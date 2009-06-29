@@ -1,7 +1,7 @@
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '/../../core/lib'))
 require 'spec/core'
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '/../lib'))
-require 'spec/mocks'
+require 'rspec/mocks'
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '/../../expectations/lib'))
 require 'spec/expectations'
 
@@ -36,33 +36,7 @@ module Macros
 end
 
 module Spec  
-  # module Example
-  #   class NonStandardError < Exception; end
-  # end
-  # 
   module Matchers
-    # def fail
-    #   raise_error(Spec::Expectations::ExpectationNotMetError)
-    # end
-    # 
-    # def fail_with(message)
-    #   raise_error(Spec::Expectations::ExpectationNotMetError, message)
-    # end
-    # 
-    # def exception_from(&block)
-    #   exception = nil
-    #   begin
-    #     yield
-    #   rescue StandardError => e
-    #     exception = e
-    #   end
-    #   exception
-    # end
-    # 
-    # def run_with(options)
-    #   ::Spec::Runner::CommandLine.run(options)
-    # end
-    # 
     def with_ruby(version)
       yield if RUBY_VERSION =~ Regexp.compile("^#{version.to_s}")
     end
@@ -71,7 +45,6 @@ end
 
 Spec::Core.configure do |config|
   config.mock_with :rspec
-  config.color_enabled = true
   config.extend(Macros)
   config.include(Spec::Matchers)
   config.include(Spec::Mocks::Methods)
