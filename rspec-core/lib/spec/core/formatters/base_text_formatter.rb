@@ -29,7 +29,11 @@ module Spec
         end
 
         def colorise(s, failure)
-          red(s)
+          if failure.is_a?(Spec::Expectations::ExpectationNotMetError)
+            red(s)
+          else
+            magenta(s)
+          end
         end
 
         def dump_summary
