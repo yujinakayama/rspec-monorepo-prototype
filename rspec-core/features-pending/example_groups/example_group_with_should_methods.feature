@@ -8,10 +8,8 @@ Feature: Spec::ExampleGroup with should methods
     Given a file named "example_group_with_should_methods.rb" with:
     """
     require 'rspec/autorun'
-    require 'rspec/expectations'
-    Rspec::Core::ExampleGroup.send(:include, Rspec::Matchers)
 
-    class MySpec < Rspec::Core::ExampleGroup
+    class MySpec < Spec::ExampleGroup
       def should_pass_with_should
         1.should == 1
       end
