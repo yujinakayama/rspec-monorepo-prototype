@@ -1,4 +1,4 @@
-require 'spec/spec_helper'
+require 'spec_helper'
 
 describe Rspec::Core::Example, :parent_metadata => 'sample' do
 
@@ -63,5 +63,5 @@ describe Rspec::Core::Example, :parent_metadata => 'sample' do
     pending "should run after(:each) when the example raises an Exception" 
     
   end
-  
+
 end
