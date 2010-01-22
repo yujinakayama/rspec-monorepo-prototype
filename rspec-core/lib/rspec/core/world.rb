@@ -1,5 +1,7 @@
 module Rspec
+  
   module Core
+
     class World
 
       attr_reader :behaviours
@@ -97,5 +99,7 @@ module Rspec
       end
 
     end
+
   end
+  
 end
