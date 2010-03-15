@@ -124,9 +124,9 @@ module Rspec
       end
 
       it "should throw when told to" do
-        @stub.stub(:something).and_throw(:up)
+        @mock.stub!(:something).and_throw(:up)
         lambda do
-          @stub.something
+          @mock.something
         end.should throw_symbol(:up)
       end
       
@@ -143,9 +143,9 @@ module Rspec
       end
 
       it "calculates return value by executing block passed to #and_return" do
-        @stub.stub(:something).with("a","b","c").and_return { |a,b,c| c+b+a }
-        @stub.something("a","b","c").should == "cba"
-        @stub.rspec_verify
+        @mock.stub!(:something).with("a","b","c").and_return { |a,b,c| c+b+a }
+        @mock.something("a","b","c").should == "cba"
+        @mock.rspec_verify
       end
     end
     
