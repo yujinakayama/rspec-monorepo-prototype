@@ -7,7 +7,7 @@
 #   RUN_FLEXMOCK_EXAMPLE=true ruby ../bin/spec mocking_with_flexmock.rb
 
 if ENV['RUN_FLEXMOCK_EXAMPLE']
-  RSpec::Runner.configure do |config|
+  Spec::Runner.configure do |config|
     config.mock_framework = :flexmock
   end
 

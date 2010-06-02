@@ -13,10 +13,6 @@ module RSpec
         end
       end
 
-      add_setting :error_stream
-      add_setting :output_stream
-      add_setting :output, :alias => :output_stream
-      add_setting :drb_port
       add_setting :color_enabled
       add_setting :profile_examples
       add_setting :run_all_when_everything_filtered
@@ -78,10 +74,6 @@ module RSpec
         self.class.add_setting(name, opts)
       end
 
-      def puts(message)
-        output_stream.puts(message)
-      end
-
       def hooks
         @hooks ||= { 
           :before => { :each => [], :all => [], :suite => [] }, 
@@ -96,7 +88,7 @@ module RSpec
       def clear_inclusion_filter
         self.filter = nil
       end
-
+      
       def cleaned_from_backtrace?(line)
         backtrace_clean_patterns.any? { |regex| line =~ regex }
       end
@@ -161,13 +153,11 @@ EOM
         end
         self.formatter_class = formatter_class
       end
-
+        
       def formatter
         @formatter ||= formatter_class.new
       end
-
-      alias_method :reporter, :formatter
-
+      
       def files_or_directories_to_run=(*files)
         self.files_to_run = files.flatten.inject([]) do |result, file|
           if File.directory?(file)
@@ -191,6 +181,14 @@ EOM
 
       def filter_run(options={})
         self.filter = options unless filter and filter[:line_number] || filter[:full_description]
+      end
+
+      def output
+        $stdout
+      end
+
+      def puts(msg="")
+        output.puts(msg)    
       end
 
       def include(mod, filters={})

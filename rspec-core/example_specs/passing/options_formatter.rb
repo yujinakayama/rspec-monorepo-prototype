@@ -5,7 +5,7 @@
 
 require 'spec/runner/formatter/base_text_formatter'
 
-class OptionsFormatter < RSpec::Runner::Formatter::BaseTextFormatter
+class OptionsFormatter < Spec::Runner::Formatter::BaseTextFormatter
   def example_started(proxy)
     if proxy.options[:report]
       puts proxy.description

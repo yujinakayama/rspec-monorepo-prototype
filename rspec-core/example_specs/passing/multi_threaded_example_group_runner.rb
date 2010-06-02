@@ -1,4 +1,4 @@
-class MultiThreadedExampleGroupRunner < RSpec::Runner::ExampleGroupRunner
+class MultiThreadedExampleGroupRunner < Spec::Runner::ExampleGroupRunner
   def initialize(options, arg)
     super(options)
     # configure these

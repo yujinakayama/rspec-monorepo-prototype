@@ -1,15 +1,10 @@
 require 'spec_helper'
-
 require 'ostruct'
 
 describe RSpec::Core::ConfigurationOptions do
   
-  def config_options_object(*args)
-    RSpec::Core::ConfigurationOptions.new(args)
-  end
-
   def options_from_args(*args)
-    config_options_object(*args).options
+    RSpec::Core::ConfigurationOptions.new(args).parse_command_line_options
   end
 
   describe 'color_enabled' do
@@ -107,86 +102,6 @@ describe RSpec::Core::ConfigurationOptions do
       options_from_args("-d").should include(:debug => true)
     end
   end
-  
-  describe "--drb (-X)" do
-    context "combined with --debug" do
-      it "turns off the debugger if --drb is specified first" do
-        config_options_object("--drb", "--debug").drb_argv.should_not include("--debug")
-        config_options_object("--drb", "-d"     ).drb_argv.should_not include("--debug")
-        config_options_object("-X",    "--debug").drb_argv.should_not include("--debug")
-        config_options_object("-X",    "-d"     ).drb_argv.should_not include("--debug")
-      end
-      
-      it "turns off the debugger option if --drb is specified later" do      
-        config_options_object("--debug", "--drb").drb_argv.should_not include("--debug")
-        config_options_object("-d",      "--drb").drb_argv.should_not include("--debug")
-        config_options_object("--debug", "-X"   ).drb_argv.should_not include("--debug")
-        config_options_object("-d",      "-X"   ).drb_argv.should_not include("--debug")
-      end
-      
-      it "turns off the debugger option if --drb is specified in the options file" do
-        File.stub(:exist?) { true }
-        File.stub(:readlines) { %w[ --drb  ] }
-        config_options_object("--debug").drb_argv.should_not include("--debug")
-        config_options_object("-d"     ).drb_argv.should_not include("--debug")        
-      end
-      
-      it "turns off the debugger option if --debug is specified in the options file" do
-        File.stub(:exist?) { true }
-        File.stub(:readlines) { %w[ --debug  ] }
-        config_options_object("--drb").drb_argv.should_not include("--debug")
-        config_options_object("-X"   ).drb_argv.should_not include("--debug")        
-      end
-    end
-        
-    it "sends all the arguments other than --drb back to the parser after parsing options" do
-      config_options_object("--drb", "--color").drb_argv.should_not include("--drb")
-    end
-  end
-  
-  
-  # TODO #drb_argv may not be the best name
-  # TODO ensure all options are output
-  # TODO check if we need to spec that the short options are "expanded" ("-v" becomes "--version" currently)
-  describe "#drb_argv" do
-    it "preserves extra arguments" do
-      config_options_object(*%w[ a --drb b --color c ]).drb_argv.should eq(%w[ --color a b c ])
-    end
-    
-    context "--drb specified in ARGV" do
-      it "renders all the original arguments except --drb" do
-        config_options_object(*%w[ --drb --color --formatter s --line_number 1 --example pattern --profile --backtrace]).
-          drb_argv.should eq(%w[ --color --profile --backtrace --formatter s --line_number 1 --example pattern ])
-      end
-    end
-
-    context "--drb specified in the options file" do
-      it "renders all the original arguments except --drb" do
-        File.stub(:exist?) { true }
-        File.stub(:readlines) { %w[ --drb --color ] }
-        config_options_object(*%w[ --formatter s --line_number 1 --example pattern --profile --backtrace ]).
-          drb_argv.should eq(%w[ --color --profile --backtrace --formatter s --line_number 1 --example pattern ])
-      end
-    end
-
-    context "--drb specified in ARGV and the options file" do
-      it "renders all the original arguments except --drb" do
-        File.stub(:exist?) { true }
-        File.stub(:readlines) { %w[ --drb --color ] }
-        config_options_object(*%w[ --drb --formatter s --line_number 1 --example pattern --profile --backtrace]).
-          drb_argv.should eq(%w[ --color --profile --backtrace --formatter s --line_number 1 --example pattern ])
-      end
-    end
-
-    context "--drb specified in ARGV and in as ARGV-specified --options file" do
-      it "renders all the original arguments except --drb and --options" do
-        File.stub(:exist?) { true }
-        File.stub(:readlines) { %w[ --drb --color ] }
-        config_options_object(*%w[ --drb --formatter s --line_number 1 --example pattern --profile --backtrace]).
-          drb_argv.should eq(%w[ --color --profile --backtrace --formatter s --line_number 1 --example pattern ])
-      end
-    end
-  end
 
   describe "options file (override)" do
     let(:config) { OpenStruct.new }
@@ -196,7 +111,7 @@ describe RSpec::Core::ConfigurationOptions do
       File.stub(:readlines) { ["--formatter", "doc"] }
 
       cli_options = RSpec::Core::ConfigurationOptions.new([])
-      cli_options.configure(config)
+      cli_options.apply_to(config)
       config.formatter.should == 'doc'
     end
     
@@ -205,7 +120,7 @@ describe RSpec::Core::ConfigurationOptions do
       File.stub(:readlines) { ["--formatter doc"] }
 
       cli_options = RSpec::Core::ConfigurationOptions.new([])
-      cli_options.configure(config)
+      cli_options.apply_to(config)
       config.formatter.should == 'doc'
     end
     
@@ -223,7 +138,7 @@ describe RSpec::Core::ConfigurationOptions do
       end
       cli_options = RSpec::Core::ConfigurationOptions.new(["--no-color"])
 
-      cli_options.configure(config)
+      cli_options.apply_to(config)
 
       config.formatter.should == "documentation"
       config.line_number.should == "37"
@@ -244,7 +159,7 @@ describe RSpec::Core::ConfigurationOptions do
       end
       cli_options = RSpec::Core::ConfigurationOptions.new([])
 
-      cli_options.configure(config)
+      cli_options.apply_to(config)
 
       config.formatter.should == "local"
     end
@@ -253,10 +168,11 @@ describe RSpec::Core::ConfigurationOptions do
       config_options = RSpec::Core::ConfigurationOptions.new(['--formatter', 'progress'])
       config_options.stub(:parse_options_file).and_return(:formatter => 'documentation')
 
-      config_options.configure(config)
+      config_options.apply_to(config)
 
       config.formatter.should == 'progress'
     end
   end
+
 end
 

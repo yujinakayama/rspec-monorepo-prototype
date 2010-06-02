@@ -6,6 +6,10 @@ module RSpec::Core
 
     let(:config) { subject }
 
+    before(:each) do
+      RSpec.world.stub(:configuration).and_return(config)
+    end
+
     describe "#mock_framework_class" do
       before(:each) do
         config.stub(:require)
@@ -217,14 +221,6 @@ module RSpec::Core
     end
 
     describe "full_backtrace=" do
-      before do
-        @backtrace_clean_patterns = config.backtrace_clean_patterns
-      end
-
-      after do
-        config.backtrace_clean_patterns = @backtrace_clean_patterns
-      end
-
       it "clears the backtrace clean patterns" do
         config.full_backtrace = true
         config.backtrace_clean_patterns.should == []
@@ -242,14 +238,6 @@ module RSpec::Core
       it "does not require 'ruby-debug'" do
         config.should_not_receive(:require).with('ruby-debug')
         config.debug = false
-      end
-    end
-    
-    describe "#output=" do
-      it "sets the output" do
-        output = mock("output")
-        config.output = output
-        config.output.should equal(output)
       end
     end
 

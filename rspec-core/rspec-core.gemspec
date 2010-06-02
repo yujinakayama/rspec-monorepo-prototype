@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Chad Humphries", "David Chelimsky"]
-  s.date = %q{2010-06-01}
+  s.date = %q{2010-05-29}
   s.description = %q{RSpec runner and example group classes}
   s.email = %q{dchelimsky@gmail.com;chad.humphries@gmail.com}
   s.executables = ["rspec", "spec"]
@@ -82,7 +82,7 @@ Gem::Specification.new do |s|
      "features/command_line/example_name_option.feature",
      "features/command_line/line_number_appended_to_path.feature",
      "features/command_line/line_number_option.feature",
-     "features/configuration/custom_settings.feature",
+     "features/configuration/custom_options.feature",
      "features/configuration/options_file.feature",
      "features/example_groups/describe_aliases.feature",
      "features/example_groups/nested_groups.feature",
@@ -105,7 +105,6 @@ Gem::Specification.new do |s|
      "lib/rspec/core.rb",
      "lib/rspec/core/around_proxy.rb",
      "lib/rspec/core/backward_compatibility.rb",
-     "lib/rspec/core/command_line_options.rb",
      "lib/rspec/core/configuration.rb",
      "lib/rspec/core/configuration_options.rb",
      "lib/rspec/core/deprecation.rb",
@@ -129,7 +128,6 @@ Gem::Specification.new do |s|
      "lib/rspec/core/mocking/with_rr.rb",
      "lib/rspec/core/mocking/with_rspec.rb",
      "lib/rspec/core/object_extensions.rb",
-     "lib/rspec/core/option_parser.rb",
      "lib/rspec/core/pending.rb",
      "lib/rspec/core/rake_task.rb",
      "lib/rspec/core/ruby_project.rb",
@@ -138,8 +136,6 @@ Gem::Specification.new do |s|
      "lib/rspec/core/subject.rb",
      "lib/rspec/core/version.rb",
      "lib/rspec/core/world.rb",
-     "lib/rspec/monkey.rb",
-     "lib/rspec/monkey/spork/test_framework/rspec.rb",
      "rspec-core.gemspec",
      "script/console",
      "spec/autotest/failed_results_re_spec.rb",
@@ -147,7 +143,6 @@ Gem::Specification.new do |s|
      "spec/rspec/core/configuration_options_spec.rb",
      "spec/rspec/core/configuration_spec.rb",
      "spec/rspec/core/deprecations_spec.rb",
-     "spec/rspec/core/drb_proxy_spec.rb",
      "spec/rspec/core/example_group_spec.rb",
      "spec/rspec/core/example_spec.rb",
      "spec/rspec/core/formatters/base_formatter_spec.rb",
@@ -163,7 +158,6 @@ Gem::Specification.new do |s|
      "spec/rspec/core/resources/a_foo.rb",
      "spec/rspec/core/resources/a_spec.rb",
      "spec/rspec/core/resources/custom_example_group_runner.rb",
-     "spec/rspec/core/resources/drb_example_spec.rb",
      "spec/rspec/core/resources/utf8_encoded.rb",
      "spec/rspec/core/ruby_project_spec.rb",
      "spec/rspec/core/runner_spec.rb",
@@ -198,7 +192,6 @@ Gem::Specification.new do |s|
      "spec/rspec/core/configuration_options_spec.rb",
      "spec/rspec/core/configuration_spec.rb",
      "spec/rspec/core/deprecations_spec.rb",
-     "spec/rspec/core/drb_proxy_spec.rb",
      "spec/rspec/core/example_group_spec.rb",
      "spec/rspec/core/example_spec.rb",
      "spec/rspec/core/formatters/base_formatter_spec.rb",
@@ -214,7 +207,6 @@ Gem::Specification.new do |s|
      "spec/rspec/core/resources/a_foo.rb",
      "spec/rspec/core/resources/a_spec.rb",
      "spec/rspec/core/resources/custom_example_group_runner.rb",
-     "spec/rspec/core/resources/drb_example_spec.rb",
      "spec/rspec/core/resources/utf8_encoded.rb",
      "spec/rspec/core/ruby_project_spec.rb",
      "spec/rspec/core/runner_spec.rb",
