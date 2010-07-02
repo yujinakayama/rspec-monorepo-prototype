@@ -10,9 +10,6 @@ module RSpec
         def method_missing(m, *a, &b)
           # no-op
         end
-
-        def message(message)
-        end
         
         def initialize(output)
           super

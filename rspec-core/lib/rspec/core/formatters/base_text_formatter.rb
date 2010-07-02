@@ -4,10 +4,6 @@ module RSpec
 
       class BaseTextFormatter < BaseFormatter
 
-        def message(message)
-          output.puts message
-        end
-
         def dump_failures
           output.puts
           failed_examples.each_with_index do |failed_example, index|
