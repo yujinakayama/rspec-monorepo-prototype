@@ -71,9 +71,6 @@ module RSpec
         def example_failed(example)
         end
 
-        def message(message)
-        end
-
         # This method is invoked at the beginning of the execution of each example group.
         # +example_group+ is the example_group.
         #
