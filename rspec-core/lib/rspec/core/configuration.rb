@@ -91,7 +91,7 @@ module RSpec
         @settings ||= {}
       end
 
-      def clear_inclusion_filter
+      def clear_inclusion_filter # :nodoc:
         self.filter = nil
       end
 
@@ -181,6 +181,8 @@ EOM
           formatter_class = case formatter_to_use.to_s
           when 'd', 'doc', 'documentation', 's', 'n', 'spec', 'nested'
             RSpec::Core::Formatters::DocumentationFormatter
+          when 'h', 'html'
+            RSpec::Core::Formatters::HtmlFormatter
           when 'progress' 
             RSpec::Core::Formatters::ProgressFormatter
           else 
@@ -224,6 +226,7 @@ EOM
       end
 
       def filter_run_including(options={})
+        # TODO (DC 2010-07-03) this should probably warn when the unless clause returns true
         self.filter = options unless filter and filter[:line_number] || filter[:full_description]
       end
 
