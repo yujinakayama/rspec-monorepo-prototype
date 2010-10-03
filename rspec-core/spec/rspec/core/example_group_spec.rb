@@ -25,7 +25,7 @@ module RSpec::Core
           end
         end
 
-        group.run_all
+        group.run
         examples_run.should have(1).example
       end
 
@@ -44,7 +44,7 @@ module RSpec::Core
             end
           end
 
-          group.run_all
+          group.run
           examples_run.should have(2).examples
         end
       end
@@ -158,7 +158,7 @@ module RSpec::Core
               end
             end
 
-            group.run_all.should be_true
+            group.run.should be_true
           end
         end
       end
@@ -216,7 +216,7 @@ module RSpec::Core
         group.before(:all) { order << 3 }
         group.example("example") {}
 
-        group.run_all
+        group.run
 
         order.should == [1,2,3]
       end
@@ -229,7 +229,7 @@ module RSpec::Core
         group.before(:each) { order << 3 }
         group.example("example") {}
 
-        group.run_all
+        group.run
 
         order.should == [1,2,3]
       end
@@ -242,7 +242,7 @@ module RSpec::Core
         group.after(:each) { order << 3 }
         group.example("example") {}
 
-        group.run_all
+        group.run
 
         order.should == [3,2,1]
       end
@@ -255,7 +255,7 @@ module RSpec::Core
         group.after(:all) { order << 3 }
         group.example("example") {}
 
-        group.run_all
+        group.run
 
         order.should == [3,2,1]
       end
@@ -285,8 +285,8 @@ module RSpec::Core
           end
         end
 
-        unfiltered_group.run_all
-        filtered_group.run_all
+        unfiltered_group.run
+        filtered_group.run
 
         hooks_run.should == [:filtered_before_all, :filtered_after_all]
       end
@@ -314,7 +314,7 @@ module RSpec::Core
         context2.after(:all) { order << :nested_after_all }
         context2.example("nested example 2") { order << :nested_example_2 }
 
-        group.run_all
+        group.run
 
         order.should == [
           :before_all_defined_in_config,
@@ -342,7 +342,7 @@ module RSpec::Core
         group.example("ignore") {  }
 
         expect do
-          group.run_all
+          group.run
         end.to_not raise_error
       end
 
@@ -350,7 +350,7 @@ module RSpec::Core
         group = ExampleGroup.describe
         group.before(:each) { raise "error in before each" }
         example = group.example("equality") { 1.should == 2}
-        group.run_all
+        group.run
 
         example.metadata[:execution_result][:exception_encountered].message.should == "error in before each"
       end
@@ -359,7 +359,7 @@ module RSpec::Core
         group = ExampleGroup.describe
         group.before(:all) { raise "error in before all" }
         example = group.example("equality") { 1.should == 2}
-        group.run_all
+        group.run
 
         example.metadata.should_not be_nil
         example.metadata[:execution_result].should_not be_nil
@@ -376,7 +376,7 @@ module RSpec::Core
             example = it("equality") { 1.should == 2}
           end
         end
-        group.run_all
+        group.run
 
         example.metadata.should_not be_nil
         example.metadata[:execution_result].should_not be_nil
@@ -389,7 +389,7 @@ module RSpec::Core
         running_example = :none
         group.before(:all) { running_example = example }
         group.example("no-op") { }
-        group.run_all
+        group.run
         running_example.should == nil
       end
 
@@ -398,7 +398,7 @@ module RSpec::Core
         option = nil
         group.before(:each) { option = example.options[:data] }
         group.example("no-op", :data => :sample) { }
-        group.run_all
+        group.run
         option.should == :sample
       end
 
@@ -407,7 +407,7 @@ module RSpec::Core
         option = nil
         group.after(:each) { option = example.options[:data] }
         group.example("no-op", :data => :sample) { }
-        group.run_all
+        group.run
         option.should == :sample
       end
 
@@ -416,7 +416,7 @@ module RSpec::Core
         running_example = :none
         group.after(:all) { running_example = example }
         group.example("no-op") { }
-        group.run_all
+        group.run
         running_example.should == nil
       end
     end
@@ -566,14 +566,6 @@ module RSpec::Core
     end
 
     describe "#its" do
-      its(:class) { should == RSpec::Core::ExampleGroup }
-      it "does not interfere between examples" do
-        subject.class.should == RSpec::Core::ExampleGroup
-      end
-      context "subject modified in before block" do
-        before { subject.class.should == RSpec::Core::ExampleGroup }
-      end
-
       context "with nil value" do
         subject do
           Class.new do
@@ -597,7 +589,7 @@ module RSpec::Core
         its("name.size.class") { should == Fixnum }
       end
 
-      context "when it's a Hash" do
+      context "when it is a Hash" do
         subject do
           { :attribute => 'value',
             'another_attribute' => 'another_value' }
@@ -614,7 +606,7 @@ module RSpec::Core
           end
         end
       end
-      
+
       context "calling and overriding super" do
         it "calls to the subject defined in the parent group" do
           group = ExampleGroup.describe(Array) do
@@ -629,7 +621,7 @@ module RSpec::Core
             end
           end
 
-          group.run_all.should be_true
+          group.run.should be_true
         end
       end
 
@@ -652,10 +644,25 @@ module RSpec::Core
     describe "#run" do
       let(:reporter) { double("reporter").as_null_object }
 
+      context "with fail_fast? => true" do
+        it "does not run examples after the failed example" do
+          group = RSpec::Core::ExampleGroup.describe
+          group.stub(:fail_fast?) { true }
+          examples_run = []
+          group.example('example 1') { examples_run << self }
+          group.example('example 2') { examples_run << self; fail; }
+          group.example('example 3') { examples_run << self }
+
+          group.run
+
+          examples_run.length.should eq(2)
+        end
+      end
+
       context "with RSpec.wants_to_quit=true" do
         before do
-          RSpec.stub(:clear_remaining_example_groups)
-          RSpec.stub(:wants_to_quit) { true }
+          RSpec.world.stub(:example_groups) { [] }
+          RSpec.world.stub(:wants_to_quit) { true }
         end
 
         it "returns without starting the group" do
