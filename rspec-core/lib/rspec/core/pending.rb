@@ -1,16 +1,7 @@
 module RSpec
   module Core
     module Pending
-      DEFAULT_MESSAGE = 'No reason given'
-
-      def pending(*args)
-        options = args.last.is_a?(Hash) ? args.pop : {}
-        message = args.first || DEFAULT_MESSAGE
-
-        if options[:unless] || (options.has_key?(:if) && !options[:if])
-          return block_given? ? yield : nil
-        end
-
+      def pending(message = 'No reason given')
         example.metadata[:pending] = true
         example.metadata[:execution_result][:pending_message] = message
         if block_given?
