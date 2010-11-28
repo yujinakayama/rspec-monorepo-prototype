@@ -1,8 +1,8 @@
 ## rspec-core release history (incomplete)
 
-### 2.2.0 / in development
+### 2.2.0 / 2010-11-28
 
-[full changelog](http://github.com/rspec/rspec-core/compare/v2.1.0...master)
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.1.0...v2.2.0)
 
 * Deprecations/changes
   * --debug/-d on command line is deprecated and now has no effect
@@ -10,7 +10,6 @@
     (Bosko Ivanisevic)
 
 * Enhancements
-  * When developing locally rspec-core now works with the rspec-dev setup or your local gems
   * Raise exception with helpful message when rspec-1 is loaded alongside
     rspec-2 (Justin Ko)
   * debugger statements _just work_ as long as ruby-debug is installed
