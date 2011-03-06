@@ -22,7 +22,12 @@ describe RSpec::Core::Example, :parent_metadata => 'sample' do
     before(:each) { RSpec::Matchers.stub(:generated_description => generated_description) }
 
     def expect_with(*frameworks)
-      RSpec.configuration.stub(:expecting_with_rspec?).and_return(frameworks.include?(:rspec))
+      # this is stubbed to prevent us from actually including stdlib assertions,
+      # as the additional methods have naming conflicts with some of our custom
+      # matchers
+      RSpec.configuration.stub(:require).with(%r|rspec/core/expecting/|)
+      RSpec.configure { |c| c.expect_with *frameworks }
+      RSpec.configuration.configure_expectation_framework
 
       if frameworks.include?(:stdlib)
         example_group.class_eval do
