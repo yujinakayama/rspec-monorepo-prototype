@@ -59,35 +59,25 @@ module RSpec
         end
       end
 
-      def announce_filters
-        filter_announcements = []
-        announce_inclusion_filter filter_announcements
-        announce_exclusion_filter filter_announcements
-
-        unless filter_announcements.empty?
-          @configuration.reporter.message("Run filtered #{filter_announcements.join(', ')}")
-        end
-      end
-
-      def announce_inclusion_filter(announcements)
+      def announce_inclusion_filter
         if inclusion_filter
           if @configuration.run_all_when_everything_filtered? && RSpec.world.example_count.zero?
             @configuration.reporter.message "No examples were matched by #{inclusion_filter.inspect}, running all"
             @configuration.clear_inclusion_filter
             filtered_examples.clear
           else
-            announcements << "using #{inclusion_filter.inspect}"
+            @configuration.reporter.message "Run filtered using #{inclusion_filter.inspect}"
           end
         end
       end
       
-      def announce_exclusion_filter(announcements)
+      def announce_exclusion_filter
         if exclusion_filter && RSpec.world.example_count.zero?
           @configuration.reporter.message(
             "No examples were matched. Perhaps #{exclusion_filter.inspect} is excluding everything?")
           example_groups.clear
         else
-          announcements << "excluding #{exclusion_filter.inspect}"
+          @configuration.reporter.message "Run filtered excluding #{exclusion_filter.inspect}"
         end
       end
 

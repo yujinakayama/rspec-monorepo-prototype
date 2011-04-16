@@ -16,7 +16,8 @@ module RSpec
         @configuration.output_stream ||= out
         @options.configure(@configuration)
         @configuration.load_spec_files
-        @world.announce_filters
+        @world.announce_inclusion_filter
+        @world.announce_exclusion_filter
 
         @configuration.reporter.report(@world.example_count) do |reporter|
           begin
