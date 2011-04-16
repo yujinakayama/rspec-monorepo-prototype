@@ -58,17 +58,31 @@ Feature: --tag option
   
   Scenario: exclude examples with a simple tag
     When I run `rspec . --tag ~skip`
+    Then the output should contain "Run filtered excluding {:skip=>true}"
     Then the examples should all pass
 
   Scenario: exclude examples with a simple tag and @
     When I run `rspec . --tag ~@skip`
+    Then the output should contain "Run filtered excluding {:skip=>true}"
     Then the examples should all pass
     
   Scenario: exclude examples with a name:value tag
     When I run `rspec . --tag ~speed:slow`
+    Then the output should contain:
+      """
+      Run filtered excluding {:speed=>"slow"}
+      """
     Then the examples should all pass
   
   Scenario: exclude examples with a name:value tag and @
     When I run `rspec . --tag ~@speed:slow`
+    Then the output should contain:
+      """
+      Run filtered excluding {:speed=>"slow"}
+      """
     Then the examples should all pass
 
+  Scenario: filter examples with a simple tag, exclude examples with another tag
+    When I run `rspec . --tag focus --tag ~skip`
+    Then the output should contain "Run filtered using {:focus=>true}, excluding {:skip=>true}"
+    And the examples should all pass
