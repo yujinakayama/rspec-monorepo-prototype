@@ -14,7 +14,7 @@ describe RSpec::Core::ConfigurationOptions do
     config_options_object(*args).options
   end
 
-  it "warns when HOME env var is not set" do
+  it "warns when HOME env var is not set", :unless => (RUBY_PLATFORM == 'java') do
     begin
       orig_home = ENV.delete("HOME")
       coo = RSpec::Core::ConfigurationOptions.new([])
@@ -224,26 +224,15 @@ describe RSpec::Core::ConfigurationOptions do
     end
 
     context "with tags" do
-      it "includes the inclusion tags" do
+      it "includes the tags" do
         coo = config_options_object("--tag", "tag")
         coo.drb_argv.should eq(["--tag", "tag"])
       end
 
-      it "leaves inclusion tags intact" do
+      it "leaves tags intact" do
         coo = config_options_object("--tag", "tag")
         coo.drb_argv
         coo.options[:filter].should eq( {:tag=>true} )
-      end
-
-      it "includes the exclusion tags" do
-        coo = config_options_object("--tag", "~tag")
-        coo.drb_argv.should eq(["--tag", "~tag"])
-      end
-
-      it "leaves exclusion tags intact" do
-        coo = config_options_object("--tag", "~tag")
-        coo.drb_argv
-        coo.options[:exclusion_filter].should eq( {:tag=>true} )
       end
     end
 
