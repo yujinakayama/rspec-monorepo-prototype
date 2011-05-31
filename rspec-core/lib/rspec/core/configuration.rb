@@ -1,4 +1,5 @@
 require "rbconfig"
+require 'fileutils'
 
 module RSpec
   module Core
@@ -29,7 +30,8 @@ module RSpec
       add_setting :exclusion_filter
       add_setting :inclusion_filter
       add_setting :filter, :alias => :inclusion_filter
-      add_setting :filename_pattern, :default => '**/*_spec.rb'
+      add_setting :pattern, :default => '**/*_spec.rb'
+      add_setting :filename_pattern, :alias => :pattern
       add_setting :files_to_run
       add_setting :include_or_extend_modules
       add_setting :backtrace_clean_patterns
@@ -42,19 +44,24 @@ module RSpec
         :unless => lambda { |value| value }
       }
 
+      DEFAULT_BACKTRACE_PATTERNS = [
+        /\/lib\d*\/ruby\//,
+        /bin\//,
+        /gems/,
+        /spec\/spec_helper\.rb/,
+        /lib\/rspec\/(core|expectations|matchers|mocks)/
+      ]
+
       def initialize
         @color_enabled = false
         self.include_or_extend_modules = []
         self.files_to_run = []
-        self.backtrace_clean_patterns = [
-          /\/lib\d*\/ruby\//,
-          /bin\//,
-          /gems/,
-          /spec\/spec_helper\.rb/,
-          /lib\/rspec\/(core|expectations|matchers|mocks)/
-        ]
-
+        self.backtrace_clean_patterns = DEFAULT_BACKTRACE_PATTERNS.dup
         self.exclusion_filter = CONDITIONAL_FILTERS.dup
+      end
+
+      def reset
+        @reporter = nil
       end
 
       # :call-seq:
@@ -209,8 +216,8 @@ module RSpec
         end
       end
 
-      def full_backtrace=(bool)
-        settings[:backtrace_clean_patterns] = []
+      def full_backtrace=(true_or_false)
+        settings[:backtrace_clean_patterns] = true_or_false ? [] : DEFAULT_BACKTRACE_PATTERNS
       end
 
       def color_enabled
@@ -267,13 +274,13 @@ EOM
         filter_run({ :full_description => /#{description}/ }, true)
       end
 
-      def add_formatter(formatter_to_use, output=nil)
+      def add_formatter(formatter_to_use, path=nil)
         formatter_class =
           built_in_formatter(formatter_to_use) ||
           custom_formatter(formatter_to_use) ||
           (raise ArgumentError, "Formatter '#{formatter_to_use}' unknown - maybe you meant 'documentation' or 'progress'?.")
 
-        formatters << formatter_class.new(output ? File.new(output, 'w') : self.output)
+        formatters << formatter_class.new(path ? file_at(path) : output)
       end
 
       alias_method :formatter=, :add_formatter
@@ -292,7 +299,7 @@ EOM
       def files_or_directories_to_run=(*files)
         self.files_to_run = files.flatten.collect do |file|
           if File.directory?(file)
-            filename_pattern.split(",").collect do |pattern|
+            pattern.split(",").collect do |pattern|
               Dir["#{file}/#{pattern.strip}"]
             end
           else
@@ -342,10 +349,17 @@ EOM
         settings[:exclusion_filter] = filter
       end
 
+      def exclusion_filter
+        settings[:exclusion_filter] || {}
+      end
+
       def inclusion_filter=(filter)
         settings[:inclusion_filter] = filter
       end
 
+      def inclusion_filter
+        settings[:inclusion_filter] || {}
+      end
       def filter_run_including(*args)
         force_overwrite = if args.last.is_a?(Hash) || args.last.is_a?(Symbol)
           false
@@ -355,7 +369,7 @@ EOM
 
         options = build_metadata_hash_from(args)
 
-        if inclusion_filter and inclusion_filter[:line_number] || inclusion_filter[:full_description]
+        if inclusion_filter[:line_number] || inclusion_filter[:full_description]
           warn "Filtering by #{options.inspect} is not possible since " \
                "you are already filtering by #{inclusion_filter.inspect}"
         else
@@ -484,6 +498,12 @@ MESSAGE
         word.downcase!
         word
       end
+
+      def file_at(path)
+        FileUtils.mkdir_p(File.dirname(path))
+        File.new(path, 'w')
+      end
+
     end
   end
 end

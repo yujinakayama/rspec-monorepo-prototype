@@ -2,9 +2,6 @@ module RSpec
   module Core
 
     class ConfigurationOptions
-      LOCAL_OPTIONS_FILE  = ".rspec"
-      GLOBAL_OPTIONS_FILE = File.join(File.expand_path("~"), ".rspec")
-
       attr_reader :options
 
       def initialize(args)
@@ -15,15 +12,16 @@ module RSpec
         keys = options.keys
         keys.unshift(:requires) if keys.delete(:requires)
         keys.unshift(:libs)     if keys.delete(:libs)
+
         formatters = options[:formatters] if keys.delete(:formatters)
+
+        config.exclusion_filter.merge! options[:exclusion_filter] if keys.delete(:exclusion_filter)
+
         keys.each do |key|
           config.send("#{key}=", options[key]) if config.respond_to?("#{key}=")
         end
-        if formatters
-          formatters.each do |pair|
-            config.add_formatter(*pair)
-          end
-        end
+
+        formatters.each {|pair| config.add_formatter(*pair) } if formatters
       end
 
       def drb_argv
@@ -35,10 +33,21 @@ module RSpec
         argv << "--fail-fast"    if options[:fail_fast]
         argv << "--line_number"  << options[:line_number]             if options[:line_number]
         argv << "--options"      << options[:custom_options_file]     if options[:custom_options_file]
-        argv << "--example"      << options[:full_description].source if options[:full_description]
+        if options[:full_description]
+          # The argument to --example is regexp-escaped before being stuffed
+          # into a regexp when received for the first time (see OptionParser).
+          # Hence, merely grabbing the source of this regexp will retain the
+          # backslashes, so we must remove them.
+          argv << "--example" << options[:full_description].source.delete('\\')
+        end
         if options[:filter]
           options[:filter].each_pair do |k, v|
             argv << "--tag" << k.to_s
+          end
+        end
+        if options[:exclusion_filter]
+          options[:exclusion_filter].each_pair do |k, v|
+            argv << "--tag" << "~#{k.to_s}"
           end
         end
         if options[:formatters]
@@ -79,11 +88,11 @@ module RSpec
       end
 
       def local_options
-        @local_options ||= options_from(LOCAL_OPTIONS_FILE)
+        @local_options ||= options_from(local_options_file)
       end
 
       def global_options
-        @global_options ||= options_from(GLOBAL_OPTIONS_FILE)
+        @global_options ||= options_from(global_options_file)
       end
 
       def options_from(path)
@@ -91,7 +100,7 @@ module RSpec
       end
 
       def args_from_options_file(path)
-        return [] unless File.exist?(path)
+        return [] unless path && File.exist?(path)
         config_string = options_file_as_erb_string(path)
         config_string.split(/\n+/).map {|l| l.split}.flatten
       end
@@ -104,6 +113,20 @@ module RSpec
       def custom_options_file
         command_line_options[:custom_options_file]
       end
+
+      def local_options_file
+        ".rspec"
+      end
+
+      def global_options_file
+        begin
+          File.join(File.expand_path("~"), ".rspec")
+        rescue ArgumentError
+          warn "Unable to find ~/.rspec because the HOME environment variable is not set"
+          nil
+        end
+      end
+
     end
   end
 end

@@ -40,8 +40,7 @@ module RSpec::Core
           options[:debug] = true
         end
 
-        parser.on('-e', '--example PATTERN', "Run examples whose full descriptions match this pattern",
-                "(PATTERN is compiled into a Ruby regular expression)") do |o|
+        parser.on('-e', '--example STRING', "Run examples whose full nested names include STRING") do |o|
           options[:full_description] = Regexp.compile(Regexp.escape(o))
         end
 
@@ -84,6 +83,10 @@ module RSpec::Core
 
         parser.on('-p', '--profile', 'Enable profiling of examples with output of the top 10 slowest examples') do |o|
           options[:profile_examples] = o
+        end
+
+        parser.on('-P', '--pattern PATTERN', 'Load files those matching this pattern. Default is "spec/**/*_spec.rb"') do |o|
+          options[:pattern] = o
         end
 
         parser.on('-r', '--require PATH', 'Require a file') do |path|

@@ -14,6 +14,17 @@ describe RSpec::Core::ConfigurationOptions do
     config_options_object(*args).options
   end
 
+  it "warns when HOME env var is not set", :unless => (RUBY_PLATFORM == 'java') do
+    begin
+      orig_home = ENV.delete("HOME")
+      coo = RSpec::Core::ConfigurationOptions.new([])
+      coo.should_receive(:warn)
+      coo.parse_options
+    ensure
+      ENV["HOME"] = orig_home
+    end
+  end
+
   describe "#configure" do
     it "sends libs before requires" do
       opts = config_options_object(*%w[--require a/path -I a/lib])
@@ -29,6 +40,13 @@ describe RSpec::Core::ConfigurationOptions do
       config.should_receive(:requires=).ordered
       config.should_receive(:add_formatter).ordered
       opts.configure(config)
+    end
+
+    it "merges the :exclusion_filter option with the default exclusion_filter" do
+      opts = config_options_object(*%w[--tag ~slow])
+      config = RSpec::Core::Configuration.new
+      opts.configure(config)
+      config.exclusion_filter.should have_key(:slow)
     end
   end
 
@@ -205,16 +223,37 @@ describe RSpec::Core::ConfigurationOptions do
       config_options_object(*%w[--options custom.opts]).drb_argv.should include("--options", "custom.opts")
     end
 
+    context "with --example" do
+      it "includes --example" do
+        config_options_object(*%w[--example foo]).drb_argv.should include("--example", "foo")
+      end
+      
+      it "unescapes characters which were escaped upon storing --example originally" do
+        config_options_object("--example", "foo\\ bar").drb_argv.should include("--example", "foo bar")
+      end
+    end
+
     context "with tags" do
-      it "includes the tags" do
+      it "includes the inclusion tags" do
         coo = config_options_object("--tag", "tag")
         coo.drb_argv.should eq(["--tag", "tag"])
       end
 
-      it "leaves tags intact" do
+      it "leaves inclusion tags intact" do
         coo = config_options_object("--tag", "tag")
         coo.drb_argv
         coo.options[:filter].should eq( {:tag=>true} )
+      end
+
+      it "includes the exclusion tags" do
+        coo = config_options_object("--tag", "~tag")
+        coo.drb_argv.should eq(["--tag", "~tag"])
+      end
+
+      it "leaves exclusion tags intact" do
+        coo = config_options_object("--tag", "~tag")
+        coo.drb_argv
+        coo.options[:exclusion_filter].should eq( {:tag=>true} )
       end
     end
 
@@ -279,23 +318,16 @@ describe RSpec::Core::ConfigurationOptions do
 
     before do
       @orig_spec_opts = ENV["SPEC_OPTS"]
-      @orig_global_options_file = RSpec::Core::ConfigurationOptions::GLOBAL_OPTIONS_FILE
-      @orig_local_options_file  = RSpec::Core::ConfigurationOptions::LOCAL_OPTIONS_FILE
-      RSpec::Core::ConfigurationOptions::__send__ :remove_const, :GLOBAL_OPTIONS_FILE
-      RSpec::Core::ConfigurationOptions::__send__ :remove_const, :LOCAL_OPTIONS_FILE
-      RSpec::Core::ConfigurationOptions::GLOBAL_OPTIONS_FILE = global_options_file
-      RSpec::Core::ConfigurationOptions::LOCAL_OPTIONS_FILE  = local_options_file
-      FileUtils.rm local_options_file if File.exist? local_options_file
-      FileUtils.rm global_options_file if File.exist? global_options_file
-      FileUtils.rm custom_options_file if File.exist? custom_options_file
+      RSpec::Core::ConfigurationOptions::send :public, :global_options_file
+      RSpec::Core::ConfigurationOptions::send :public, :local_options_file
+      RSpec::Core::ConfigurationOptions::any_instance.stub(:global_options_file) { global_options_file }
+      RSpec::Core::ConfigurationOptions::any_instance.stub(:local_options_file) { local_options_file }
     end
 
     after do
       ENV["SPEC_OPTS"] = @orig_spec_opts
-      RSpec::Core::ConfigurationOptions::__send__ :remove_const, :GLOBAL_OPTIONS_FILE
-      RSpec::Core::ConfigurationOptions::__send__ :remove_const, :LOCAL_OPTIONS_FILE
-      RSpec::Core::ConfigurationOptions::GLOBAL_OPTIONS_FILE = @orig_global_options_file
-      RSpec::Core::ConfigurationOptions::LOCAL_OPTIONS_FILE  = @orig_local_options_file
+      RSpec::Core::ConfigurationOptions::send :private, :global_options_file
+      RSpec::Core::ConfigurationOptions::send :private, :local_options_file
     end
 
     def write_options(scope, options)

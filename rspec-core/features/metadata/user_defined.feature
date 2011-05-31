@@ -5,7 +5,7 @@ Feature: User-defined metadata
   `context` or `it`.  RSpec supports many configuration options that apply
   only to certain examples or groups based on the metadata.
 
-  Metadata defined on an example group is available (and can be overriden)
+  Metadata defined on an example group is available (and can be overridden)
   by any sub-group or from any example in that group or a sub-group.
 
   In addition, there is a configuration option (which will be the default
@@ -68,12 +68,12 @@ Feature: User-defined metadata
     Given a file named "override_metadata_spec.rb" with:
       """
       describe "a group with user-defined metadata", :foo => 'bar' do
-        it 'can be overriden by an example', :foo => 'bazz' do
+        it 'can be overridden by an example', :foo => 'bazz' do
           example.metadata[:foo].should == 'bazz'
         end
 
         describe "a sub-group with an override", :foo => 'goo' do
-          it 'can be overriden by a sub-group' do
+          it 'can be overridden by a sub-group' do
             example.metadata[:foo].should == 'goo'
           end
         end

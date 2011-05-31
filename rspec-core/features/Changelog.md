@@ -1,13 +1,38 @@
-### 2.6.0.rc4 / 2011-05-01
+### Dev
 
-[full changelog](http://github.com/rspec/rspec-core/compare/v2.6.0.rc2...v2.6.0.rc4)
+* Bug fixes
+  * Support exclusion filters in DRb. (Yann Lugrin)
+  * Fix --example escaping when run over DRb. (Elliot Winkler)
 
-* Enhancements
-  * Clean up messages for filters/tags.
+### 2.6.3 / 2011-05-24
 
-### 2.6.0.rc2 / 2011-04-18
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.6.2...v2.6.3)
 
-[full changelog](http://github.com/rspec/rspec-core/compare/v2.5.1...v2.6.0.rc2)
+* Bug fixes
+  * Explicitly convert exit code to integer, avoiding TypeError when return
+    value of run is IO object proxied by `DRb::DRbObject` (Julian Scheid)
+  * Clarify behavior of `--example` command line option
+  * Build using a rubygems-1.6.2 to avoid downstream yaml parsing error
+
+### 2.6.2 / 2011-05-21
+
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.6.1...v2.6.2)
+
+* Bug fixes
+  * Warn rather than raise when HOME env var is not defined
+  * Properly merge command-line exclusions with default :if and :unless (joshcooper)
+
+### 2.6.1 / 2011-05-19
+
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.6.0...v2.6.1)
+
+* Bug fixes
+  * Don't extend nil when filters are nil
+  * `require 'rspec/autorun'` when running rcov.
+
+### 2.6.0 / 2011-05-12
+
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.5.1...v2.6.0)
 
 * Enhancements
   * `shared_context` (Damian Nurzynski)
@@ -23,8 +48,11 @@
     defined. (Myron Marston)
   * Pass the exit status of a DRb run to the invoking process. This causes
     specs run via DRb to not just return true or false. (Ilkka Laukkanen)
-  * Refactoring of ConfigurationOptions#parse_options (Rodrigo Rosenfeld Rosas)
+  * Refactoring of `ConfigurationOptions#parse_options` (Rodrigo Rosenfeld Rosas)
   * Report excluded filters in runner output (tip from andyl)
+  * Clean up messages for filters/tags.
+  * Restore --pattern/-P command line option from rspec-1
+  * Support false as well as true in config.full_backtrace= (Andreas Tolf Tolfsen)
 
 * Bug fixes
   * Don't stumble over an exception without a message (Hans Hasselberg)
@@ -35,12 +63,15 @@
   * Include RSpec::Matchers when first example group is defined, rather
     than just before running the examples.  This works around an obscure
     bug in ruby 1.9 that can cause infinite recursion. (Myron Marston)
-  * Don't send example_group_[started|finished] to formatters for empty groups.
+  * Don't send `example_group_[started|finished]` to formatters for empty groups.
   * Get specs passing on jruby (Sidu Ponnappa)
   * Fix bug where mixing nested groups and outer-level examples gave
     unpredictable :line_number behavior (Artur Małecki)
   * Regexp.escape the argument to --example (tip from Elliot Winkler)
   * Correctly pass/fail pending block with message expectations
+  * CommandLine returns exit status (0/1) instead of true/false
+  * Create path to formatter output file if it doesn't exist (marekj).
+
 
 ### 2.5.1 / 2011-02-06
 

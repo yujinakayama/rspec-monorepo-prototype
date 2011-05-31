@@ -26,6 +26,8 @@ require 'rspec/core/example_group'
 require 'rspec/core/version'
 require 'rspec/core/errors'
 
+require 'rspec/autorun' if $0.split(File::SEPARATOR).last == 'rcov'
+
 module RSpec
   autoload :Matchers, 'rspec/matchers'
 
@@ -49,10 +51,24 @@ module RSpec
     @world ||= RSpec::Core::World.new
   end
 
+  # Used internally to ensure examples get reloaded between multiple runs in
+  # the same process.
+  def self.reset
+    world.reset
+    configuration.reset
+  end
+
   def self.configuration
     @configuration ||= RSpec::Core::Configuration.new
   end
 
+  # Yields the global configuration object
+  #
+  # == Examples
+  #
+  # RSpec.configure do |config|
+  #   config.format = 'documentation'
+  # end
   def self.configure
     warn_about_deprecated_configure if RSpec.world.example_groups.any?
     yield configuration if block_given?

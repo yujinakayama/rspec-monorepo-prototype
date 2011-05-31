@@ -21,9 +21,16 @@ module RSpec::Core
     end
 
     describe "#run" do
+      let(:err) { StringIO.new }
+      let(:out) { StringIO.new }
+
+      it "resets world and configuration" do
+        RSpec.configuration.should_receive(:reset)
+        RSpec.world.should_receive(:reset)
+        RSpec::Core::Runner.run([], err, out)
+      end
+
       context "with --drb or -X" do
-        let(:err) { StringIO.new }
-        let(:out) { StringIO.new }
 
         before(:each) do
           @options = RSpec::Core::ConfigurationOptions.new(%w[--drb --drb-port 8181 --color])
