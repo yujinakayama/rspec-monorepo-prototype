@@ -1,4 +1,3 @@
-require 'rspec/core/dsl'
 require 'rspec/core/extensions'
 require 'rspec/core/load_path'
 require 'rspec/core/deprecation'
@@ -40,17 +39,14 @@ module RSpec
     end
   end
 
-  # Used internally to determine what to do when a SIGINT is received
   def self.wants_to_quit
     world.wants_to_quit
   end
 
-  # Used internally to determine what to do when a SIGINT is received
   def self.wants_to_quit=(maybe)
     world.wants_to_quit=(maybe)
   end
 
-  # Internal container for global non-configuration data
   def self.world
     @world ||= RSpec::Core::World.new
   end
@@ -62,7 +58,6 @@ module RSpec
     configuration.reset
   end
 
-  # Returns the global configuration object
   def self.configuration
     @configuration ||= RSpec::Core::Configuration.new
   end
@@ -79,7 +74,6 @@ module RSpec
     yield configuration if block_given?
   end
 
-  # Used internally to clear remaining groups when fail_fast is set
   def self.clear_remaining_example_groups
     world.example_groups.clear
   end
