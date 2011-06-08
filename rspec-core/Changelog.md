@@ -1,8 +1,27 @@
-### Dev
+### dev
+
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.6.4...master)
+
+* Enhancements
+  * Add example.exception (useful for extensions)
+
+### 2.6.4 / 2011-06-06
+
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.6.3...v2.6.4)
+
+NOTE: RSpec's release policy dictates that there should not be new
+functionality in patch releases, but this minor enhancement slipped in by
+accident.  As it doesn't add a new API, we decided to leave it in rather than
+roll back this release.
+
+* Enhancements
+    * Add summary of commands to run individual failed examples.
 
 * Bug fixes
-  * Support exclusion filters in DRb. (Yann Lugrin)
-  * Fix --example escaping when run over DRb. (Elliot Winkler)
+    * Support exclusion filters in DRb. (Yann Lugrin)
+    * Fix --example escaping when run over DRb. (Elliot Winkler)
+    * Use standard ANSI codes for color formatting so colors work in a wider set
+      of color schemes.
 
 ### 2.6.3 / 2011-05-24
 
