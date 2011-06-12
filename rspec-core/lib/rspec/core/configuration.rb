@@ -38,6 +38,7 @@ module RSpec
       add_setting :tty
       add_setting :treat_symbols_as_metadata_keys_with_true_values, :default => false
       add_setting :expecting_with_rspec
+      add_setting :default_path, :default => 'spec'
 
       CONDITIONAL_FILTERS = {
         :if     => lambda { |value, metadata| metadata.has_key?(:if) && !value },
@@ -297,10 +298,17 @@ EOM
       end
 
       def files_or_directories_to_run=(*files)
-        self.files_to_run = files.flatten.collect do |file|
+        files = files.flatten
+        files << default_path if files.empty? && default_path
+        self.files_to_run = get_files_to_run(files)
+      end
+
+      def get_files_to_run(files)
+        patterns = pattern.split(",")
+        files.map do |file|
           if File.directory?(file)
-            pattern.split(",").collect do |pattern|
-              Dir["#{file}/#{pattern.strip}"]
+            patterns.map do |pattern|
+              Dir["#{file}/{#{pattern.strip}}"]
             end
           else
             if file =~ /(\:(\d+))$/
@@ -360,6 +368,7 @@ EOM
       def inclusion_filter
         settings[:inclusion_filter] || {}
       end
+
       def filter_run_including(*args)
         force_overwrite = if args.last.is_a?(Hash) || args.last.is_a?(Symbol)
           false
@@ -475,7 +484,7 @@ MESSAGE
           end
         end
       end
-
+      
       def string_const?(str)
         str.is_a?(String) && /\A[A-Z][a-zA-Z0-9_:]*\z/ =~ str
       end
