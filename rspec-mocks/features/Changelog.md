@@ -2,7 +2,6 @@
 
 * Bug fixes
   * pass a hash to `any_instance.stub`. (Justin Ko)
-  * allow :to_ary to be called without raising NoMethodError (Mikhail Dieterle)
 
 ### 2.6.0 / 2011-05-12
 

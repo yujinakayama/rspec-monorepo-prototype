@@ -64,12 +64,7 @@ module RSpec
       end
 
       with_yaml_loaded do
-        compiled_with_psych = begin
-          require 'psych'
-          true
-        rescue LoadError => e
-          false
-        end
+        compiled_with_psych = RbConfig::CONFIG['configure_args'] =~ /with-libyaml/
 
         if compiled_with_psych
           context 'using Syck as the YAML engine' do

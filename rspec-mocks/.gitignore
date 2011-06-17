@@ -8,5 +8,4 @@ tmp
 rerun.txt
 Gemfile.lock
 .bundle
-*.rbc
-.yardoc
+.idea
