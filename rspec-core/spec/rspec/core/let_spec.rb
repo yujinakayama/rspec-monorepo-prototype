@@ -12,13 +12,26 @@ describe "#let" do
     end.new
   end
 
+  let(:nil_value) do
+    @nil_value_count += 1
+    nil
+  end
+
   it "generates an instance method" do
-    counter.count.should == 1
+    counter.count.should eq(1)
   end
 
   it "caches the value" do
-    counter.count.should == 1
-    counter.count.should == 2
+    counter.count.should eq(1)
+    counter.count.should eq(2)
+  end
+
+  it "caches a nil value" do
+    @nil_value_count = 0
+    nil_value
+    nil_value
+
+    @nil_value_count.should eq(1)
   end
 end
 
@@ -37,6 +50,6 @@ describe "#let!" do
   end
 
   it "does not interfere between tests" do
-    Creator.count.should == 1
+    Creator.count.should eq(1)
   end
 end
