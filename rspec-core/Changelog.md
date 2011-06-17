@@ -3,7 +3,13 @@
 [full changelog](http://github.com/rspec/rspec-core/compare/v2.6.4...master)
 
 * Enhancements
-  * Add example.exception (useful for extensions)
+  * Add example.exception (David Chelimsky)
+  * --default_path command line option (Justin Ko)
+  * support multiple --line_number options (David J. Hamilton)
+      * also supports path/to/file.rb:5:9 (runs examples on lines 5 and 9)
+
+* Bug fixes
+  * Only eval `let` block once even if it returns `nil` (Adam Meehan)
 
 ### 2.6.4 / 2011-06-06
 

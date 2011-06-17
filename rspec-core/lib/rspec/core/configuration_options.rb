@@ -9,9 +9,7 @@ module RSpec
       end
 
       def configure(config)
-        keys = options.keys
-        keys.unshift(:requires) if keys.delete(:requires)
-        keys.unshift(:libs)     if keys.delete(:libs)
+        keys = order(options.keys, :libs, :requires, :default_path)
 
         formatters = options[:formatters] if keys.delete(:formatters)
 
@@ -31,7 +29,6 @@ module RSpec
         argv << "--backtrace"    if options[:full_backtrace]
         argv << "--tty"          if options[:tty]
         argv << "--fail-fast"    if options[:fail_fast]
-        argv << "--line_number"  << options[:line_number]             if options[:line_number]
         argv << "--options"      << options[:custom_options_file]     if options[:custom_options_file]
         if options[:full_description]
           # The argument to --example is regexp-escaped before being stuffed
@@ -39,6 +36,9 @@ module RSpec
           # Hence, merely grabbing the source of this regexp will retain the
           # backslashes, so we must remove them.
           argv << "--example" << options[:full_description].source.delete('\\')
+        end
+        if options[:line_numbers]
+          argv += options[:line_numbers].inject([]){|a,l| a << "--line_number" << l}
         end
         if options[:filter]
           options[:filter].each_pair do |k, v|
@@ -70,6 +70,13 @@ module RSpec
       end
 
     private
+
+      def order(keys, *ordered)
+        ordered.reverse.each do |key|
+          keys.unshift(key) if keys.delete(key)
+        end
+        keys
+      end
 
       def file_options
         custom_options_file ? custom_options : global_options.merge(local_options)

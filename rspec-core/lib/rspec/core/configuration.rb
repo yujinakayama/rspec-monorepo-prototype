@@ -38,6 +38,7 @@ module RSpec
       add_setting :tty
       add_setting :treat_symbols_as_metadata_keys_with_true_values, :default => false
       add_setting :expecting_with_rspec
+      add_setting :default_path, :default => 'spec'
 
       CONDITIONAL_FILTERS = {
         :if     => lambda { |value, metadata| metadata.has_key?(:if) && !value },
@@ -266,8 +267,18 @@ EOM
         end
       end
 
-      def line_number=(line_number)
-        filter_run({ :line_number => line_number.to_i }, true)
+      # Run examples defined on +line_numbers+ in all files to run.
+      def line_numbers=(line_numbers)
+        filter_run({ :line_numbers => line_numbers.map{|l| l.to_i} }, true)
+      end
+
+      def add_location(file_path, line_numbers)
+        # Filter locations is a hash of expanded paths to arrays of line numbers
+        # to match against.
+        #
+        filter_locations = ((self.filter || {})[:locations] ||= {})
+        (filter_locations[File.expand_path(file_path)] ||= []).push *line_numbers
+        filter_run({ :locations => filter_locations })
       end
 
       def full_description=(description)
@@ -297,15 +308,22 @@ EOM
       end
 
       def files_or_directories_to_run=(*files)
-        self.files_to_run = files.flatten.collect do |file|
+        files = files.flatten
+        files << default_path if files.empty? && default_path
+        self.files_to_run = get_files_to_run(files)
+      end
+
+      def get_files_to_run(files)
+        patterns = pattern.split(",")
+        files.map do |file|
           if File.directory?(file)
-            pattern.split(",").collect do |pattern|
-              Dir["#{file}/#{pattern.strip}"]
+            patterns.map do |pattern|
+              Dir["#{file}/{#{pattern.strip}}"]
             end
           else
-            if file =~ /(\:(\d+))$/
-              self.line_number = $2
-              file.sub($1,'')
+            if file =~ /^(.*?)((?:\:\d+)+)$/
+              self.add_location $1, $2[1..-1].split(":").map{|n| n.to_i}
+              $1
             else
               file
             end
@@ -360,6 +378,7 @@ EOM
       def inclusion_filter
         settings[:inclusion_filter] || {}
       end
+
       def filter_run_including(*args)
         force_overwrite = if args.last.is_a?(Hash) || args.last.is_a?(Symbol)
           false
@@ -369,7 +388,7 @@ EOM
 
         options = build_metadata_hash_from(args)
 
-        if inclusion_filter[:line_number] || inclusion_filter[:full_description]
+        if inclusion_filter and inclusion_filter[:line_numbers] || inclusion_filter[:full_description]
           warn "Filtering by #{options.inspect} is not possible since " \
                "you are already filtering by #{inclusion_filter.inspect}"
         else
@@ -475,7 +494,7 @@ MESSAGE
           end
         end
       end
-
+      
       def string_const?(str)
         str.is_a?(String) && /\A[A-Z][a-zA-Z0-9_:]*\z/ =~ str
       end
