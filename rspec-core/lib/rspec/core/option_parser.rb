@@ -132,6 +132,11 @@ module RSpec::Core
         parser.on('--tty', 'Used internally by rspec when sending commands to other processes') do |o|
           options[:tty] = true
         end
+        
+        parser.on('--default_path PATH', 'Set the default path where RSpec looks for examples.',
+                                         'Can be a path to a file or a directory') do |path|
+          options[:default_path] = path
+        end
       end
     end
   end
