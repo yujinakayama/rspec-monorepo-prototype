@@ -9,39 +9,35 @@ Feature: text formatter
       """
       describe String do
         it "has a failing example" do
-          "foo".reverse.should eq("ofo")
+          "foo".reverse.should == "ofo"
         end
       end
       """
     And a file named "integer_spec.rb" with:
       """
+      require 'rspec/autorun'
+
       describe Integer do
         it "has a failing example" do
-          (7 + 5).should eq(11)
+          (7 + 5).should == 11
         end
       end
       """
-    When I run `rspec integer_spec.rb string_spec.rb`
+    When I run `ruby ./integer_spec.rb ./string_spec.rb`
     Then the backtrace-normalized output should contain:
       """
       Failures:
-      
+
         1) Integer has a failing example
-           Failure/Error: (7 + 5).should eq(11)
-             
-             expected 11
-                  got 12
-             
-             (compared using ==)
-           # ./integer_spec.rb:3
-      
+           Failure/Error: (7 + 5).should == 11
+             expected: 11
+                  got: 12 (using ==)
+           # ./integer_spec.rb:5
+
         2) String has a failing example
-           Failure/Error: "foo".reverse.should eq("ofo")
-             
-             expected "ofo"
-                  got "oof"
-             
-             (compared using ==)
+           Failure/Error: "foo".reverse.should == "ofo"
+             expected: "ofo"
+                  got: "oof" (using ==)
            # ./string_spec.rb:3
       """
 

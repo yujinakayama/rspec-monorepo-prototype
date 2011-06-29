@@ -37,7 +37,7 @@ end
 
 describe "#let!" do
   let!(:creator) do
-    Class.new do
+    class Creator
       @count = 0
       def self.count
         @count += 1
@@ -46,10 +46,10 @@ describe "#let!" do
   end
 
   it "evaluates the value non-lazily" do
-    lambda { creator.count }.should_not raise_error
+    lambda { Creator.count }.should_not raise_error
   end
 
   it "does not interfere between tests" do
-    creator.count.should eq(1)
+    Creator.count.should eq(1)
   end
 end

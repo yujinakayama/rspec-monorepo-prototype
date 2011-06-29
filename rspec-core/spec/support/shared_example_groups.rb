@@ -7,12 +7,12 @@ shared_examples_for "metadata hash builder" do
     end
 
     it 'treats symbols as metadata keys with a true value' do
-      hash[:foo].should be(true)
-      hash[:bar].should be(true)
+      hash[:foo].should == true
+      hash[:bar].should == true
     end
 
     it 'still processes hash values normally' do
-      hash[:bazz].should be(23)
+      hash[:bazz].should == 23
     end
   end
 
