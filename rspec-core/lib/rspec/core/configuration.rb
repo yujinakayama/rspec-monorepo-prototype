@@ -6,8 +6,6 @@ module RSpec
     class Configuration
       include RSpec::Core::Hooks
 
-      class MustBeConfiguredBeforeExampleGroupsError < StandardError; end
-
       def self.add_setting(name, opts={})
         if opts[:alias]
           alias_method name, opts[:alias]
@@ -162,7 +160,6 @@ module RSpec
       #   teardown_mocks_for_rspec
       #     - called after verify_mocks_for_rspec (even if there are errors)
       def mock_framework=(framework)
-        assert_no_example_groups_defined(:mock_framework)
         case framework
         when Module
           settings[:mock_framework] = framework
@@ -203,7 +200,6 @@ module RSpec
       # Given :stdlib, configures test/unit/assertions
       # Given both, configures both
       def expect_with(*frameworks)
-        assert_no_example_groups_defined(:expect_with)
         settings[:expectation_frameworks] = []
         frameworks.each do |framework|
           case framework
@@ -458,15 +454,6 @@ EOM
       end
 
     private
-
-      def assert_no_example_groups_defined(config_option)
-        if RSpec.world.example_groups.any?
-          raise MustBeConfiguredBeforeExampleGroupsError.new(
-            "RSpec's #{config_option} configuration option must be configured before " +
-            "any example groups are defined, but you have already defined a group."
-          )
-        end
-      end
 
       def raise_if_rspec_1_is_loaded
         if defined?(Spec) && defined?(Spec::VERSION::MAJOR) && Spec::VERSION::MAJOR == 1
