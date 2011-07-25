@@ -51,7 +51,7 @@ module RSpec
         end
 
         def comparing_with_matcher?(actual, expected)
-          actual.is_a?(Array) && expected.respond_to?(:matches?)
+          actual.is_a?(Array) && expected.is_a?(Matcher)
         end
       end
     end
