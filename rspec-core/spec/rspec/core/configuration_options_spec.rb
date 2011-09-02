@@ -78,6 +78,14 @@ describe RSpec::Core::ConfigurationOptions do
     it "sets :color_enabled => false" do
       parse_options('--no-color').should include(:color_enabled => false)
     end
+
+    it "overrides previous :color_enabled => true" do
+      parse_options('--color', '--no-color').should include(:color_enabled => false)
+    end
+
+    it "gets overriden by a subsequent :color_enabled => true" do
+      parse_options('--no-color', '--color').should include(:color_enabled => true)
+    end
   end
 
   describe "-I" do
@@ -204,6 +212,21 @@ describe RSpec::Core::ConfigurationOptions do
 
   end
 
+  describe "--no-drb" do
+    it "disables drb" do
+      parse_options("--no-drb").should include(:drb => false)
+    end
+
+    it "overrides a previous drb => true" do
+      parse_options("--drb", "--no-drb").should include(:drb => false)
+    end
+
+    it "gets overriden by a subsquent drb => true" do
+      parse_options("--no-drb", "--drb").should include(:drb => true)
+    end
+  end
+
+
   describe "files_or_directories_to_run" do
     it "parses files from '-c file.rb dir/file.rb'" do
       parse_options("-c", "file.rb", "dir/file.rb").should include(:files_or_directories_to_run => ["file.rb", "dir/file.rb"])
@@ -256,7 +279,7 @@ describe RSpec::Core::ConfigurationOptions do
       it "includes --example" do
         config_options_object(*%w[--example foo]).drb_argv.should include("--example", "foo")
       end
-      
+
       it "unescapes characters which were escaped upon storing --example originally" do
         config_options_object("--example", "foo\\ bar").drb_argv.should include("--example", "foo bar")
       end
