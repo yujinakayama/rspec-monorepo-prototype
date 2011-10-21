@@ -10,12 +10,22 @@ module RSpec
       end
     end
 
+    # Passes if actual is truthy (anything but false or nil)
+    def be_true
+      BeTrue.new
+    end
+
     class BeFalse
       include BaseMatcher
 
       def matches?(actual)
         !super(actual)
       end
+    end
+
+    # Passes if actual is falsy (false or nil)
+    def be_false
+      BeFalse.new
     end
 
     class BeNil
@@ -32,6 +42,11 @@ module RSpec
       def failure_message_for_should_not
         "expected: not nil\n     got: nil"
       end
+    end
+
+    # Passes if actual is nil
+    def be_nil
+      BeNil.new
     end
 
     class Be
