@@ -240,6 +240,45 @@ module RSpec
       BeNil.new
     end
 
+    def exist(*args)
+      Exist.new(*args)
+    end
+
+    # Passes if actual.kind_of?(expected)
+    #
+    # == Examples
+    #
+    #   5.should be_kind_of(Fixnum)
+    #   5.should be_kind_of(Numeric)
+    #   5.should_not be_kind_of(Float)
+    def be_a_kind_of(expected)
+      BeAKindOf.new(expected)
+    end
+    
+    alias_method :be_kind_of, :be_a_kind_of
+
+    # Passes if actual.instance_of?(expected)
+    #
+    # == Examples
+    #
+    #   5.should be_instance_of(Fixnum)
+    #   5.should_not be_instance_of(Numeric)
+    #   5.should_not be_instance_of(Float)
+    def be_an_instance_of(expected)
+      BeAnInstanceOf.new(expected)
+    end
+    
+    alias_method :be_instance_of, :be_an_instance_of
+
+    # Passes if actual == expected +/- delta
+    #
+    # == Examples
+    #
+    #   result.should be_within(0.5).of(3.0)
+    #   result.should_not be_within(0.5).of(3.0)
+    def be_within(delta)
+      BeWithin.new(delta)
+    end
   end
 end
 
