@@ -95,9 +95,6 @@ module RSpec
         def dump_pending
         end
 
-        def seed(number)
-        end
-
         # This method is invoked at the very end. Allows the formatter to clean up, like closing open streams.
         def close
           restore_sync_output
@@ -145,6 +142,7 @@ module RSpec
             match = line.match(/(.+?):(\d+)(|:\d+)/)
             match && match[1].downcase == path.downcase
           }
+
         end
 
         def start_sync_output

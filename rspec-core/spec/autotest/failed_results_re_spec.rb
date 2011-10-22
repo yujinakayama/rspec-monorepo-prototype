@@ -9,7 +9,7 @@ describe "failed_results_re for autotest" do
     reporter = RSpec::Core::Reporter.new(formatter)
 
     group.run(reporter)
-    reporter.report(1, nil) {}
+    reporter.report(1) {}
     io.string
   end
 
