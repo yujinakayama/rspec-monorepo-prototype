@@ -147,8 +147,10 @@ MESSAGE
 
       # Returns the configured mock framework adapter module
       def mock_framework
-        mock_with :rspec unless @mock_framework
-        @mock_framework
+        @mock_framework ||= begin
+                              require 'rspec/core/mocking/with_rspec'
+                              RSpec::Core::MockFrameworkAdapter
+                            end
       end
 
       # Delegates to mock_framework=(framework)
@@ -179,9 +181,10 @@ MESSAGE
       #   teardown_mocks_for_rspec
       #     - called after verify_mocks_for_rspec (even if there are errors)
       def mock_with(framework)
-        framework_module = case framework
+        assert_no_example_groups_defined(:mock_framework)
+        case framework
         when Module
-          framework
+          @mock_framework = framework
         when String, Symbol
           require case framework.to_s
                   when /rspec/i
@@ -195,18 +198,8 @@ MESSAGE
                   else
                     'rspec/core/mocking/with_absolutely_nothing'
                   end
-          RSpec::Core::MockFrameworkAdapter
+          @mock_framework = RSpec::Core::MockFrameworkAdapter
         end
-
-        new_name, old_name = [framework_module, @mock_framework].map do |mod|
-          mod.respond_to?(:framework_name) ?  mod.framework_name : :unnamed
-        end
-
-        unless new_name == old_name
-          assert_no_example_groups_defined(:mock_framework)
-        end
-
-        @mock_framework = framework_module
       end
 
       # Returns the configured expectation framework adapter module(s)
@@ -228,6 +221,9 @@ MESSAGE
       # Given :stdlib, configures test/unit/assertions
       # Given both, configures both
       def expect_with(*frameworks)
+        assert_no_example_groups_defined(:expect_with)
+        @expectation_frameworks.clear
+
         modules = frameworks.map do |framework|
           case framework
           when :rspec
@@ -242,11 +238,6 @@ MESSAGE
           end
         end
 
-        if (modules - @expectation_frameworks).any?
-          assert_no_example_groups_defined(:expect_with)
-        end
-
-        @expectation_frameworks.clear
         @expectation_frameworks.push(*modules)
       end
 
