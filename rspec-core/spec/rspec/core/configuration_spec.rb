@@ -756,7 +756,7 @@ module RSpec::Core
     end
 
     describe "line_numbers=" do
-      before { config.filter_manager.stub(:warn) }
+      before { config.instance_variable_get("@filter").stub(:warn) }
 
       it "sets the line numbers" do
         config.line_numbers = ['37']
