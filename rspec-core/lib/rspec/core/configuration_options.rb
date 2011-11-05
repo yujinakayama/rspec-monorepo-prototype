@@ -12,7 +12,8 @@ module RSpec
       def configure(config)
         formatters = options.delete(:formatters)
 
-        config.filter_manager = filter_manager
+        # FIXME
+        config.instance_variable_set("@filter", filter)
 
         order(options.keys, :libs, :requires, :default_path, :pattern).each do |key|
           force?(key) ? config.force(key => options[key]) : config.send("#{key}=", options[key]) 
@@ -28,11 +29,11 @@ module RSpec
       end
 
       def drb_argv
-        DrbOptions.new(options, filter_manager).options
+        DrbOptions.new(options, filter).options
       end
 
-      def filter_manager
-        @filter_manager ||= FilterManager.new
+      def filter
+        @filter ||= Filter.new
       end
 
     private
@@ -52,8 +53,8 @@ module RSpec
 
       def extract_filters_from(*configs)
         configs.compact.each do |config|
-          filter_manager.include config.delete(:inclusion_filter) if config.has_key?(:inclusion_filter)
-          filter_manager.exclude config.delete(:exclusion_filter) if config.has_key?(:exclusion_filter)
+          filter.include config.delete(:inclusion_filter) if config.has_key?(:inclusion_filter)
+          filter.exclude config.delete(:exclusion_filter) if config.has_key?(:exclusion_filter)
         end
       end
 
