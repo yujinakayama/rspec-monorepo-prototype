@@ -2,7 +2,6 @@ require 'erb'
 
 module RSpec
   module Core
-    # @private
     class ConfigurationOptions
       attr_reader :options
 

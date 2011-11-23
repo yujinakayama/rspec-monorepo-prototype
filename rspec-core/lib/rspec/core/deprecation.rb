@@ -1,4 +1,5 @@
 module RSpec
+
   class << self
     # @api private
     #

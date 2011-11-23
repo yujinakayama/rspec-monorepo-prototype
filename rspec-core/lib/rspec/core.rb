@@ -1,10 +1,8 @@
 if defined?(require_relative)
-  # @private
   def require_rspec(path)
     require_relative path
   end
 else
-  # @private
   def require_rspec(path)
     require "rspec/#{path}"
   end
@@ -44,13 +42,13 @@ module RSpec
   autoload :Matchers,      'rspec/matchers'
   autoload :SharedContext, 'rspec/core/shared_context'
 
-  # @private
-  def self.wants_to_quit
+  # @api private
   # Used internally to determine what to do when a SIGINT is received
+  def self.wants_to_quit
     world.wants_to_quit
   end
 
-  # @private
+  # @api private
   # Used internally to determine what to do when a SIGINT is received
   def self.wants_to_quit=(maybe)
     world.wants_to_quit=(maybe)
@@ -93,7 +91,7 @@ module RSpec
     yield configuration if block_given?
   end
 
-  # @private
+  # @api private
   # Used internally to clear remaining groups when fail_fast is set
   def self.clear_remaining_example_groups
     world.example_groups.clear
