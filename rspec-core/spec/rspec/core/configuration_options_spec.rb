@@ -140,9 +140,9 @@ describe RSpec::Core::ConfigurationOptions do
 
   describe "--format, -f" do
     it "sets :formatter" do
-      [['--format', 'd'], ['-f', 'd'], '-fd'].each do |args|
-        parse_options(*args).should include(:formatters => [['d']])
-      end
+      parse_options('--format', 'd').should include(:formatters => [['d']])
+      parse_options('-f', 'd').should include(:formatters => [['d']])
+      parse_options('-fd').should include(:formatters => [['d']])
     end
 
     example "can accept a class name" do
@@ -202,13 +202,13 @@ describe RSpec::Core::ConfigurationOptions do
 
   describe "--failure-exit-code" do
     it "sets :failure_exit_code" do
-      parse_options('--failure-exit-code', '0').should include(:failure_exit_code => 0)
-      parse_options('--failure-exit-code', '1').should include(:failure_exit_code => 1)
-      parse_options('--failure-exit-code', '2').should include(:failure_exit_code => 2)
+      (0..2).each do |code|
+        parse_options('--failure-exit-code', code.to_s)[:failure_exit_code].should == code
+      end
     end
 
     it "overrides previous :failure_exit_code" do
-      parse_options('--failure-exit-code', '2', '--failure-exit-code', '3').should include(:failure_exit_code => 3)
+      parse_options('--failure-exit-code', '2', '--failure-exit-code', '3')[:failure_exit_code].should == 3
     end
   end
 
