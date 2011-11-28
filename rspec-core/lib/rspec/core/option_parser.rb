@@ -154,7 +154,14 @@ FILTERING
           name = name.to_sym
 
           options[filter_type] ||= {}
-          options[filter_type][name] = value.nil? ? true : eval(value) rescue value
+          options[filter_type][name] = case value
+                                       when /^(true|false|nil)$/
+                                         eval(value)
+                                       when nil
+                                         true
+                                       else
+                                         value
+                                       end
         end
 
         parser.on('--default_path PATH', 'Set the default path where RSpec looks for examples.',

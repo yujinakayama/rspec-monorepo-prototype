@@ -140,9 +140,9 @@ describe RSpec::Core::ConfigurationOptions do
 
   describe "--format, -f" do
     it "sets :formatter" do
-      [['--format', 'd'], ['-f', 'd'], '-fd'].each do |args|
-        parse_options(*args).should include(:formatters => [['d']])
-      end
+      parse_options('--format', 'd').should include(:formatters => [['d']])
+      parse_options('-f', 'd').should include(:formatters => [['d']])
+      parse_options('-fd').should include(:formatters => [['d']])
     end
 
     example "can accept a class name" do
@@ -279,16 +279,13 @@ describe RSpec::Core::ConfigurationOptions do
     end
 
     it "parses dir and files from 'spec/file1_spec.rb, spec/file2_spec.rb'" do
-      parse_options("dir", "spec/file1_spec.rb", "spec/file2_spec.rb").should include(:files_or_directories_to_run => ["dir", "spec/file1_spec.rb", "spec/file2_spec.rb"])
+      parse_options("dir", "spec/file1_spec.rb", "spec/file2_spec.rb")
+        .should include(:files_or_directories_to_run => ["dir", "spec/file1_spec.rb", "spec/file2_spec.rb"])
     end
 
     it "provides no files or directories if spec directory does not exist" do
       FileTest.stub(:directory?).with("spec").and_return false
       parse_options().should include(:files_or_directories_to_run => [])
-    end
-
-    it "parses dir and files from 'spec/file1_spec.rb, spec/file2_spec.rb'" do
-      parse_options("dir", "spec/file1_spec.rb", "spec/file2_spec.rb").should include(:files_or_directories_to_run => ["dir", "spec/file1_spec.rb", "spec/file2_spec.rb"])
     end
   end
 
