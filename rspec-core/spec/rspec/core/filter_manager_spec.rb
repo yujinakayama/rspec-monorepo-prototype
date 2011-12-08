@@ -83,31 +83,25 @@ module RSpec::Core
     end
 
     describe "#prune" do
-      def filterable_object_with(args = {})
-        object = double('a filterable object')
-        object.stub(:any_apply?) { |f| Metadata.new(args).any_apply?(f) }
-        object
-      end
-
       it "includes objects with tags matching inclusions" do
-        included = filterable_object_with({:foo => :bar})
-        excluded = filterable_object_with
+        included = RSpec::Core::Metadata.new({:foo => :bar})
+        excluded = RSpec::Core::Metadata.new
         filter_manager = FilterManager.new
         filter_manager.include :foo => :bar
         filter_manager.prune([included, excluded]).should eq([included])
       end
 
       it "excludes objects with tags matching exclusions" do
-        included = filterable_object_with
-        excluded = filterable_object_with({:foo => :bar})
+        included = RSpec::Core::Metadata.new
+        excluded = RSpec::Core::Metadata.new({:foo => :bar})
         filter_manager = FilterManager.new
         filter_manager.exclude :foo => :bar
         filter_manager.prune([included, excluded]).should eq([included])
       end
 
       it "prefers exclusion when matches previously set inclusion" do
-        included = filterable_object_with
-        excluded = filterable_object_with({:foo => :bar})
+        included = RSpec::Core::Metadata.new
+        excluded = RSpec::Core::Metadata.new({:foo => :bar})
         filter_manager = FilterManager.new
         filter_manager.include :foo => :bar
         filter_manager.exclude :foo => :bar
@@ -115,8 +109,8 @@ module RSpec::Core
       end
 
       it "prefers inclusion when matches previously set exclusion" do
-        included = filterable_object_with({:foo => :bar})
-        excluded = filterable_object_with
+        included = RSpec::Core::Metadata.new({:foo => :bar})
+        excluded = RSpec::Core::Metadata.new
         filter_manager = FilterManager.new
         filter_manager.exclude :foo => :bar
         filter_manager.include :foo => :bar
@@ -124,8 +118,8 @@ module RSpec::Core
       end
 
       it "prefers previously set inclusion when exclusion matches but has lower priority" do
-        included = filterable_object_with({:foo => :bar})
-        excluded = filterable_object_with
+        included = RSpec::Core::Metadata.new({:foo => :bar})
+        excluded = RSpec::Core::Metadata.new
         filter_manager = FilterManager.new
         filter_manager.include :foo => :bar
         filter_manager.exclude_with_low_priority :foo => :bar
@@ -133,8 +127,8 @@ module RSpec::Core
       end
 
       it "prefers previously set exclusion when inclusion matches but has lower priority" do
-        included = filterable_object_with
-        excluded = filterable_object_with({:foo => :bar})
+        included = RSpec::Core::Metadata.new
+        excluded = RSpec::Core::Metadata.new({:foo => :bar})
         filter_manager = FilterManager.new
         filter_manager.exclude :foo => :bar
         filter_manager.include_with_low_priority :foo => :bar
