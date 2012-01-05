@@ -242,7 +242,7 @@ module RSpec
 
       # @private
       def self.children
-        @children ||= [].extend(Extensions::Ordered::ExampleGroups)
+        @children ||= [].extend(Extensions::Ordered)
       end
 
       # @private
