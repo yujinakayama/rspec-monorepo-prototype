@@ -799,6 +799,68 @@ EOM
         order.to_s.match(/rand/)
       end
 
+      # Sets a strategy by which to order examples.
+      #
+      # @example
+      #   RSpec.configure do |config|
+      #     config.order_examples do |examples|
+      #       examples.reverse
+      #     end
+      #   end
+      #
+      # @see #order_groups
+      # @see #order_groups_and_examples
+      # @see #order=
+      # @see #seed=
+      def order_examples(&block)
+        @example_ordering_block = block
+      end
+
+      # @private
+      def example_ordering_block
+        @example_ordering_block ||= lambda { |examples| examples }
+      end
+
+      # Sets a strategy by which to order groups.
+      #
+      # @example
+      #   RSpec.configure do |config|
+      #     config.order_groups do |groups|
+      #       groups.reverse
+      #     end
+      #   end
+      #
+      # @see #order_examples
+      # @see #order_groups_and_examples
+      # @see #order=
+      # @see #seed=
+      def order_groups(&block)
+        @group_ordering_block = block
+      end
+
+      # @private
+      def group_ordering_block
+        @group_ordering_block ||= lambda { |groups| groups }
+      end
+
+      # Sets a strategy by which to order groups and examples.
+      #
+      # @example
+      #   RSpec.configure do |config|
+      #     config.order_groups_and_examples do |groups_or_examples|
+      #       groups_or_examples.reverse
+      #     end
+      #   end
+      #
+      # @see #order_groups
+      # @see #order_examples
+      # @see #order=
+      # @see #seed=
+      def order_groups_and_examples(&block)
+        order_groups(&block)
+        order_examples(&block)
+      end
+
     private
 
       def get_files_to_run(paths)
@@ -923,6 +985,7 @@ MESSAGE
       end
 
       def order_and_seed_from_seed(value)
+        set_random_ordering
         @order, @seed = 'rand', value.to_i
       end
 
@@ -935,8 +998,22 @@ MESSAGE
         order, seed = type.to_s.split(':')
         @order = order
         @seed  = seed = seed.to_i if seed
-        @order, @seed = nil, nil if order == 'default'
+
+        if randomize?
+          set_random_ordering
+        elsif order == 'default'
+          @order, @seed = nil, nil
+          order_groups_and_examples { |list| list }
+        end
+
         return order, seed
+      end
+
+      def set_random_ordering
+        order_groups_and_examples do |list|
+          Kernel.srand seed
+          list.sort_by { Kernel.rand(list.size) }
+        end
       end
 
     end
