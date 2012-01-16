@@ -1,46 +1,14 @@
 require 'spec_helper'
 
 describe "an example" do
-  matcher :be_pending_with do |message|
-    match do |example|
-      example.pending? && example.metadata[:execution_result][:pending_message] == message
-    end
-
-    failure_message_for_should do |example|
-      "expected: example pending with #{message.inspect}\n     got: #{example.metadata[:execution_result][:pending_message].inspect}"
-    end
-  end
-
-  context "declared pending with metadata" do
-    it "uses the value assigned to :pending as the message" do
-      group = RSpec::Core::ExampleGroup.describe('group') do
-        example "example", :pending => 'just because' do
-        end
-      end
-      example = group.examples.first
-      example.run(group.new, stub.as_null_object)
-      example.should be_pending_with('just because')
-    end
-
-    it "sets the message to 'No reason given' if :pending => true" do
-      group = RSpec::Core::ExampleGroup.describe('group') do
-        example "example", :pending => true do
-        end
-      end
-      example = group.examples.first
-      example.run(group.new, stub.as_null_object)
-      example.should be_pending_with('No reason given')
-    end
-  end
-
   context "with no block" do
-    it "is listed as pending with 'Not yet implemented'" do
+    it "is listed as pending with 'Not Yet Implemented'" do
       group = RSpec::Core::ExampleGroup.describe('group') do
         it "has no block"
       end
       example = group.examples.first
       example.run(group.new, stub.as_null_object)
-      example.should be_pending_with('Not yet implemented')
+      example.should be_pending_with('Not Yet Implemented')
     end
   end
 
@@ -53,7 +21,7 @@ describe "an example" do
       end
       example = group.examples.first
       example.run(group.new, stub.as_null_object)
-      example.should be_pending_with(RSpec::Core::Pending::NO_REASON_GIVEN)
+      example.should be_pending_with(RSpec::Core::Pending::DEFAULT_MESSAGE)
     end
   end
 
@@ -126,7 +94,7 @@ describe "an example" do
         end
 
         it "is listed as pending with the default message when no message is given" do
-          run_example.should be_pending_with(RSpec::Core::Pending::NO_REASON_GIVEN)
+          run_example.should be_pending_with(RSpec::Core::Pending::DEFAULT_MESSAGE)
         end
       end
 
@@ -136,7 +104,7 @@ describe "an example" do
         end
 
         it "is listed as pending with the default message when no message is given" do
-          run_example(:if => true).should be_pending_with(RSpec::Core::Pending::NO_REASON_GIVEN)
+          run_example(:if => true).should be_pending_with(RSpec::Core::Pending::DEFAULT_MESSAGE)
         end
       end
 
@@ -160,7 +128,7 @@ describe "an example" do
         end
 
         it "is listed as pending with the default message when no message is given" do
-          run_example(:unless => false).should be_pending_with(RSpec::Core::Pending::NO_REASON_GIVEN)
+          run_example(:unless => false).should be_pending_with(RSpec::Core::Pending::DEFAULT_MESSAGE)
         end
       end
     end
@@ -182,15 +150,15 @@ describe "an example" do
 
       context "when given no options" do
         it "fails with a PendingExampleFixedError" do
-          run_example("just because").should fail_with(RSpec::Core::Pending::PendingExampleFixedError)
-          run_example.should                 fail_with(RSpec::Core::Pending::PendingExampleFixedError)
+          run_example("just because").should fail_with(RSpec::Core::PendingExampleFixedError)
+          run_example.should                 fail_with(RSpec::Core::PendingExampleFixedError)
         end
       end
 
       context "when given a truthy :if option" do
         it "fails with a PendingExampleFixedError" do
-          run_example("just because", :if => true).should fail_with(RSpec::Core::Pending::PendingExampleFixedError)
-          run_example(                :if => true).should fail_with(RSpec::Core::Pending::PendingExampleFixedError)
+          run_example("just because", :if => true).should fail_with(RSpec::Core::PendingExampleFixedError)
+          run_example(                :if => true).should fail_with(RSpec::Core::PendingExampleFixedError)
         end
       end
 
@@ -210,8 +178,8 @@ describe "an example" do
 
       context "when given a falsey :unless option" do
         it "fails with a PendingExampleFixedError" do
-          run_example("just because", :unless => false).should fail_with(RSpec::Core::Pending::PendingExampleFixedError)
-          run_example(                :unless => false).should fail_with(RSpec::Core::Pending::PendingExampleFixedError)
+          run_example("just because", :unless => false).should fail_with(RSpec::Core::PendingExampleFixedError)
+          run_example(                :unless => false).should fail_with(RSpec::Core::PendingExampleFixedError)
         end
       end
     end

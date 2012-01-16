@@ -1,9 +1,6 @@
 require 'spec_helper'
 
 describe 'command line', :ui do
-  let(:stderr) { StringIO.new }
-  let(:stdout) { StringIO.new }
-
   before :all do
     write_file 'spec/order_spec.rb', """
       describe 'group 1' do
@@ -57,11 +54,9 @@ describe 'command line', :ui do
 
   describe '--order rand' do
     it 'runs the examples and groups in a different order each time' do
-      run_command 'tmp/aruba/spec/order_spec.rb --order rand -f doc'
-      RSpec.configuration.seed = srand && srand # reset seed in same process
-      run_command 'tmp/aruba/spec/order_spec.rb --order rand -f doc'
+      2.times { run_command 'rspec spec/order_spec.rb --order rand -f doc' }
 
-      stdout.string.should match(/Randomized with seed \d+/)
+      all_output.should match(/Randomized with seed \d+/)
 
       top_level_groups      {|first_run, second_run| first_run.should_not eq(second_run)}
       nested_groups         {|first_run, second_run| first_run.should_not eq(second_run)}
@@ -72,9 +67,9 @@ describe 'command line', :ui do
 
   describe '--order rand:SEED' do
     it 'runs the examples and groups in the same order each time' do
-      2.times { run_command 'tmp/aruba/spec/order_spec.rb --order rand:123 -f doc' }
+      2.times { run_command 'rspec spec/order_spec.rb --order rand:123 -f doc' }
 
-      stdout.string.should match(/Randomized with seed 123/)
+      all_output.should match(/Randomized with seed 123/)
 
       top_level_groups      {|first_run, second_run| first_run.should eq(second_run)}
       nested_groups         {|first_run, second_run| first_run.should eq(second_run)}
@@ -85,9 +80,9 @@ describe 'command line', :ui do
 
   describe '--seed SEED' do
     it "forces '--order rand' and runs the examples and groups in the same order each time" do
-      2.times { run_command 'tmp/aruba/spec/order_spec.rb --seed 123 -f doc' }
+      2.times { run_command 'rspec spec/order_spec.rb --seed 123 -f doc' }
 
-      stdout.string.should match(/Randomized with seed \d+/)
+      all_output.should match(/Randomized with seed \d+/)
 
       top_level_groups      {|first_run, second_run| first_run.should eq(second_run)}
       nested_groups         {|first_run, second_run| first_run.should eq(second_run)}
@@ -100,18 +95,16 @@ describe 'command line', :ui do
     it "overrides --order rand with --order default" do
       write_file '.rspec', '--order rand'
 
-      run_command 'tmp/aruba/spec/order_spec.rb --order default -f doc'
+      run_command 'rspec spec/order_spec.rb --order default -f doc'
 
-      stdout.string.should_not match(/Randomized/)
+      all_output.should_not match(/Randomized/)
 
-      stdout.string.should match(
-        /group 1.*group 1 example 1.*group 1 example 2.*group 1-1.*group 1-2.*group 2.*/m
-      )
+      all_output.should match(/group 1.*group 1 example 1.*group 1 example 2.*group 1-1.*group 1-2.*group 2.*/m)
     end
   end
 
   def examples(group)
-    yield split_in_half(stdout.string.scan(/^\s+#{group} example.*$/))
+    yield split_in_half(all_stdout.scan(/^\s+#{group} example.*$/))
   end
 
   def top_level_groups
@@ -123,7 +116,7 @@ describe 'command line', :ui do
   end
 
   def example_groups_at_level(level)
-    split_in_half(stdout.string.scan(/^\s{#{level*2}}group.*$/))
+    split_in_half(all_stdout.scan(/^\s{#{level*2}}group.*$/))
   end
 
   def split_in_half(array)
@@ -132,6 +125,7 @@ describe 'command line', :ui do
   end
 
   def run_command(cmd)
-    RSpec::Core::Runner.run(cmd.split, stderr, stdout)
+    # Wraps aruba api - 2nd param is fail_on_error
+    run_simple cmd, false
   end
 end

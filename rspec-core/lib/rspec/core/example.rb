@@ -8,7 +8,7 @@ module RSpec
     # [around](Hooks#around-instance_method) hooks.
     # @see ExampleGroup
     class Example
-      # @private
+      # @api private
       #
       # Used to define methods that delegate to this example's metadata
       def self.delegate_to_metadata(*keys)
@@ -31,7 +31,7 @@ module RSpec
       attr_reader :metadata
 
       # @attr_reader
-      # @private
+      # @api private
       #
       # Returns the example_group_instance that provides the context for
       # running this example.
@@ -62,7 +62,7 @@ module RSpec
 
       alias_method :pending?, :pending
 
-      # @api private
+      # @api
       # @param example_group_instance the instance of an ExampleGroup subclass
       # instance_evals the block submitted to the constructor in the
       # context of the instance of ExampleGroup
@@ -105,7 +105,7 @@ module RSpec
         finish(reporter)
       end
 
-      # @private
+      # @api private
       #
       # Wraps the example block in a Proc so it can invoked using `run` or
       # `call` in [around](../Hooks#around-instance_method) hooks.
@@ -113,11 +113,11 @@ module RSpec
         Proc.new(&proc).extend(Procsy).with(metadata)
       end
 
-      # @private
+      # @api private
       module Procsy
         attr_reader :metadata
 
-        # @private
+        # @api private
         # @param [Proc]
         # Adds a `run` method to the extended Proc, allowing it to be invoked
         # in an [around](../Hooks#around-instance_method) hook using either
@@ -126,29 +126,24 @@ module RSpec
           def object.run; call; end
         end
 
-        # @private
+        # @api private
         def with(metadata)
           @metadata = metadata
           self
         end
       end
 
-      # @private
-      def any_apply?(filters)
-        metadata.any_apply?(filters)
-      end
-
-      # @private
+      # @api private
       def all_apply?(filters)
         @metadata.all_apply?(filters) || @example_group_class.all_apply?(filters)
       end
 
-      # @private
+      # @api private
       def around_hooks
         @around_hooks ||= example_group.around_hooks_for(self)
       end
 
-      # @private
+      # @api private
       #
       # Used internally to set an exception in an after hook, which
       # captures the exception but doesn't raise it.
@@ -156,7 +151,7 @@ module RSpec
         @exception ||= exception
       end
 
-      # @private
+      # @api private
       #
       # Used internally to set an exception and fail without actually executing
       # the example when an exception is raised in before(:all).
@@ -164,6 +159,11 @@ module RSpec
         start(reporter)
         set_exception(exception)
         finish(reporter)
+      end
+
+      # @api private
+      def any_apply?(filters)
+        metadata.any_apply?(filters)
       end
 
     private
@@ -181,14 +181,8 @@ module RSpec
         record :started_at => Time.now
       end
 
-      # @private
-      module NotPendingExampleFixed
-        def pending_fixed?; false; end
-      end
-
       def finish(reporter)
         if @exception
-          @exception.extend(NotPendingExampleFixed) unless @exception.respond_to?(:pending_fixed?)
           record_finished 'failed', :exception => @exception
           reporter.example_failed self
           false
@@ -197,7 +191,7 @@ module RSpec
           reporter.example_pending self
           true
         elsif pending
-          record_finished 'pending', :pending_message => String === pending ? pending : Pending::NO_REASON_GIVEN
+          record_finished 'pending', :pending_message => 'Not Yet Implemented'
           reporter.example_pending self
           true
         else

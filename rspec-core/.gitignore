@@ -14,5 +14,3 @@ Gemfile.lock
 bin
 .rbx
 .yardoc
-vendor
-Gemfile-custom

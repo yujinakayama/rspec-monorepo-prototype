@@ -1,5 +1,5 @@
 module Kernel
-  unless defined?(debugger)
+  unless respond_to?(:debugger)
     # If not already defined by ruby-debug, this implementation prints helpful
     # message to STDERR when ruby-debug is not loaded.
     def debugger(*args)

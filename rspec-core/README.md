@@ -1,12 +1,5 @@
 # rspec-core
 
-```
-gem install rspec      # for rspec-core, rspec-expectations, rspec-mocks
-gem install rspec-core # for rspec-core only
-```
-
-# overview
-
 rspec-core provides the structure for writing executable examples of how
 your code should behave.  It uses the words "describe" and "it" so we can
 express concepts like a conversation:
@@ -16,21 +9,19 @@ express concepts like a conversation:
 
 ## basic structure
 
-```ruby
-describe Order do
-  it "sums the prices of its line items" do
-    order = Order.new
-    order.add_entry(LineItem.new(:item => Item.new(
-      :price => Money.new(1.11, :USD)
-    )))
-    order.add_entry(LineItem.new(:item => Item.new(
-      :price => Money.new(2.22, :USD),
-      :quantity => 2
-    )))
-    order.total.should eq(Money.new(5.55, :USD))
-  end
-end
-```
+    describe Order do
+      it "sums the prices of its line items" do
+        order = Order.new
+        order.add_entry(LineItem.new(:item => Item.new(
+          :price => Money.new(1.11, :USD)
+        )
+        order.add_entry(LineItem.new(:item => Item.new(
+          :price => Money.new(2.22, :USD),
+          :quantity => 2
+        )
+        order.total.should eq(Money.new(5.55, :USD))
+      end
+    end
 
 The `describe` method creates an [ExampleGroup](../RSpec/Core/ExampleGroup).  Within the
 block passed to `describe` you can declare examples using the `it` method.
@@ -44,21 +35,19 @@ context of an _instance_ of that class.
 You can also declare nested nested groups using the `describe` or `context`
 methods:
 
-```ruby
-describe Order do
-  context "with no items" do
-    it "behaves one way" do
-      # ...
-    end
-  end
+    describe Order to
+      context "with no items" do
+        it "behaves one way" do
+          # ...
+        end
+      end
 
-  context "with one item" do
-    it "behaves another way" do
-      # ...
+      context "with one item" do
+        it "behaves another way" do
+          # ...
+        end
+      end
     end
-  end
-end
-```
 
 ## aliases
 
@@ -73,21 +62,19 @@ You can declare examples within a group using any of `it`, `specify`, or
 Declare a shared example group using `shared_examples`, and then include it
 in any group using `include_examples`.
 
-```ruby
-shared_examples "collections" do |collection_class|
-  it "is empty when first created" do
-    collection_class.new.should be_empty
-  end
-end
+    shared_examples "collections" do |collection_class|
+      it "is empty when first created" do
+        collection_class.new.should be_empty
+      end
+    end
 
-describe Array do
-  include_examples "collections", Array
-end
+    describe Array do
+      include_examples "collections", Array
+    end
 
-describe Hash do
-  include_examples "collections", Hash
-end
-```
+    describe Hash do
+      include_examples "collections", Hash
+    end
 
 Nearly anything that can be declared within an example group can be declared
 within a shared example group. This includes `before`, `after`, and `around`
@@ -109,11 +96,9 @@ and filtering before and after hooks.
 Although you probably won't ever need this unless you are writing an
 extension, you can access it from an example like this:
 
-```ruby
-it "does something" do
-  example.metadata[:description].should eq("does something")
-end
-```
+    it "does something" do
+      example.metadata[:description].should eq("does something")
+    end
 
 ### `described_class`
 
@@ -121,33 +106,29 @@ When a class is passed to `describe`, you can access it from an example
 using the `described_class` method, which is a wrapper for
 `example.metadata[:described_class]`.
 
-```ruby
-describe Widget do
-  example do
-    described_class.should equal(Widget)
-  end
-end
-```
+    describe Widget do
+      example do
+        described_class.should equal(Widget)
+      end
+    end
 
 This is useful in extensions or shared example groups in which the specific
 class is unknown. Taking the shared examples example from above, we can
 clean it up a bit using `described_class`:
 
-```ruby
-shared_examples "collections" do
-  it "is empty when first created" do
-    described.new.should be_empty
-  end
-end
+    shared_examples "collections" do
+      it "is empty when first created" do
+        described.new.should be_empty
+      end
+    end
 
-describe Array do
-  include_examples "collections"
-end
+    describe Array do
+      include_examples "collections"
+    end
 
-describe Hash do
-  include_examples "collections"
-end
-```
+    describe Hash do
+      include_examples "collections"
+    end
 
 ## the `rspec` command
 
@@ -165,64 +146,52 @@ Run `rspec --help` to see the complete list.
 Start with a simple example of behavior you expect from your system. Do
 this before you write any implementation code:
 
-```ruby
-# in spec/calculator_spec.rb
-describe Calculator do
-  it "add(x,y) returns the sum of its arguments" do
-    Calculator.new.add(1, 2).should eq(3)
-  end
-end
-```
+    # in spec/calculator_spec.rb
+    describe Calculator do
+      it "add(x,y) returns the sum of its arguments" do
+        Calculator.new.add(1, 2).should eq(3)
+      end
+    end
 
 Run this with the rspec command, and watch it fail:
 
-```
-$ rspec spec/calculator_spec.rb
-./spec/calculator_spec.rb:1: uninitialized constant Calculator
-```
+    $ rspec spec/calculator_spec.rb
+    ./spec/calculator_spec.rb:1: uninitialized constant Calculator
 
 Implement the simplest solution:
 
-```ruby
-# in lib/calculator.rb
-class Calculator
-  def add(a,b)
-    a + b
-  end
-end
-```
+    # in lib/calculator.rb
+    class Calculator
+      def add(a,b)
+        a + b
+      end
+    end
 
 Be sure to require the implementation file in the spec:
 
-```ruby
-# in spec/calculator_spec.rb
-# - RSpec adds ./lib to the $LOAD_PATH
-require "calculator"
-```
+    # in spec/calculator_spec.rb
+    # - RSpec adds ./lib to the $LOAD_PATH
+    require "calculator"
 
 Now run the spec again, and watch it pass:
 
-```
-$ rspec spec/calculator_spec.rb
-.
+    $ rspec spec/calculator_spec.rb
+    .
 
-Finished in 0.000315 seconds
-1 example, 0 failures
-```
+    Finished in 0.000315 seconds
+    1 example, 0 failures
 
 Use the `documentation` formatter to see the resulting spec:
 
-```
-$ rspec spec/calculator_spec.rb --format doc
-Calculator add
-  returns the sum of its arguments
+    $ rspec spec/calculator_spec.rb --format doc
+    Calculator add
+      returns the sum of its arguments
 
-Finished in 0.000379 seconds
-1 example, 0 failures
-```
+    Finished in 0.000379 seconds
+    1 example, 0 failures
 
-## Also see
+## install
 
-* [http://github.com/rspec/rspec](http://github.com/rspec/rspec)
-* [http://github.com/rspec/rspec-expectations](http://github.com/rspec/rspec-expectations)
-* [http://github.com/rspec/rspec-mocks](http://github.com/rspec/rspec-mocks)
+    gem install rspec      # for rspec-core, rspec-expectations, rspec-mocks
+    gem install rspec-core # for rspec-core only
+

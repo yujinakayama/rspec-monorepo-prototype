@@ -1,8 +1,6 @@
 module RSpec
   module Core
-    # @private
     module MetadataHashBuilder
-      # @private
       module Common
         def build_metadata_hash_from(args)
           metadata = args.last.is_a?(Hash) ? args.pop : {}
@@ -31,7 +29,6 @@ module RSpec
           end
       end
 
-      # @private
       module WithConfigWarning
         include Common
 
@@ -60,7 +57,6 @@ NOTICE
           end
       end
 
-      # @private
       module WithDeprecationWarning
         include Common
 
