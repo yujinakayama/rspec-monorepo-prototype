@@ -178,11 +178,7 @@ module RSpec
         @order_group.handle_order_constraint self
 
         begin
-          begin
-            Kernel::raise(@exception_to_raise) unless @exception_to_raise.nil?
-          rescue ArgumentError => ex
-            Kernel::raise ex.exception("Errors raised by expectations cannot have constructors that take arguments. #{@exception_to_raise.to_s} has a constructor requiring #{@exception_to_raise.instance_method(:initialize).arity}.")
-          end
+          Kernel::raise(@exception_to_raise) unless @exception_to_raise.nil?
           Kernel::throw(*@args_to_throw) unless @args_to_throw.empty?
 
           default_return_val = if !@method_block.nil?
