@@ -27,7 +27,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
       line = __LINE__ - 2
       group.run(formatter)
       formatter.dump_commands_to_rerun_failed_examples
-      output.string.should include("rspec #{RSpec::Core::Metadata::relative_path("#{__FILE__}:#{line}")} # example group fails")
+      output.string.should include("rspec #{RSpec::Core::Formatters::BaseFormatter::relative_path("#{__FILE__}:#{line}")} # example group fails")
     end
   end
 
@@ -56,6 +56,12 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
         exception_without_message.stub(:message) { nil }
         group.example("example name") { raise exception_without_message }
         expect { run_all_and_dump_failures }.not_to raise_error(NoMethodError)
+      end
+
+      it "preserves ancestry" do
+        example = group.example("example name") { raise "something" }
+        run_all_and_dump_failures
+        example.example_group.ancestors.size.should == 1
       end
     end
 

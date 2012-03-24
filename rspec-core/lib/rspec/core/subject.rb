@@ -81,8 +81,6 @@ module RSpec
         # Creates a nested example group named by the submitted +attribute+,
         # and then generates an example using the submitted block.
         #
-        # @example
-        #
         #   # This ...
         #   describe Array do
         #     its(:size) { should eq(0) }
@@ -101,8 +99,6 @@ module RSpec
         # with dots, the result is as though you concatenated that +String+
         # onto the subject in an expression.
         #
-        # @example
-        #
         #   describe Person do
         #     subject do
         #       Person.new.tap do |person|
@@ -115,8 +111,6 @@ module RSpec
         #
         # When the subject is a +Hash+, you can refer to the Hash keys by
         # specifying a +Symbol+ or +String+ in an array.
-        #
-        # @example
         #
         #   describe "a configuration Hash" do
         #     subject do
