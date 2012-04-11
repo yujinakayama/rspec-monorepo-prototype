@@ -1,10 +1,24 @@
 ### dev
-[full changelog](http://github.com/rspec/rspec-expectations/compare/v2.9.0...master)
+[full changelog](http://github.com/rspec/rspec-expectations/compare/v2.9.1...master)
+
+Enhancements
+
+* Add new `start_with` and `end_with` matchers (Jeremy Wadsack)
+
+Bug fixes
+
+* Fix `be_within` matcher to be inclusive of delta.
+
+### 2.9.1 / 2012-04-03
+[full changelog](http://github.com/rspec/rspec-expectations/compare/v2.9.0...v2.9.1)
 
 Bug fixes
 
 * Provide a helpful message if the diff between two objects is empty.
-* Fix bug diffing single strings with multiline strings
+* Fix bug diffing single strings with multiline strings.
+* Fix for error with using custom matchers inside other custom matchers
+  (mirasrael)
+* Fix using execution context methods in nested DSL matchers (mirasrael)
 
 ### 2.9.0 / 2012-03-17
 [full changelog](http://github.com/rspec/rspec-expectations/compare/v2.8.0...v2.9.0)

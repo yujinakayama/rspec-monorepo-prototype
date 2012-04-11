@@ -19,7 +19,6 @@
   - satisfy.feature
   - throw_symbol.feature
   - types.feature
-  - yield.feature
 - custom_matchers:
   - define_matcher.feature
   - define_diffable_matcher.feature
