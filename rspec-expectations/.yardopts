@@ -1,7 +1,3 @@
---exclude features
 --no-private
+--exclude features
 --markup markdown
-lib/**/*.rb
--
-Changelog.md
-License.txt
