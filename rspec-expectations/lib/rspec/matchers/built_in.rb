@@ -24,10 +24,12 @@ module RSpec
       autoload :MatchArray,     'rspec/matchers/built_in/match_array'
       autoload :RaiseError,     'rspec/matchers/built_in/raise_error'
       autoload :RespondTo,      'rspec/matchers/built_in/respond_to'
-      autoload :StartWith,      'rspec/matchers/built_in/start_and_end_with'
-      autoload :EndWith,        'rspec/matchers/built_in/start_and_end_with'
       autoload :Satisfy,        'rspec/matchers/built_in/satisfy'
       autoload :ThrowSymbol,    'rspec/matchers/built_in/throw_symbol'
+      autoload :YieldControl,   'rspec/matchers/built_in/yield'
+      autoload :YieldWithArgs,  'rspec/matchers/built_in/yield'
+      autoload :YieldWithNoArgs, 'rspec/matchers/built_in/yield'
+      autoload :YieldSuccessiveArgs, 'rspec/matchers/built_in/yield'
     end
   end
 end

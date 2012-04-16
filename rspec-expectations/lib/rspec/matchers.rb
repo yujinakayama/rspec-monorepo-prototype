@@ -355,20 +355,6 @@ module RSpec
       BuiltIn::Cover.new(*values)
     end if (1..2).respond_to?(:cover?)
 
-    # Matches if the actual value ends with the expected value(s). In the case
-    # of a string, matches against the last `expected.length` characters of the
-    # actual string. In the case of an array, matches against the last
-    # `expected.length` elements of the actual array.
-    #
-    # @example
-    #
-    #   "this string".should end_with "string"
-    #   [0, 1, 2, 3, 4].should end_with 4
-    #   [0, 2, 3, 4, 4].should end_with 3, 4
-    def end_with(*expected)
-      BuiltIn::EndWith.new(*expected)
-    end
-
     # Passes if <tt>actual == expected</tt>.
     #
     # See http://www.ruby-doc.org/core/classes/Object.html#M001057 for more information about equality in Ruby.
@@ -548,20 +534,6 @@ module RSpec
       BuiltIn::Satisfy.new(&block)
     end
 
-    # Matches if the actual value starts with the expected value(s). In the
-    # case of a string, matches against the first `expected.length` characters
-    # of the actual string. In the case of an array, matches against the first
-    # `expected.length` elements of the actual array.
-    #
-    # @example
-    #
-    #   "this string".should start_with "this s"
-    #   [0, 1, 2, 3, 4].should start_with 0
-    #   [0, 2, 3, 4, 4].should start_with 0, 1
-    def start_with(*expected)
-      BuiltIn::StartWith.new(*expected)
-    end
-
     # Given no argument, matches if a proc throws any Symbol.
     #
     # Given a Symbol, matches if the given proc throws the specified Symbol.
@@ -580,6 +552,88 @@ module RSpec
     #   lambda { do_something_risky }.should_not throw_symbol(:that_was_risky, culprit)
     def throw_symbol(expected_symbol=nil, expected_arg=nil)
       BuiltIn::ThrowSymbol.new(expected_symbol, expected_arg)
+    end
+
+    # Passes if the method called in the expect block yields, regardless
+    # of whether or not arguments are yielded.
+    #
+    # @example
+    #
+    #   expect { |b| 5.tap(&b) }.to yield_control
+    #   expect { |b| "a".to_sym(&b) }.not_to yield_control
+    #
+    # @note Your expect block must accept a parameter and pass it on to
+    #   the method-under-test as a block.
+    # @note This matcher is not designed for use with methods that yield
+    #   multiple times.
+    def yield_control
+      BuiltIn::YieldControl.new
+    end
+
+    # Passes if the method called in the expect block yields with
+    # no arguments. Fails if it does not yield, or yields with arguments.
+    #
+    # @example
+    #
+    #   expect { |b| User.transaction(&b) }.to yield_with_no_args
+    #   expect { |b| 5.tap(&b) }.not_to yield_with_no_args # because it yields with `5`
+    #   expect { |b| "a".to_sym(&b) }.not_to yield_with_no_args # because it does not yield
+    #
+    # @note Your expect block must accept a parameter and pass it on to
+    #   the method-under-test as a block.
+    # @note This matcher is not designed for use with methods that yield
+    #   multiple times.
+    def yield_with_no_args
+      BuiltIn::YieldWithNoArgs.new
+    end
+
+    # Given no arguments, matches if the method called in the expect
+    # block yields with arguments (regardless of what they are or how
+    # many there are).
+    #
+    # Given arguments, matches if the method called in the expect block
+    # yields with arguments that match the given arguments.
+    #
+    # Argument matching is done using `===` (the case match operator)
+    # and `==`. If the expected and actual arguments match with either
+    # operator, the matcher will pass.
+    #
+    # @example
+    #
+    #   expect { |b| 5.tap(&b) }.to yield_with_args # because #tap yields an arg
+    #   expect { |b| 5.tap(&b) }.to yield_with_args(5) # because 5 == 5
+    #   expect { |b| 5.tap(&b) }.to yield_with_args(Fixnum) # because Fixnum === 5
+    #   expect { |b| File.open("f.txt", &b) }.to yield_with_args(/txt/) # because /txt/ === "f.txt"
+    #
+    #   expect { |b| User.transaction(&b) }.not_to yield_with_args # because it yields no args
+    #   expect { |b| 5.tap(&b) }.not_to yield_with_args(1, 2, 3)
+    #
+    # @note Your expect block must accept a parameter and pass it on to
+    #   the method-under-test as a block.
+    # @note This matcher is not designed for use with methods that yield
+    #   multiple times.
+    def yield_with_args(*args)
+      BuiltIn::YieldWithArgs.new(*args)
+    end
+
+    # Designed for use with methods that repeatedly yield (such as
+    # iterators). Passes if the method called in the expect block yields
+    # multiple times with arguments matching those given.
+    #
+    # Argument matching is done using `===` (the case match operator)
+    # and `==`. If the expected and actual arguments match with either
+    # operator, the matcher will pass.
+    #
+    # @example
+    #
+    #   expect { |b| [1, 2, 3].each(&b) }.to yield_successive_args(1, 2, 3)
+    #   expect { |b| { :a => 1, :b => 2 }.each(&b) }.to yield_successive_args([:a, 1], [:b, 2])
+    #   expect { |b| [1, 2, 3].each(&b) }.not_to yield_successive_args(1, 2)
+    #
+    # @note Your expect block must accept a parameter and pass it on to
+    #   the method-under-test as a block.
+    def yield_successive_args(*args)
+      BuiltIn::YieldSuccessiveArgs.new(*args)
     end
 
     # Passes if actual contains all of the expected regardless of order. 
