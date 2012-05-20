@@ -1,4 +1,5 @@
 ### dev
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.10.1...master)
 
 Enhancements
 
@@ -7,14 +8,24 @@ Enhancements
     * aids decoupling from rspec-core's configuation
 * Allow specifying multiple `--example` options. (Daniel Doubrovkine @dblock)
 * `subject(:article) { Article.new }`
-    * see http://blog.davidchelimsky.net/2012/05/13/spec-smell-explicit-use-of-subject/
+    * see [http://blog.davidchelimsky.net/2012/05/13/spec-smell-explicit-use-of-subject/](http://blog.davidchelimsky.net/2012/05/13/spec-smell-explicit-use-of-subject/)
       for background.
     * thanks to Bradley Schaefer for suggesting it and Avdi Grimm for almost
       suggesting it.
 
 Bug fixes
 
+* Support alternative path separators. For example, on Windows, you can now do
+  this: `rspec spec\subdir`. (Jarmo Pertman @jarmo)
+
+### 2.10.1 / 2012-05-19
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.10.0...v2.10.1)
+
+Bug fixes
+
 * `RSpec.reset` properly reinits configuration and world
+* Call `to_s` before `split` on exception messages that might not always be
+  Strings (slyphon)
 
 ### 2.10.0 / 2012-05-03
 [full changelog](http://github.com/rspec/rspec-core/compare/v2.9.0...v2.10.0)

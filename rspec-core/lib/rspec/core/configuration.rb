@@ -1,4 +1,3 @@
-require "rbconfig"
 require 'fileutils'
 
 module RSpec
@@ -412,10 +411,9 @@ MESSAGE
       end
 
       def color=(bool)
-        return unless bool
-        @color = true
-        if bool && ::RbConfig::CONFIG['host_os'] =~ /mswin|mingw/
-          unless ENV['ANSICON']
+        if bool
+          @color = true
+          if RSpec.windows_os? and not ENV['ANSICON']
             warn "You must use ANSICON 1.31 or later (http://adoxa.110mb.com/ansicon/) to use colour on Windows"
             @color = false
           end
@@ -465,7 +463,7 @@ EOM
       def full_description=(description)
         filter_run :full_description => Regexp.union(*Array(description).map {|d| Regexp.new(d) })
       end
-      
+
       # @overload add_formatter(formatter)
       #
       # Adds a formatter to the formatters collection. `formatter` can be a
@@ -538,7 +536,7 @@ EOM
       #
       # Example:
       #
-      #     alias_it_should_behave_like_to(:it_has_behavior, 'has behavior:')
+      #     alias_it_behaves_like_to(:it_has_behavior, 'has behavior:')
       #
       # allows the user to include a shared example group like:
       #
@@ -553,9 +551,11 @@ EOM
       #     Entity
       #       has behavior: sortability
       #         # sortability examples here
-      def alias_it_should_behave_like_to(new_name, report_label = '')
-        RSpec::Core::ExampleGroup.alias_it_should_behave_like_to(new_name, report_label)
+      def alias_it_behaves_like_to(new_name, report_label = '')
+        RSpec::Core::ExampleGroup.alias_it_behaves_like_to(new_name, report_label)
       end
+
+      alias_method :alias_it_should_behave_like_to, :alias_it_behaves_like_to
 
       # Adds key/value pairs to the `inclusion_filter`. If the
       # `treat_symbols_as_metadata_keys_with_true_values` config option is set
@@ -804,6 +804,7 @@ EOM
       def get_files_to_run(paths)
         patterns = pattern.split(",")
         paths.map do |path|
+          path = path.gsub(File::ALT_SEPARATOR, File::SEPARATOR) if File::ALT_SEPARATOR
           File.directory?(path) ? gather_directories(path, patterns) : extract_location(path)
         end.flatten
       end
