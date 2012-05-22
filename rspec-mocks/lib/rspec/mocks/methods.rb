@@ -135,10 +135,6 @@ module RSpec
           mp
         end
       end
-      
-      def __remove_mock_proxy
-        @mock_proxy = nil
-      end
 
       def format_chain(*chain, &blk)
         if Hash === chain.last
