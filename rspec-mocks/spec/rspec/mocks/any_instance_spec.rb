@@ -34,13 +34,13 @@ module RSpec
             lambda{ klass.any_instance.stub(:foo).and_yield(1).with("1") }.should raise_error(NoMethodError)
           end
         end
-        
+
         context "#stub_chain" do
           it "raises an error if 'stub_chain' follows 'any_instance'" do
             lambda{ klass.any_instance.and_return("1").stub_chain(:foo, :bar) }.should raise_error(NoMethodError)
           end
         end
-        
+
         context "#should_receive" do
           it "raises an error if 'should_receive' follows 'with'" do
             lambda{ klass.any_instance.with("1").should_receive(:foo) }.should raise_error(NoMethodError)
@@ -57,13 +57,13 @@ module RSpec
           end
         end
       end
-      
+
       context "with #stub" do
         it "does not suppress an exception when a method that doesn't exist is invoked" do
           klass.any_instance.stub(:foo)
           lambda{ klass.new.bar }.should raise_error(NoMethodError)
         end
-        
+
         context 'multiple methods' do
           it "allows multiple methods to be stubbed in a single invocation" do
             klass.any_instance.stub(:foo => 'foo', :bar => 'bar')
@@ -71,12 +71,12 @@ module RSpec
             instance.foo.should eq('foo')
             instance.bar.should eq('bar')
           end
-          
+
           it "adheres to the contract of multiple method stubbing withou any instance" do
             Object.new.stub(:foo => 'foo', :bar => 'bar').should eq(:foo => 'foo', :bar => 'bar')
             klass.any_instance.stub(:foo => 'foo', :bar => 'bar').should eq(:foo => 'foo', :bar => 'bar')
           end
-          
+
           context "allows a chain of methods to be stubbed using #stub_chain" do
             it "given symbols representing the methods" do
               klass.any_instance.stub_chain(:one, :two, :three).and_return(:four)
@@ -87,14 +87,14 @@ module RSpec
               klass.any_instance.stub_chain(:one, :two, :three => :four)
               klass.new.one.two.three.should eq(:four)
             end
-            
+
             it "given a string of '.' separated method names representing the chain" do
               klass.any_instance.stub_chain('one.two.three').and_return(:four)
               klass.new.one.two.three.should eq(:four)
             end
           end
         end
-        
+
         context "behaves as 'every instance'" do
           it "stubs every instance in the spec" do
             klass.any_instance.stub(:foo).and_return(result = Object.new)
@@ -108,13 +108,13 @@ module RSpec
             instance.foo.should eq(result)
           end
         end
-        
+
         context "with argument matching" do
-          before do 
+          before do
             klass.any_instance.stub(:foo).with(:param_one, :param_two).and_return(:result_one)
             klass.any_instance.stub(:foo).with(:param_three, :param_four).and_return(:result_two)
           end
-          
+
           it "returns the stubbed value when arguments match" do
             instance = klass.new
             instance.foo(:param_one, :param_two).should eq(:result_one)
@@ -127,11 +127,11 @@ module RSpec
             end.to(raise_error(RSpec::Mocks::MockExpectationError))
           end
         end
-        
+
         context "with multiple stubs" do
-          before do 
-            klass.any_instance.stub(:foo).and_return(1) 
-            klass.any_instance.stub(:bar).and_return(2) 
+          before do
+            klass.any_instance.stub(:foo).and_return(1)
+            klass.any_instance.stub(:bar).and_return(2)
           end
 
           it "stubs a method" do
@@ -196,7 +196,7 @@ module RSpec
             klass.new.foo.should eq(klass.new.foo)
           end
         end
-        
+
         context "core ruby objects" do
           it "works uniformly across *everything*" do
             Object.any_instance.stub(:foo).and_return(1)
@@ -244,7 +244,7 @@ module RSpec
           end.to raise_error(/Use stub instead/)
         end
       end
-      
+
       context "unstub implementation" do
         it "replaces the stubbed method with the original method" do
           klass.any_instance.stub(:existing_method)
@@ -264,7 +264,7 @@ module RSpec
           klass.any_instance.stub(:existing_method_with_arguments).with(1)
           klass.any_instance.stub(:existing_method_with_arguments).with(2)
           klass.any_instance.unstub(:existing_method_with_arguments)
-          klass.new.existing_method_with_arguments(3).should eq :three
+          klass.new.existing_method_with_arguments(3).should eq(:three)
         end
 
         it "raises a MockExpectationError if the method has not been stubbed" do
@@ -273,6 +273,37 @@ module RSpec
           end.should raise_error(RSpec::Mocks::MockExpectationError, 'The method `existing_method` was not stubbed or was already unstubbed')
         end
       end
+      
+      context "with #should_not_receive" do
+        it "fails if the method is called" do
+          klass.any_instance.should_not_receive(:existing_method)
+          lambda { klass.new.existing_method }.should raise_error(RSpec::Mocks::MockExpectationError)
+        end
+        
+        it "passes if no method is called" do
+          lambda { klass.any_instance.should_not_receive(:existing_method) }.should_not raise_error
+        end
+        
+        it "passes if only a different method is called" do
+          klass.any_instance.should_not_receive(:existing_method)
+          lambda { klass.new.another_existing_method }.should_not raise_error
+        end
+        
+        context "with constraints" do
+          it "fails if the method is called with the specified parameters" do
+            klass.any_instance.should_not_receive(:existing_method_with_arguments).with(:argument_one, :argument_two)
+            lambda do
+              klass.new.existing_method_with_arguments(:argument_one, :argument_two) 
+            end.should raise_error(RSpec::Mocks::MockExpectationError)
+          end
+          
+          it "passes if the method is called with different parameters" do
+            klass.any_instance.should_not_receive(:existing_method_with_arguments).with(:argument_one, :argument_two)
+            lambda { klass.new.existing_method_with_arguments(:argument_three, :argument_four) }.should_not raise_error
+          end
+        end
+      end
+      
       context "with #should_receive" do
         let(:foo_expectation_error_message) { 'Exactly one instance should have received the following message(s) but didn\'t: foo' }
         let(:existing_method_expectation_error_message) { 'Exactly one instance should have received the following message(s) but didn\'t: existing_method' }
@@ -406,11 +437,11 @@ module RSpec
         end
 
         context "with argument matching" do
-          before do 
+          before do
             klass.any_instance.should_receive(:foo).with(:param_one, :param_two).and_return(:result_one)
             klass.any_instance.should_receive(:foo).with(:param_three, :param_four).and_return(:result_two)
           end
-          
+
           it "returns the expected value when arguments match" do
             instance = klass.new
             instance.foo(:param_one, :param_two).should eq(:result_one)
@@ -434,7 +465,7 @@ module RSpec
             instance.foo(:param_one, :param_two).should eq(:result_one)
             instance.foo(:param_three, :param_four).should eq(:result_two)
           end
-          
+
           it "fails when arguments do not match" do
             instance = klass.new
             expect do
@@ -676,21 +707,21 @@ module RSpec
                 klass.new.existing_method.should eq(existing_method_return_value)
               end
             end
-            
+
             context "private methods" do
               before :each do
                 klass.any_instance.stub(:private_method).and_return(:something)
                 space.verify_all
               end
-              
+
               it "cleans up the backed up method" do
                 klass.method_defined?(:__existing_method_without_any_instance__).should be_false
               end
-              
+
               it "restores a stubbed private method after the spec is run" do
                 klass.private_method_defined?(:private_method).should be_true
               end
-              
+
               it "ensures that the restored method behaves as it originally did" do
                 klass.new.send(:private_method).should eq(:private_method_return_value)
               end
@@ -717,7 +748,7 @@ module RSpec
                 klass.new.send(:private_method).should eq(:private_method_return_value)
               end
             end
-            
+
             context "ensures that the subsequent specs do not see expectations set in previous specs" do
               context "when the instance created after the expectation is set" do
                 it "first spec" do
@@ -777,6 +808,15 @@ module RSpec
           instance = klass.new
           instance.foo
           RSpec::Mocks::space.send(:receivers).should include(instance)
+        end
+      end
+
+      context 'when used in conjunction with a `dup`' do
+        it "doesn't cause an infinite loop" do
+          Object.any_instance.stub(:some_method)
+          o = Object.new
+          o.some_method
+          lambda { o.dup.some_method }.should_not raise_error(SystemStackError)
         end
       end
 

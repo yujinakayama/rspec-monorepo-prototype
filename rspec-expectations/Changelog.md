@@ -1,10 +1,27 @@
 ### dev
-[full changelog](http://github.com/rspec/rspec-expectations/compare/v2.9.1...master)
+
+Enhancements
+
+* Expand `expect` syntax so that it supports expections on bare values
+  in addition to blocks (Myron Marston).
+* Add configuration options to control available expectation syntaxes
+  (Myron Marston):
+  * `RSpec.configuration.expect_with(:rspec) { |c| c.syntax = :expect }`
+  * `RSpec.configuration.expect_with(:rspec) { |c| c.syntax = :should }`
+  * `RSpec.configuration.expect_with(:rspec) { |c| c.syntax = [:should, :expect] }`
+
+Bug fixes
+
+* Allow only `Numeric` values to be the "actual" in the `be_within` matcher.
+  This prevents confusing error messages. (Su Zhang @zhangsu)
+
+### 2.10.0 / 2012-05-03
+[full changelog](http://github.com/rspec/rspec-expectations/compare/v2.9.1...v2.10.0)
 
 Enhancements
 
 * Add new `start_with` and `end_with` matchers (Jeremy Wadsack)
-* Add new matchers for specifying yields (Myron Marson):
+* Add new matchers for specifying yields (Myron Marston):
     * `expect {...}.to yield_control`
     * `expect {...}.to yield_with_args(1, 2, 3)`
     * `expect {...}.to yield_with_no_args`

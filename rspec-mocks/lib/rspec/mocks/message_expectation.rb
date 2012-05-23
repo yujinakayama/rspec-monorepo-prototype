@@ -3,11 +3,10 @@ module RSpec
 
     class MessageExpectation
       # @private
-      attr_reader :message
-      attr_writer :expected_received_count, :expected_from, :argument_expectation, :implementation
-      protected :expected_received_count=, :expected_from=, :implementation=
       attr_accessor :error_generator
-      protected :error_generator, :error_generator=
+      attr_reader :message
+      attr_writer :expected_received_count, :expected_from, :argument_list_matcher
+      protected :expected_received_count=, :expected_from=, :error_generator, :error_generator=
 
       # @private
       def initialize(error_generator, expectation_ordering, expected_from, message, expected_received_count=1, opts={}, &implementation)
@@ -17,7 +16,7 @@ module RSpec
         @message = message
         @actual_received_count = 0
         @expected_received_count = expected_received_count
-        @argument_expectation = ArgumentExpectation.new(ArgumentMatchers::AnyArgsMatcher.new)
+        @argument_list_matcher = ArgumentListMatcher.new(ArgumentMatchers::AnyArgsMatcher.new)
         @consecutive = false
         @exception_to_raise = nil
         @args_to_throw = []
@@ -30,6 +29,12 @@ module RSpec
         @implementation = implementation
       end
 
+      def implementation=(implementation)
+        @consecutive = false
+        @implementation = implementation
+      end
+      protected :implementation=
+
       # @private
       def build_child(expected_from, expected_received_count, opts={}, &implementation)
         child = clone
@@ -41,13 +46,13 @@ module RSpec
         new_gen.opts = opts
         child.error_generator = new_gen
         child.clone_args_to_yield(*@args_to_yield)
-        child.argument_expectation = ArgumentExpectation.new(ArgumentMatchers::AnyArgsMatcher.new)
+        child.argument_list_matcher = ArgumentListMatcher.new(ArgumentMatchers::AnyArgsMatcher.new)
         child
       end
 
       # @private
       def expected_args
-        @argument_expectation.args
+        @argument_list_matcher.expected_args
       end
 
       # @overload and_return(value)
@@ -87,7 +92,7 @@ module RSpec
       #   counter.stub(:count) { 1 }
       #   counter.count # => 1
       def and_return(*values, &implementation)
-        @expected_received_count = [@expected_received_count, values.size].max unless ignoring_args?
+        @expected_received_count = [@expected_received_count, values.size].max unless ignoring_args? || (@expected_received_count == 0 and @at_least)
         @consecutive = true if values.size > 1
         @implementation = implementation || build_implementation(values)
       end
@@ -148,12 +153,12 @@ module RSpec
 
       # @private
       def matches?(message, *args)
-        @message == message && @argument_expectation.args_match?(*args)
+        @message == message && @argument_list_matcher.args_match?(*args)
       end
 
       # @private
       def invoke(*args, &block)
-        if @expected_received_count == 0 || ((@exactly || @at_most) && (@actual_received_count == @expected_received_count))
+        if (@expected_received_count == 0 && !@at_least) || ((@exactly || @at_most) && (@actual_received_count == @expected_received_count))
           @actual_received_count += 1
           @failed_fast = true
           @error_generator.raise_expectation_error(@message, @expected_received_count, @actual_received_count, *args)
@@ -199,7 +204,7 @@ MESSAGE
 
       # @private
       def matches_name_but_not_args(message, *args)
-        @message == message and not @argument_expectation.args_match?(*args)
+        @message == message and not @argument_list_matcher.args_match?(*args)
       end
 
       # @private
@@ -248,7 +253,7 @@ MESSAGE
       # @private
       def generate_error
         if similar_messages.empty?
-          @error_generator.raise_expectation_error(@message, @expected_received_count, @actual_received_count, *@argument_expectation.args)
+          @error_generator.raise_expectation_error(@message, @expected_received_count, @actual_received_count, *expected_args)
         else
           @error_generator.raise_similar_message_args_error(self, *@similar_messages)
         end
@@ -284,7 +289,7 @@ MESSAGE
       #   # => passes
       def with(*args, &block)
         @implementation = block if block_given? unless args.empty?
-        @argument_expectation = ArgumentExpectation.new(*args, &block)
+        @argument_list_matcher = ArgumentListMatcher.new(*args, &block)
         self
       end
 
@@ -465,6 +470,10 @@ MESSAGE
       # @private
       def initialize(error_generator, expectation_ordering, expected_from, message, &implementation)
         super(error_generator, expectation_ordering, expected_from, message, 0, {}, &implementation)
+      end
+
+      def and_return(*)
+        # no-op
       end
 
       # @private
