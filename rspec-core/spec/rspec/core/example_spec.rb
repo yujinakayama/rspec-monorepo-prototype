@@ -258,40 +258,6 @@ describe RSpec::Core::Example, :parent_metadata => 'sample' do
         group.run.should be_true
       end
     end
-
-    context "when the example and an around hook raise errors" do
-      it "prints the around hook error rather than silencing it" do
-        group = RSpec::Core::ExampleGroup.describe do
-          around(:each) { |e| e.run; raise "around" }
-          example("e") { raise "example" }
-        end
-
-        reported_msg = nil
-        # We can't use should_receive(:message).with(/.../) here,
-        # because if that fails, it would fail within our example-under-test,
-        # and since there's already two errors, it would just be reported again.
-        RSpec.configuration.reporter.stub(:message) { |msg| reported_msg = msg }
-        group.run
-        reported_msg.should =~ /An error occurred in an around.* hook/i
-      end
-    end
-
-    context "when the example and an after hook raise errors" do
-      it "prints the after hook error rather than silencing it" do
-        group = RSpec::Core::ExampleGroup.describe do
-          after(:each) { raise "after" }
-          example("e") { raise "example" }
-        end
-
-        reported_msg = nil
-        # We can't use should_receive(:message).with(/.../) here,
-        # because if that fails, it would fail within our example-under-test,
-        # and since there's already two errors, it would just be reported again.
-        RSpec.configuration.reporter.stub(:message) { |msg| reported_msg = msg }
-        group.run
-        reported_msg.should =~ /An error occurred in an after.* hook/i
-      end
-    end
   end
 
   describe "#pending" do

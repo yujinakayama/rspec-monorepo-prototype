@@ -25,9 +25,10 @@ module RSpec::Core
       let(:err) { StringIO.new }
       let(:out) { StringIO.new }
 
-      it "tells RSpec to reset" do
-        RSpec.configuration.stub(:files_to_run => [])
-        RSpec.should_receive(:reset)
+      it "resets world and configuration" do
+        RSpec.configuration.stub(:files_to_run) { [] }
+        RSpec.configuration.should_receive(:reset)
+        RSpec.world.should_receive(:reset)
         RSpec::Core::Runner.run([], err, out)
       end
 

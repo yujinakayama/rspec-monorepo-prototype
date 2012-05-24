@@ -32,7 +32,7 @@ module RSpec
         include HookExtension
 
         def run(example)
-          example.instance_eval_with_rescue("in an after hook", &self)
+          example.instance_eval_with_rescue(&self)
         end
 
         def display_name
@@ -126,11 +126,12 @@ module RSpec
       #
       # Declare a block of code to be run before each example (using `:each`)
       # or once before any example (using `:all`). These are usually declared
-      # directly in the {ExampleGroup} to which they apply, but they can also
-      # be shared across multiple groups.
+      # directly in the [ExampleGroup](ExampleGroup) to which they apply, but
+      # they can also be shared across multiple groups.
       #
       # You can also use `before(:suite)` to run a block of code before any
-      # example groups are run. This should be declared in {RSpec.configure}
+      # example groups are run. This should be declared in
+      # [RSpec.configure](../../RSpec#configure-class_method)
       #
       # Instance variables declared in `before(:each)` or `before(:all)` are
       # accessible within each example.
@@ -231,7 +232,7 @@ module RSpec
       # rspec-rails, but it will not be wrapped in a transaction for you, so
       # you are on your own to clean up in an `after(:all)` block.
       #
-      # @example before(:each) declared in an {ExampleGroup}
+      # @example before(:each) declared in an [ExampleGroup](ExampleGroup)
       #
       #     describe Thing do
       #       before(:each) do
@@ -243,7 +244,7 @@ module RSpec
       #       end
       #     end
       #
-      # @example before(:all) declared in an {ExampleGroup}
+      # @example before(:all) declared in an [ExampleGroup](ExampleGroup)
       #
       #     describe Parser do
       #       before(:all) do
