@@ -1,11 +1,37 @@
 module RSpec
   module Core
-    # Wrapper for an instance of a subclass of [ExampleGroup](ExampleGroup). An
-    # instance of `Example` is returned by the
-    # [example](ExampleGroup#example-instance_method) method available in
-    # examples, [before](Hooks#before-instance_method) and
-    # [after](Hooks#after-instance_method) hooks, and yielded to
-    # [around](Hooks#around-instance_method) hooks.
+    # Wrapper for an instance of a subclass of {ExampleGroup}. An instance of
+    # `Example` is returned by the {ExampleGroup#example example} method
+    # exposed to examples, {Hooks#before before} and {Hooks#after after} hooks,
+    # and yielded to {Hooks#around around} hooks.
+    #
+    # Useful for configuring logging and/or taking some action based
+    # on the state of an example's metadata.
+    #
+    # @example
+    #
+    #     RSpec.configure do |config|
+    #       config.before do
+    #         log example.description
+    #       end
+    #
+    #       config.after do
+    #         log example.description
+    #       end
+    #
+    #       config.around do |ex|
+    #         log example.description
+    #         ex.run
+    #       end
+    #     end
+    #
+    #     shared_examples "auditable" do
+    #       it "does something" do
+    #         log "#{example.full_description}: #{auditable.inspect}"
+    #         auditable.should do_something
+    #       end
+    #     end
+    #
     # @see ExampleGroup
     class Example
       # @private
@@ -70,9 +96,9 @@ module RSpec
       alias_method :pending?, :pending
 
       # @api private
+      # instance_evals the block passed to the constructor in the context of
+      # the instance of {ExampleGroup}.
       # @param example_group_instance the instance of an ExampleGroup subclass
-      # instance_evals the block submitted to the constructor in the
-      # context of the instance of ExampleGroup
       def run(example_group_instance, reporter)
         @example_group_instance = example_group_instance
         @example_group_instance.example = self
@@ -105,14 +131,14 @@ module RSpec
           begin
             assign_auto_description
           rescue Exception => e
-            set_exception(e)
+            set_exception(e, "while assigning the example description")
           end
         end
 
         finish(reporter)
       end
 
-      # @private
+      # @api private
       #
       # Wraps the example block in a Proc so it can invoked using `run` or
       # `call` in [around](../Hooks#around-instance_method) hooks.
@@ -120,20 +146,39 @@ module RSpec
         proc.extend(Procsy).with(metadata)
       end
 
-      # @private
+      # Used to extend a `Proc` with behavior that makes it look something like
+      # an {Example} in an {Hooks#around around} hook.
+      #
+      # @note Procsy, itself, is not a public API, but we're documenting it
+      #   here to document how to interact with the object yielded to an
+      #   `around` hook.
+      #
+      # @example
+      #
+      #     RSpec.configure do |c|
+      #       c.around do |ex| # ex is a Proc extended with Procsy
+      #         if ex.metadata[:key] == :some_value && some_global_condition
+      #           raise "some message"
+      #         end
+      #         ex.run         # run delegates to ex.call
+      #       end
+      #     end
       module Procsy
+        # The `metadata` of the {Example} instance.
         attr_reader :metadata
 
-        # @private
+        # @api private
         # @param [Proc]
         # Adds a `run` method to the extended Proc, allowing it to be invoked
         # in an [around](../Hooks#around-instance_method) hook using either
         # `run` or `call`.
-        def self.extended(object)
-          def object.run; call; end
+        def self.extended(proc)
+          # @api public
+          # Foo bar
+          def proc.run; call; end
         end
 
-        # @private
+        # @api private
         def with(metadata)
           @metadata = metadata
           self
@@ -159,7 +204,20 @@ module RSpec
       #
       # Used internally to set an exception in an after hook, which
       # captures the exception but doesn't raise it.
-      def set_exception(exception)
+      def set_exception(exception, context=nil)
+        if @exception
+          # An error has already been set; we don't want to override it,
+          # but we also don't want silence the error, so let's print it.
+          msg = <<-EOS
+
+An error occurred #{context}
+  #{exception.class}: #{exception.message}
+  occurred at #{exception.backtrace.first}
+
+          EOS
+          RSpec.configuration.reporter.message(msg)
+        end
+
         @exception ||= exception
       end
 
@@ -179,8 +237,8 @@ module RSpec
       end
 
       # @private
-      def instance_eval_with_rescue(&block)
-        @example_group_instance.instance_eval_with_rescue(&block)
+      def instance_eval_with_rescue(context = nil, &block)
+        @example_group_instance.instance_eval_with_rescue(context, &block)
       end
 
       # @private
@@ -196,6 +254,8 @@ module RSpec
         else
           @example_group_class.run_around_each_hooks(self, Example.procsy(metadata, &block))
         end
+      rescue Exception => e
+        set_exception(e, "in an around(:each) hook")
       end
 
       def start(reporter)
@@ -242,6 +302,8 @@ module RSpec
       def run_after_each
         @example_group_class.run_after_each_hooks(self)
         @example_group_instance.verify_mocks_for_rspec if @example_group_instance.respond_to?(:verify_mocks_for_rspec)
+      rescue Exception => e
+        set_exception(e, "in an after(:each) hook")
       ensure
         @example_group_instance.teardown_mocks_for_rspec if @example_group_instance.respond_to?(:teardown_mocks_for_rspec)
       end

@@ -11,6 +11,7 @@ else
 end
 
 require 'set'
+require 'rbconfig'
 require_rspec 'core/filter_manager'
 require_rspec 'core/dsl'
 require_rspec 'core/extensions'
@@ -66,8 +67,8 @@ module RSpec
   # Used internally to ensure examples get reloaded between multiple runs in
   # the same process.
   def self.reset
-    world.reset
-    configuration.reset
+    @world = nil
+    @configuration = nil
   end
 
   # Returns the global [Configuration](RSpec/Core/Configuration) object. While you
@@ -98,6 +99,11 @@ module RSpec
   # Used internally to clear remaining groups when fail_fast is set
   def self.clear_remaining_example_groups
     world.example_groups.clear
+  end
+
+  # @private
+  def self.windows_os?
+    /mswin|mingw/ === ::RbConfig::CONFIG['host_os']
   end
 
   module Core
