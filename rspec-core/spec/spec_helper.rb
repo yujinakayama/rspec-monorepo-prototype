@@ -68,7 +68,7 @@ Spork.prefork do
 
   RSpec.configure do |c|
     # structural
-    c.alias_it_should_behave_like_to 'it_has_behavior'
+    c.alias_it_behaves_like_to 'it_has_behavior'
     c.around {|example| sandboxed { example.run }}
     c.include(RSpecHelpers)
     c.include Aruba::Api, :example_group => {
@@ -79,7 +79,6 @@ Spork.prefork do
     c.treat_symbols_as_metadata_keys_with_true_values = true
     c.color = !in_editor?
     c.filter_run :focus
-    c.filter_run :foo
     c.include FakeFS::SpecHelpers, :fakefs
     c.run_all_when_everything_filtered = true
     c.filter_run_excluding :ruby => lambda {|version|
