@@ -128,7 +128,7 @@ module RSpec
           raise_unexpected_message_args_error(expectation, *args) unless (has_negative_expectation?(message) or null_object?)
         elsif stub = find_almost_matching_stub(message, *args)
           stub.advise(*args)
-          raise_unexpected_message_args_error(stub, *args)
+          raise_missing_default_stub_error(stub, *args)
         elsif @object.is_a?(Class)
           @object.superclass.__send__(message, *args, &block)
         else
@@ -137,13 +137,18 @@ module RSpec
       end
 
       # @private
+      def raise_unexpected_message_error(method_name, *args)
+        @error_generator.raise_unexpected_message_error method_name, *args
+      end
+
+      # @private
       def raise_unexpected_message_args_error(expectation, *args)
         @error_generator.raise_unexpected_message_args_error(expectation, *args)
       end
 
       # @private
-      def raise_unexpected_message_error(method_name, *args)
-        @error_generator.raise_unexpected_message_error method_name, *args
+      def raise_missing_default_stub_error(expectation, *args)
+        @error_generator.raise_missing_default_stub_error(expectation, *args)
       end
 
       private
