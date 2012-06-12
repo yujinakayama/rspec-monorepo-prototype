@@ -43,27 +43,20 @@ module RSpec
         #    format_duration(1) #=>  "1 minute 1 second"
         #    format_duration(135.14) #=> "2 minutes 15.14 seconds"
         def format_duration(duration)
-          precision = case
-                      when duration < 1;    SUB_SECOND_PRECISION
-                      when duration < 120;  DEFAULT_PRECISION
-                      when duration < 300;  1
-                      else                  0
-                      end
-
           if duration > 60
             minutes = duration.to_i / 60
             seconds = duration - minutes * 60
 
-            "#{pluralize(minutes, 'minute')} #{pluralize(format_seconds(seconds, precision), 'second')}"
+            "#{pluralize(minutes, 'minute')} #{pluralize(format_seconds(seconds), 'second')}"
           else
-            pluralize(format_seconds(duration, precision), 'second')
+            pluralize(format_seconds(duration), 'second')
           end
         end
 
         # @api private
         #
         # Formats seconds to have 5 digits of precision with trailing zeros removed if the number
-        # is less than 1 or with 2 digits of precision if the number is greater than zero.
+        # if less than 1 or with 2 digits of precision if the number is greater than zero.
         #
         # @param [Float] float
         # @return [String] formatted float
@@ -76,7 +69,7 @@ module RSpec
         # The precision used is set in {Helpers::SUB_SECOND_PRECISION} and {Helpers::DEFAULT_PRECISION}.
         #
         # @see #strip_trailing_zeroes
-        def format_seconds(float, precision = nil)
+        def format_seconds(float)
           precision ||= (float < 1) ? SUB_SECOND_PRECISION : DEFAULT_PRECISION
           formatted = sprintf("%.#{precision}f", float)
           strip_trailing_zeroes(formatted)

@@ -254,21 +254,6 @@ module RSpec::Core
           expect(subject_value).to eq(:inner)
         end
 
-        it 'is not overriden when an inner group defines a new method with the same name' do
-          subject_value = nil
-
-          ExampleGroup.describe do
-            subject(:named) { :outer_subject }
-
-            describe "inner" do
-              let(:named) { :inner_named }
-              example { subject_value = self.subject }
-            end
-          end.run
-
-          expect(subject_value).to be(:outer_subject)
-        end
-
         context 'when `super` is used' do
           def should_raise_not_supported_error(&block)
             ex = nil
@@ -514,13 +499,6 @@ module RSpec::Core
       nil_value
 
       expect(@nil_value_count).to eq(1)
-    end
-
-    let(:regex_with_capture) { %r[RegexWithCapture(\d)] }
-
-    it 'does not pass the block up the ancestor chain' do
-      # Test for Ruby bug http://bugs.ruby-lang.org/issues/8059
-      expect("RegexWithCapture1".match(regex_with_capture)[1]).to eq('1')
     end
 
     let(:a_value) { "a string" }

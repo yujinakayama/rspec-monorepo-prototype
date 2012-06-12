@@ -1,5 +1,4 @@
 require 'fileutils'
-require 'rspec/core/ruby_project'
 
 module RSpec
   module Core
@@ -793,12 +792,6 @@ EOM
       end
 
       # @private
-      def add_project_paths(*paths)
-        directories = paths.select { |p| File.directory? p }
-        RSpec::Core::RubyProject.add_to_load_path(*directories)
-      end
-
-      # @private
       if RUBY_VERSION.to_f >= 1.9
         def safe_extend(mod, host)
           host.extend(mod) unless (class << host; self; end) < mod
@@ -823,7 +816,6 @@ EOM
 
       # @private
       def load_spec_files
-        add_project_paths 'lib', default_path
         files_to_run.uniq.each {|f| load File.expand_path(f) }
         raise_if_rspec_1_is_loaded
       end
@@ -871,9 +863,7 @@ EOM
       # @private
       RANDOM_ORDERING = lambda do |list|
         Kernel.srand RSpec.configuration.seed
-        ordering = list.sort_by { Kernel.rand(list.size) }
-        Kernel.srand # reset random generation
-        ordering
+        list.sort_by { Kernel.rand(list.size) }
       end
 
       # Sets a strategy by which to order examples.

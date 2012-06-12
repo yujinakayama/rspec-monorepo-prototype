@@ -1,44 +1,15 @@
 ### dev
-[full changelog](http://github.com/rspec/rspec-core/compare/v2.13.1...master)
-
-Enhancements
-
-* Rather than always adding `spec` to the load path, add the configured
-  `--default-path` to the load path (which defaults to `spec`). This
-  better supports folks who choose to put their specs in a different
-  directory (John Feminella).
-* Add some logic to test time duration precision. Make it a
-  function of time, dropping precision as the time increases. (Aaron Kromer)
-
-Bug fixes
-
-* Fix named subjects so that if an inner group defines a method that
-  overrides the named method, `subject` still retains the originally
-  declared value (Myron Marston).
-* Fix random ordering so that it does not cause `rand` in examples in
-  nested sibling contexts to return the same value (Max Shytikov).
-
-### 2.13.1 / 2013-03-12
-[full changelog](http://github.com/rspec/rspec-core/compare/v2.13.0...v2.13.1)
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.13.0...master)
 
 Bug fixes
 
 * Use hook classes as proxies rather than extending hook blocks to support
   lambdas for before/after/around hooks. (David Chelimsky)
-* Fix regression in 2.13.0 that caused confusing behavior when overriding
+* Fix regression in 2.13.0 that caused confusing behavior when overridng
   a named subject with an unnamed subject in an inner group and then
-  referencing the outer group subject's name. The fix for this required
-  us to disallow using `super` in a named subject (which is confusing,
-  anyway -- named subjects create 2 methods, so which method on the
-  parent example group are you `super`ing to?) but `super` in an unnamed
-  subject continues to work (Myron Marston).
+  referencing the outer group subject's name (Myron Marston).
 * Do not allow a referenced `let` or `subject` in `before(:all)` to cause
   other `let` declarations to leak across examples (Myron Marston).
-* Work around odd ruby 1.9 bug with `String#match` that was triggered
-  by passing it a regex from a `let` declaration. For more info, see
-  http://bugs.ruby-lang.org/issues/8059 (Aaron Kromer).
-* Add missing `require 'set'` to `base_text_formatter.rb` (Tom
-  Anderson).
 
 Deprecations
 

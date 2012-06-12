@@ -2,11 +2,9 @@
 
 set -e -x
 
-# Needed by Bundler 1.3: https://github.com/carlhuda/bundler/issues/2382
-export RUBYOPT='-rrbconfig'
-
-# idea taken from: http://blog.headius.com/2010/03/jruby-startup-time-tips.html
+# ideas taken from: http://blog.headius.com/2010/03/jruby-startup-time-tips.html
 export JRUBY_OPTS='-X-C' # disable JIT since these processes are so short lived
+export JAVA_OPTS='-d32'  # force jRuby to use client JVM for faster startup times
 
 echo "Bundling Standalone so we can run the specs w/o bundler loaded"
 
@@ -26,11 +24,6 @@ done
 
 # Prepare RUBYOPT for scenarios that are shelling out to ruby,
 # and PATH for those that are using `rspec` or `rake`.
-# RUBYOPT="-I${PWD}/bundle -rbundler/setup" \
-#   PATH="${PWD}/bin:$PATH" \
-#   bin/cucumber
-
-# For now, use this instead, due to a bug in bundler:
-# https://github.com/carlhuda/bundler/issues/2382
-bundle exec bin/cucumber
-
+RUBYOPT="-I${PWD}/bundle -rbundler/setup" \
+  PATH="${PWD}/bin:$PATH" \
+  bin/cucumber
