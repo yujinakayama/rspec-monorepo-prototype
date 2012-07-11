@@ -1128,14 +1128,6 @@ module RSpec::Core
         config.order.should eq("rand")
       end
 
-      it 'can set random ordering' do
-        config.force :seed => "rand:37"
-        RSpec.stub(:configuration => config)
-        list = [1, 2, 3, 4].extend(Extensions::Ordered::Examples)
-        Kernel.should_receive(:rand).and_return(3, 1, 4, 2)
-        list.ordered.should eq([2, 4, 1, 3])
-      end
-
       it "forces 'false' value" do
         config.add_setting :custom_option
         config.custom_option = true
@@ -1183,13 +1175,6 @@ module RSpec::Core
         it 'sets seed to 123' do
           config.seed.should eq(123)
         end
-
-        it 'sets up random ordering' do
-          RSpec.stub(:configuration => config)
-          list = [1, 2, 3, 4].extend(Extensions::Ordered::Examples)
-          Kernel.should_receive(:rand).and_return(3, 1, 4, 2)
-          list.ordered.should eq([2, 4, 1, 3])
-        end
       end
 
       context 'given "default"' do
@@ -1205,75 +1190,6 @@ module RSpec::Core
         it "sets the seed to nil" do
           config.seed.should be_nil
         end
-
-        it 'clears the random ordering' do
-          RSpec.stub(:configuration => config)
-          list = [1, 2, 3, 4].extend(Extensions::Ordered::Examples)
-          Kernel.should_not_receive(:rand)
-          list.ordered.should eq([1, 2, 3, 4])
-        end
-      end
-    end
-
-    describe "#order_examples" do
-      before { RSpec.stub(:configuration => config) }
-
-      it 'sets a block that determines the ordering of a collection extended with Extensions::Ordered::Examples' do
-        examples = [1, 2, 3, 4]
-        examples.extend Extensions::Ordered::Examples
-        config.order_examples { |examples| examples.reverse }
-        examples.ordered.should eq([4, 3, 2, 1])
-      end
-
-      it 'sets #order to "custom"' do
-        config.order_examples { |examples| examples.reverse }
-        config.order.should eq("custom")
-      end
-    end
-
-    describe "#example_ordering_block" do
-      it 'defaults to a block that returns the passed argument' do
-        config.example_ordering_block.call([1, 2, 3]).should eq([1, 2, 3])
-      end
-    end
-
-    describe "#order_groups" do
-      before { RSpec.stub(:configuration => config) }
-
-      it 'sets a block that determines the ordering of a collection extended with Extensions::Ordered::ExampleGroups' do
-        groups = [1, 2, 3, 4]
-        groups.extend Extensions::Ordered::ExampleGroups
-        config.order_groups { |groups| groups.reverse }
-        groups.ordered.should eq([4, 3, 2, 1])
-      end
-
-      it 'sets #order to "custom"' do
-        config.order_groups { |groups| groups.reverse }
-        config.order.should eq("custom")
-      end
-    end
-
-    describe "#group_ordering_block" do
-      it 'defaults to a block that returns the passed argument' do
-        config.group_ordering_block.call([1, 2, 3]).should eq([1, 2, 3])
-      end
-    end
-
-    describe "#order_groups_and_examples" do
-      let(:examples) { [1, 2, 3, 4].extend Extensions::Ordered::Examples }
-      let(:groups)   { [1, 2, 3, 4].extend Extensions::Ordered::ExampleGroups }
-
-      before do
-        RSpec.stub(:configuration => config)
-        config.order_groups_and_examples { |list| list.reverse }
-      end
-
-      it 'sets a block that determines the ordering of a collection extended with Extensions::Ordered::Examples' do
-        examples.ordered.should eq([4, 3, 2, 1])
-      end
-
-      it 'sets a block that determines the ordering of a collection extended with Extensions::Ordered::ExampleGroups' do
-        groups.ordered.should eq([4, 3, 2, 1])
       end
     end
   end

@@ -7,27 +7,11 @@ Feature: configure expectation framework
   * stdlib assertions
     * test/unit assertions in ruby 1.8
     * minitest assertions in ruby 1.9
-  * rspec/expectations _and_ stlib assertions
+  * rspec/expecations _and_ stlib assertions
 
   Note that when you do not use rspec-expectations, you must explicitly
   provide a description to every example.  You cannot rely on the generated
   descriptions provided by rspec-expectations.
-
-  Scenario: rspec-expectations can be used by default if nothing is configured
-    Given a file named "example_spec.rb" with:
-      """
-      RSpec::Matchers.define :be_a_multiple_of do |factor|
-        match do |actual|
-          actual % factor == 0
-        end
-      end
-
-      describe 6 do
-        it { should be_a_multiple_of(3) }
-      end
-      """
-    When I run `rspec example_spec.rb`
-    Then the examples should all pass
 
   Scenario: configure rspec-expectations (explicitly)
     Given a file named "example_spec.rb" with:

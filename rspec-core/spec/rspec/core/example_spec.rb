@@ -259,48 +259,37 @@ describe RSpec::Core::Example, :parent_metadata => 'sample' do
       end
     end
 
-    context 'when the example raises an error' do
-      def run_and_capture_reported_message(group)
+    context "when the example and an around hook raise errors" do
+      it "prints the around hook error rather than silencing it" do
+        group = RSpec::Core::ExampleGroup.describe do
+          around(:each) { |e| e.run; raise "around" }
+          example("e") { raise "example" }
+        end
+
         reported_msg = nil
         # We can't use should_receive(:message).with(/.../) here,
         # because if that fails, it would fail within our example-under-test,
         # and since there's already two errors, it would just be reported again.
         RSpec.configuration.reporter.stub(:message) { |msg| reported_msg = msg }
         group.run
-        reported_msg
+        reported_msg.should =~ /An error occurred in an around.* hook/i
       end
+    end
 
-      it "prints any around hook errors rather than silencing them" do
-        group = RSpec::Core::ExampleGroup.describe do
-          around(:each) { |e| e.run; raise "around" }
-          example("e") { raise "example" }
-        end
-
-        message = run_and_capture_reported_message(group)
-        message.should =~ /An error occurred in an around.* hook/i
-      end
-
-      it "prints any after hook errors rather than silencing them" do
+    context "when the example and an after hook raise errors" do
+      it "prints the after hook error rather than silencing it" do
         group = RSpec::Core::ExampleGroup.describe do
           after(:each) { raise "after" }
           example("e") { raise "example" }
         end
 
-        message = run_and_capture_reported_message(group)
-        message.should =~ /An error occurred in an after.* hook/i
-      end
-
-      it 'does not print mock expectation errors' do
-        group = RSpec::Core::ExampleGroup.describe do
-          example do
-            foo = mock
-            foo.should_receive(:bar)
-            raise "boom"
-          end
-        end
-
-        message = run_and_capture_reported_message(group)
-        message.should be_nil
+        reported_msg = nil
+        # We can't use should_receive(:message).with(/.../) here,
+        # because if that fails, it would fail within our example-under-test,
+        # and since there's already two errors, it would just be reported again.
+        RSpec.configuration.reporter.stub(:message) { |msg| reported_msg = msg }
+        group.run
+        reported_msg.should =~ /An error occurred in an after.* hook/i
       end
     end
   end
