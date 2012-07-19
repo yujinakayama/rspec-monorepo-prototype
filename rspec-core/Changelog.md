@@ -1,19 +1,13 @@
 ### dev
 [full changelog](http://github.com/rspec/rspec-core/compare/v2.11.0...master)
 
-Enhancements
-
-* Add support for custom ordering strategies for groups and examples.
-  (Myron Marston)
-
 Bug fixes
 
-* Remove override of ExampleGroup#ancestors. This is a core ruby
-  method that RSpec shouldn't override. Instead, define
-  ExampleGroup#parent_groups. (Myron Marston)
-* Limit monkey patching of shared example/context declaration
-  methods (`shared_examples_for`, etc.) to just the objects
-  that need it rather than every object in the system (Myron Marston).
+* Fix the way we autoload RSpec::Matchers so that custom matchers can be
+  defined before rspec-core has been configured to definitely use
+  rspec-expectations. (Myron Marston)
+* Fix typo in --help message printed for -e option. (Jo Liss)
+* Fix ruby warnings. (Myron Marston)
 * Ignore mock expectation failures when the example has already failed.
   Mock expectation failures have always been ignored in this situation,
   but due to my changes in 27059bf1 it was printing a confusing message.

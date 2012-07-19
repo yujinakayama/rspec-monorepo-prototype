@@ -1,25 +1,17 @@
 require 'spec_helper'
 
 main = self
+describe "The describe method" do
+  it 'is available on the main object' do
+    main.should respond_to(:describe)
+  end
 
-describe "The RSpec DSL" do
-  methods = [
-    :describe,
-    :share_examples_for,
-    :shared_examples_for,
-    :shared_examples,
-    :shared_context,
-    :share_as
-  ]
+  it 'is available on modules (so example groups can be nested inside them)' do
+    Module.new.should respond_to(:describe)
+  end
 
-  methods.each do |method_name|
-    describe "##{method_name}" do
-      it "is not added to every object in the system" do
-        main.should respond_to(method_name)
-        Module.new.should respond_to(method_name)
-        Object.new.should_not respond_to(method_name)
-      end
-    end
+  it 'is not available on other types of objects' do
+    Object.new.should_not respond_to(:describe)
   end
 end
 
