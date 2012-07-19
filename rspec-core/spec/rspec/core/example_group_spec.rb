@@ -696,7 +696,7 @@ module RSpec::Core
           example.example_group.description.should eq('A sample nested group')
         end
 
-        it "has top level metadata from the example_group and its ancestors" do
+        it "has top level metadata from the example_group and its parent groups" do
           example.example_group.metadata.should include(:little_less_nested => 'yep', :nested_describe => 'yep')
         end
 
@@ -716,7 +716,7 @@ module RSpec::Core
           example('ex 1') { 1.should eq(1) }
           example('ex 2') { 1.should eq(1) }
         end
-        group.stub(:filtered_examples) { group.examples.extend(Extensions::Ordered) }
+        group.stub(:filtered_examples) { group.examples.extend(Extensions::Ordered::Examples) }
         group.run(reporter).should be_true
       end
 
@@ -725,7 +725,7 @@ module RSpec::Core
           example('ex 1') { 1.should eq(1) }
           example('ex 2') { 1.should eq(2) }
         end
-        group.stub(:filtered_examples) { group.examples.extend(Extensions::Ordered) }
+        group.stub(:filtered_examples) { group.examples.extend(Extensions::Ordered::Examples) }
         group.run(reporter).should be_false
       end
 
@@ -734,7 +734,7 @@ module RSpec::Core
           example('ex 1') { 1.should eq(2) }
           example('ex 2') { 1.should eq(1) }
         end
-        group.stub(:filtered_examples) { group.examples.extend(Extensions::Ordered) }
+        group.stub(:filtered_examples) { group.examples.extend(Extensions::Ordered::Examples) }
         group.filtered_examples.each do |example|
           example.should_receive(:run)
         end

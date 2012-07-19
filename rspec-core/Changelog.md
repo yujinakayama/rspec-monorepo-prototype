@@ -1,5 +1,22 @@
 ### dev
-[full changelog](http://github.com/rspec/rspec-core/compare/v2.11.0...master)
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.11.1...master)
+
+Enhancements
+
+* Add support for custom ordering strategies for groups and examples.
+  (Myron Marston)
+
+Bug fixes
+
+* Remove override of ExampleGroup#ancestors. This is a core ruby
+  method that RSpec shouldn't override. Instead, define
+  ExampleGroup#parent_groups. (Myron Marston)
+* Limit monkey patching of shared example/context declaration
+  methods (`shared_examples_for`, etc.) to just the objects
+  that need it rather than every object in the system (Myron Marston).
+
+### 2.11.1 / 2012-07-18
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.11.0...v2.11.1)
 
 Bug fixes
 

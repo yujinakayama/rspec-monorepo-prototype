@@ -22,6 +22,7 @@ module RSpec
       include Subject::ExampleMethods
       include Pending
       include Let
+      include SharedExampleGroup
 
       # @private
       def self.world
@@ -241,7 +242,7 @@ module RSpec
 
       # @private
       def self.children
-        @children ||= [].extend(Extensions::Ordered)
+        @children ||= [].extend(Extensions::Ordered::ExampleGroups)
       end
 
       # @private
@@ -249,9 +250,9 @@ module RSpec
         @_descendants ||= [self] + children.inject([]) {|list, c| list + c.descendants}
       end
 
-      # @private
-      def self.ancestors
-        @_ancestors ||= super().select {|a| a < RSpec::Core::ExampleGroup}
+      ## @private
+      def self.parent_groups
+        @parent_groups ||= ancestors.select {|a| a < RSpec::Core::ExampleGroup}
       end
 
       # @private
@@ -417,7 +418,7 @@ An error occurred in an after(:all) hook.
 
       # @private
       def self.top_level_description
-        ancestors.last.description
+        parent_groups.last.description
       end
 
       # @private
