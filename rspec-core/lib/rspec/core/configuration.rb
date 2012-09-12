@@ -405,21 +405,17 @@ MESSAGE
         @backtrace_clean_patterns = true_or_false ? [] : DEFAULT_BACKTRACE_PATTERNS
       end
 
-      def color(output=output_stream)
-        # rspec's built-in formatters all call this with the output argument,
-        # but defaulting to output_stream for backward compatibility with
-        # formatters in extension libs
-        return false unless output_to_tty?(output)
+      def color
+        return false unless output_to_tty?
         value_for(:color, @color)
       end
 
       def color=(bool)
         if bool
+          @color = true
           if RSpec.windows_os? and not ENV['ANSICON']
             warn "You must use ANSICON 1.31 or later (http://adoxa.110mb.com/ansicon/) to use colour on Windows"
             @color = false
-          else
-            @color = true
           end
         end
       end
@@ -888,7 +884,7 @@ EOM
 
       def gather_directories(path, patterns)
         patterns.map do |pattern|
-          pattern =~ /^#{path}/ ? Dir[pattern.strip].sort : Dir["#{path}/{#{pattern.strip}}"].sort
+          pattern =~ /^#{path}/ ? Dir[pattern.strip] : Dir["#{path}/{#{pattern.strip}}"]
         end
       end
 
@@ -933,8 +929,12 @@ MESSAGE
         end
       end
 
-      def output_to_tty?(output=output_stream)
-        tty? || (output.respond_to?(:tty?) && output.tty?)
+      def output_to_tty?
+        begin
+          output_stream.tty? || tty?
+        rescue NoMethodError
+          false
+        end
       end
 
       def built_in_formatter(key)
@@ -951,9 +951,6 @@ MESSAGE
         when 'p', 'progress'
           require 'rspec/core/formatters/progress_formatter'
           RSpec::Core::Formatters::ProgressFormatter
-        when 'j', 'json'
-          require 'rspec/core/formatters/json_formatter'
-          RSpec::Core::Formatters::JsonFormatter
         end
       end
 

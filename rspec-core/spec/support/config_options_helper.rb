@@ -3,7 +3,14 @@ require 'fakefs/safe'
 module ConfigOptionsHelper
   extend RSpec::SharedContext
 
-  around(:each) { |e| without_env_vars('SPEC_OPTS', &e) }
+  before do
+    @orig_spec_opts = ENV["SPEC_OPTS"]
+    ENV.delete("SPEC_OPTS")
+  end
+
+  after do
+    ENV["SPEC_OPTS"] = @orig_spec_opts
+  end
 
   def config_options_object(*args)
     coo = RSpec::Core::ConfigurationOptions.new(args)

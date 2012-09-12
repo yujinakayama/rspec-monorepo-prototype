@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'rspec/core/drb_command_line'
 
 module RSpec::Core
   describe Runner do

@@ -16,5 +16,3 @@ bin
 .yardoc
 vendor
 Gemfile-custom
-.idea
-bundle

@@ -144,9 +144,9 @@ module RSpec
 
       def files_to_run
         if ENV['SPEC']
-          FileList[ ENV['SPEC'] ].sort
+          FileList[ ENV['SPEC'] ]
         else
-          FileList[ pattern ].sort.map { |f| f.gsub(/"/, '\"').gsub(/'/, "\\\\'") }
+          FileList[ pattern ].map { |f| f.gsub(/"/, '\"').gsub(/'/, "\\\\'") }
         end
       end
 
