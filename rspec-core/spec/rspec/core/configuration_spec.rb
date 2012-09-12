@@ -1,9 +1,6 @@
 require 'spec_helper'
 require 'tmpdir'
 
-# so the stdlib module is available...
-module Test; module Unit; module Assertions; end; end; end
-
 module RSpec::Core
 
   describe Configuration do
@@ -25,12 +22,8 @@ module RSpec::Core
       end
 
       context "with rspec-1 loaded" do
-        before do
-          Object.const_set(:Spec, Module.new)
-          ::Spec::const_set(:VERSION, Module.new)
-          ::Spec::VERSION::const_set(:MAJOR, 1)
-        end
-        after  { Object.__send__(:remove_const, :Spec) }
+        before { stub_const("Spec::VERSION::MAJOR", 1) }
+
         it "raises with a helpful message" do
           expect {
             config.load_spec_files
@@ -153,7 +146,10 @@ module RSpec::Core
     end
 
     describe "#expect_with" do
-      before { config.stub(:require) }
+      before do
+        stub_const("Test::Unit::Assertions", Module.new)
+        config.stub(:require)
+      end
 
       it_behaves_like "a configurable framework adapter", :expect_with
 
@@ -213,7 +209,10 @@ module RSpec::Core
     end
 
     describe "#expecting_with_rspec?" do
-      before { config.stub(:require) }
+      before do
+        stub_const("Test::Unit::Assertions", Module.new)
+        config.stub(:require)
+      end
 
       it "returns false by default" do
         config.should_not be_expecting_with_rspec
@@ -318,6 +317,40 @@ module RSpec::Core
           config.stub(:command) { 'ruby' }
           config.files_or_directories_to_run = []
           config.files_to_run.should be_empty
+        end
+      end
+
+      def specify_consistent_ordering_of_files_to_run
+        File.stub(:directory?).with('a') { true }
+
+        orderings = [
+          %w[ a/1.rb a/2.rb a/3.rb ],
+          %w[ a/2.rb a/1.rb a/3.rb ],
+          %w[ a/3.rb a/2.rb a/1.rb ]
+        ].map do |files|
+          Dir.should_receive(:[]).with(/^a/) { files }
+          yield
+          config.files_to_run
+        end
+
+        orderings.uniq.size.should eq(1)
+      end
+
+      context 'when the given directories match the pattern' do
+        it 'orders the files in a consistent ordering, regardless of the underlying OS ordering' do
+          specify_consistent_ordering_of_files_to_run do
+            config.pattern = 'a/*.rb'
+            config.files_or_directories_to_run = 'a'
+          end
+        end
+      end
+
+      context 'when the pattern is given relative to the given directories' do
+        it 'orders the files in a consistent ordering, regardless of the underlying OS ordering' do
+          specify_consistent_ordering_of_files_to_run do
+            config.pattern = '*.rb'
+            config.files_or_directories_to_run = 'a'
+          end
         end
       end
     end
@@ -503,33 +536,57 @@ module RSpec::Core
     %w[color color_enabled].each do |color_option|
       describe "##{color_option}=" do
         context "given true" do
-          context "with non-tty output and no autotest" do
-            it "does not set color_enabled" do
-              config.output_stream = StringIO.new
-              config.output_stream.stub(:tty?) { false }
-              config.tty = false
-              config.send "#{color_option}=", true
-              config.send(color_option).should be_false
-            end
-          end
+          before { config.send "#{color_option}=", true }
 
-          context "with tty output" do
+          context "with config.tty? and output.tty?" do
             it "does not set color_enabled" do
-              config.output_stream = StringIO.new
-              config.output_stream.stub(:tty?) { true }
-              config.tty = false
-              config.send "#{color_option}=", true
-              config.send(color_option).should be_true
-            end
-          end
+              output = StringIO.new
+              config.output_stream = output
 
-          context "with tty set" do
-            it "does not set color_enabled" do
-              config.output_stream = StringIO.new
-              config.output_stream.stub(:tty?) { false }
               config.tty = true
-              config.send "#{color_option}=", true
+              config.output_stream.stub :tty? => true
+
               config.send(color_option).should be_true
+              config.send(color_option, output).should be_true
+            end
+          end
+
+          context "with config.tty? and !output.tty?" do
+            it "sets color_enabled" do
+              output = StringIO.new
+              config.output_stream = output
+
+              config.tty = true
+              config.output_stream.stub :tty? => false
+
+              config.send(color_option).should be_true
+              config.send(color_option, output).should be_true
+            end
+          end
+
+          context "with config.tty? and !output.tty?" do
+            it "does not set color_enabled" do
+              output = StringIO.new
+              config.output_stream = output
+
+              config.tty = false
+              config.output_stream.stub :tty? => true
+
+              config.send(color_option).should be_true
+              config.send(color_option, output).should be_true
+            end
+          end
+
+          context "with !config.tty? and !output.tty?" do
+            it "does not set color_enabled" do
+              output = StringIO.new
+              config.output_stream = output
+
+              config.tty = false
+              config.output_stream.stub :tty? => false
+
+              config.send(color_option).should be_false
+              config.send(color_option, output).should be_false
             end
           end
 
@@ -546,18 +603,11 @@ module RSpec::Core
             end
 
             context "with ANSICON available" do
-              before(:all) do
-                @original_ansicon = ENV['ANSICON']
-                ENV['ANSICON'] = 'ANSICON'
-              end
-
-              after(:all) do
-                ENV['ANSICON'] = @original_ansicon
-              end
+              around(:each) { |e| with_env_vars('ANSICON' => 'ANSICON', &e) }
 
               it "enables colors" do
                 config.output_stream = StringIO.new
-                config.output_stream.stub(:tty?) { true }
+                config.output_stream.stub :tty? => true
                 config.send "#{color_option}=", true
                 config.send(color_option).should be_true
               end
@@ -631,23 +681,23 @@ module RSpec::Core
       end
 
       it "finds a formatter by class name" do
-        Object.const_set("ACustomFormatter", Class.new(Formatters::BaseFormatter))
-        config.add_formatter "ACustomFormatter"
-        config.formatters.first.should be_an_instance_of(ACustomFormatter)
+        stub_const("CustomFormatter", Class.new(Formatters::BaseFormatter))
+        config.add_formatter "CustomFormatter"
+        config.formatters.first.should be_an_instance_of(CustomFormatter)
       end
 
       it "finds a formatter by class fully qualified name" do
-        RSpec.const_set("CustomFormatter", Class.new(Formatters::BaseFormatter))
+        stub_const("RSpec::CustomFormatter", Class.new(Formatters::BaseFormatter))
         config.add_formatter "RSpec::CustomFormatter"
         config.formatters.first.should be_an_instance_of(RSpec::CustomFormatter)
       end
 
       it "requires a formatter file based on its fully qualified name" do
-        config.should_receive(:require).with('rspec/custom_formatter2') do
-          RSpec.const_set("CustomFormatter2", Class.new(Formatters::BaseFormatter))
+        config.should_receive(:require).with('rspec/custom_formatter') do
+          stub_const("RSpec::CustomFormatter", Class.new(Formatters::BaseFormatter))
         end
-        config.add_formatter "RSpec::CustomFormatter2"
-        config.formatters.first.should be_an_instance_of(RSpec::CustomFormatter2)
+        config.add_formatter "RSpec::CustomFormatter"
+        config.formatters.first.should be_an_instance_of(RSpec::CustomFormatter)
       end
 
       it "raises NameError if class is unresolvable" do

@@ -27,10 +27,10 @@ module RSpec::Core
 
     context "with rcov" do
       it "renders rcov" do
-          with_rcov do
-            spec_command.should =~ /^#{ruby} -S rcov/
-          end
+        with_rcov do
+          spec_command.should =~ /^#{ruby} -S rcov/
         end
+      end
     end
 
     context "with ruby options" do
@@ -80,19 +80,39 @@ module RSpec::Core
       end
     end
 
-    context "with SPEC=path/to/file" do
-      before do
-        @orig_spec = ENV["SPEC"]
-        ENV["SPEC"] = "path/to/file"
+    def specify_consistent_ordering_of_files_to_run(pattern, task)
+      orderings = [
+        %w[ a/1.rb a/2.rb a/3.rb ],
+        %w[ a/2.rb a/1.rb a/3.rb ],
+        %w[ a/3.rb a/2.rb a/1.rb ]
+      ].map do |files|
+        FileList.should_receive(:[]).with(pattern) { files }
+        task.__send__(:files_to_run)
       end
 
-      after do
-        ENV["SPEC"] = @orig_spec
-      end
+      orderings.uniq.size.should eq(1)
+    end
 
+    context "with SPEC env var set" do
       it "sets files to run" do
-        task.__send__(:files_to_run).should eq(["path/to/file"])
+        with_env_vars 'SPEC' => 'path/to/file' do
+          task.__send__(:files_to_run).should eq(["path/to/file"])
+        end
       end
+
+      it "sets the files to run in a consistent order, regardless of the underlying FileList ordering" do
+        with_env_vars 'SPEC' => 'a/*.rb' do
+          specify_consistent_ordering_of_files_to_run('a/*.rb', task)
+        end
+      end
+    end
+
+    it "sets the files to run in a consistent order, regardless of the underlying FileList ordering" do
+      task = RakeTask.new do |t|
+        t.pattern = 'a/*.rb'
+      end
+
+      specify_consistent_ordering_of_files_to_run('a/*.rb', task)
     end
 
     context "with paths with quotes" do

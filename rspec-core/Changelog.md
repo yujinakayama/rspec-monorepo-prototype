@@ -5,16 +5,23 @@ Enhancements
 
 * Add support for custom ordering strategies for groups and examples.
   (Myron Marston)
+* JSON Formatter (Alex Chaffee)
 
 Bug fixes
 
-* Remove override of ExampleGroup#ancestors. This is a core ruby
-  method that RSpec shouldn't override. Instead, define
-  ExampleGroup#parent_groups. (Myron Marston)
-* Limit monkey patching of shared example/context declaration
-  methods (`shared_examples_for`, etc.) to just the objects
-  that need it rather than every object in the system (Myron Marston).
+* Remove override of ExampleGroup#ancestors. This is a core ruby method that
+  RSpec shouldn't override. Instead, define ExampleGroup#parent_groups. (Myron
+  Marston)
+* Limit monkey patching of shared example/context declaration methods
+  (`shared_examples_for`, etc.) to just the objects that need it rather than
+  every object in the system (Myron Marston).
 * Fix Metadata#fetch to support computed values (Sam Goldman).
+* Named subject can now be referred to from within subject block in a nested
+  group (tomykaira).
+* Fix `fail_fast` so that it properly exits when an error occurs in a
+  `before(:all) hook` (Bradley Schaefer).
+* Make the order spec files are loaded consistent, regardless of the
+  order of the files returned by the OS (Jo Liss).
 
 ### 2.11.1 / 2012-07-18
 [full changelog](http://github.com/rspec/rspec-core/compare/v2.11.0...v2.11.1)
