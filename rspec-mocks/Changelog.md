@@ -1,11 +1,31 @@
 ### dev
-[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.11.1...master)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.11.2...master)
+
+Bug fixes
+
+* Fix `:transfer_nested_constants` option of `stub_const` so that it
+  doesn't blow up when there are inherited constants. (Myron Marston)
+* `any_instance` stubs can be used on classes that override `Object#method`.
+  (Andy Lindeman)
+* Methods stubbed with `any_instance` are unstubbed after the test finishes.
+  (Andy Lindeman)
+
+Deprecations:
+
+* Add deprecation warning when using `and_return` with `should_not_receive`
+  (Neha Kumari)
+
+### 2.11.2 / 2012-08-11
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.11.1...v2.11.2)
 
 Bug fixes
 
 * Don't modify `dup` on classes that don't support `dup` (David Chelimsky)
 * Fix `any_instance` so that it works properly with methods defined on
   a superclass. (Daniel Eguzkiza)
+* Fix `stub_const` so that it works properly for nested constants that
+  share a name with a top-level constant (e.g. "MyGem::Hash"). (Myron
+  Marston)
 
 ### 2.11.1 / 2012-07-09
 [full changelog](http://github.com/rspec/rspec-mocks/compare/v2.11.0...v2.11.1)

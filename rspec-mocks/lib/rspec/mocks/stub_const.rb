@@ -4,15 +4,67 @@ module RSpec
     # constant stubbing.
     # @api private
     module RecursiveConstMethods
+      # We only want to consider constants that are defined directly on a
+      # particular module, and not include top-level/inherited constants.
+      # Unfortunately, the constant API changed between 1.8 and 1.9, so
+      # we need to conditionally define methods to ignore the top-level/inherited
+      # constants.
+      #
+      # Given:
+      #   class A; B = 1; end
+      #   class C < A; end
+      #
+      # On 1.8:
+      #   - C.const_get("Hash") # => ::Hash
+      #   - C.const_defined?("Hash") # => false
+      #   - C.constants # => ["A"]
+      #   - None of these methods accept the extra `inherit` argument
+      # On 1.9:
+      #   - C.const_get("Hash") # => ::Hash
+      #   - C.const_defined?("Hash") # => true
+      #   - C.const_get("Hash", false) # => raises NameError
+      #   - C.const_defined?("Hash", false) # => false
+      #   - C.constants # => [:A]
+      #   - C.constants(false) #=> []
+      if Module.method(:const_defined?).arity == 1
+        def const_defined_on?(mod, const_name)
+          mod.const_defined?(const_name)
+        end
+
+        def get_const_defined_on(mod, const_name)
+          if const_defined_on?(mod, const_name)
+            return mod.const_get(const_name)
+          end
+
+          raise NameError, "uninitialized constant #{mod.name}::#{const_name}"
+        end
+
+        def constants_defined_on(mod)
+          mod.constants.select { |c| const_defined_on?(mod, c) }
+        end
+      else
+        def const_defined_on?(mod, const_name)
+          mod.const_defined?(const_name, false)
+        end
+
+        def get_const_defined_on(mod, const_name)
+          mod.const_get(const_name, false)
+        end
+
+        def constants_defined_on(mod)
+          mod.constants(false)
+        end
+      end
+
       def recursive_const_get(const_name)
-        const_name.split('::').inject(Object) { |mod, name| mod.const_get name }
+        const_name.split('::').inject(Object) { |mod, name| get_const_defined_on(mod, name) }
       end
 
       def recursive_const_defined?(const_name)
         const_name.split('::').inject([Object, '']) do |(mod, full_name), name|
           yield(full_name, name) if block_given? && !mod.is_a?(Module)
-          return false unless mod.const_defined?(name)
-          [mod.const_get(name), [mod, name].join('::')]
+          return false unless const_defined_on?(mod, name)
+          [get_const_defined_on(mod, name), [mod, name].join('::')]
         end
       end
     end
@@ -139,7 +191,7 @@ module RSpec
       class DefinedConstantReplacer < BaseStubber
         def stub
           @context = recursive_const_get(@context_parts.join('::'))
-          @original_value = @context.const_get(@const_name)
+          @original_value = get_const_defined_on(@context, @const_name)
 
           constants_to_transfer = verify_constants_to_transfer!
 
@@ -160,7 +212,7 @@ module RSpec
 
         def transfer_nested_constants(constants)
           constants.each do |const|
-            @stubbed_value.const_set(const, original_value.const_get(const))
+            @stubbed_value.const_set(const, get_const_defined_on(original_value, const))
           end
         end
 
@@ -178,10 +230,10 @@ module RSpec
 
           if @transfer_nested_constants.is_a?(Array)
             @transfer_nested_constants = @transfer_nested_constants.map(&:to_s) if RUBY_VERSION == '1.8.7'
-            undefined_constants = @transfer_nested_constants - @original_value.constants
+            undefined_constants = @transfer_nested_constants - constants_defined_on(@original_value)
 
             if undefined_constants.any?
-              available_constants = @original_value.constants - @transfer_nested_constants
+              available_constants = constants_defined_on(@original_value) - @transfer_nested_constants
               raise ArgumentError,
                 "Cannot transfer nested constant(s) #{undefined_constants.join(' and ')} " +
                 "for #{@full_constant_name} since they are not defined. Did you mean " +
@@ -190,7 +242,7 @@ module RSpec
 
             @transfer_nested_constants
           else
-            @original_value.constants
+            constants_defined_on(@original_value)
           end
         end
       end
@@ -202,9 +254,9 @@ module RSpec
         def stub
           remaining_parts = @context_parts.dup
           @deepest_defined_const = @context_parts.inject(Object) do |klass, name|
-            break klass unless klass.const_defined?(name)
+            break klass unless const_defined_on?(klass, name)
             remaining_parts.shift
-            klass.const_get(name)
+            get_const_defined_on(klass, name)
           end
 
           context = remaining_parts.inject(@deepest_defined_const) do |klass, name|
