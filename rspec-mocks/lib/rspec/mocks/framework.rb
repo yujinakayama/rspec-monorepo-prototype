@@ -2,7 +2,6 @@
 # supports wrapping rspec's mocking functionality without invading every
 # object in the system.
 
-require 'rspec/mocks/configuration'
 require 'rspec/mocks/extensions/instance_exec'
 require 'rspec/mocks/stashed_instance_method'
 require 'rspec/mocks/method_double'
