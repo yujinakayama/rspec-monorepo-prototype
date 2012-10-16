@@ -24,6 +24,8 @@ Feature: text formatter
     When I run `rspec integer_spec.rb string_spec.rb`
     Then the backtrace-normalized output should contain:
       """
+      Failures:
+      
         1) Integer has a failing example
            Failure/Error: (7 + 5).should eq(11)
              
@@ -32,9 +34,7 @@ Feature: text formatter
              
              (compared using ==)
            # ./integer_spec.rb:3
-      """
-    And the backtrace-normalized output should contain:
-      """
+      
         2) String has a failing example
            Failure/Error: "foo".reverse.should eq("ofo")
              

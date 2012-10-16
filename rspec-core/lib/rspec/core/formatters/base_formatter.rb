@@ -4,12 +4,25 @@ require 'stringio'
 module RSpec
   module Core
     module Formatters
-      # RSpec's built-in formatters are all subclasses of RSpec::Core::Formatters::BaseTextFormatter,
-      # but the BaseTextFormatter documents all of the methods needed to be implemented by a formatter,
-      # as they are called from the reporter.
+
+      # The Reporter calls the Formatter with this protocol:
       #
-      # @see RSpec::Core::Formatters::BaseTextFormatter
-      # @see RSpec::Core::Reporter
+      # * start(expected_example_count)
+      # * zero or more of the following
+      #   * example_group_started(group)
+      #   * example_started(example)
+      #   * example_passed(example)
+      #   * example_failed(example)
+      #   * example_pending(example)
+      #   * message(string)
+      # * stop
+      # * start_dump
+      # * dump_pending
+      # * dump_failures
+      # * dump_summary(duration, example_count, failure_count, pending_count)
+      # * seed(value)
+      # * close
+      #
       class BaseFormatter
         include Helpers
         attr_accessor :example_group
@@ -26,68 +39,55 @@ module RSpec
           @example_group = nil
         end
 
-        # Invoked before any examples are run, right after they have all
-        # been collected. This can be useful for formatters that provide
-        # feedback on progress through a suite.
+        # This method is invoked before any examples are run, right after
+        # they have all been collected. This can be useful for special
+        # formatters that need to provide progress on feedback (graphical ones)
         #
-        # @param example_count
+        # This will only be invoked once, and the next one to be invoked
+        # is #example_group_started
         def start(example_count)
           start_sync_output
           @example_count = example_count
         end
 
-        # Invoked at the beginning of the execution of each example
-        # group.
+        # This method is invoked at the beginning of the execution of each example group.
+        # +example_group+ is the example_group.
         #
-        # @param example_group subclass of `RSpec::Core::ExampleGroup`
+        # The next method to be invoked after this is +example_passed+,
+        # +example_pending+, or +example_finished+
         def example_group_started(example_group)
           @example_group = example_group
         end
 
-        # Invoked at the end of the execution of each example group.
-        #
-        # @param example_group subclass of `RSpec::Core::ExampleGroup`
+        # This method is invoked at the end of the execution of each example group.
+        # +example_group+ is the example_group.
         def example_group_finished(example_group)
         end
 
-
-        # Invoked at the beginning of the execution of each example.
-        #
-        # @param example instance of subclass of `RSpec::Core::ExampleGroup`
         def example_started(example)
           examples << example
         end
 
-        # Invoked when an example passes.
-        #
-        # @param example instance of subclass of `RSpec::Core::ExampleGroup`
         def example_passed(example)
         end
 
-        # Invoked when an example is pending.
-        #
-        # @param example instance of subclass of `RSpec::Core::ExampleGroup`
         def example_pending(example)
           @pending_examples << example
         end
 
-        # Invoked when an example fails.
-        #
-        # @param example instance of subclass of `RSpec::Core::ExampleGroup`
         def example_failed(example)
           @failed_examples << example
         end
 
-        # Used by the reporter to send messages to the output stream.
-        # @param [String] message
         def message(message)
         end
 
-        # Invoked after all examples have executed, before dumping post-run reports.
         def stop
         end
 
-        # Invoked after all of the examples have executed (after `stop`).
+        # This method is invoked after all of the examples have executed. The next method
+        # to be invoked after this one is #dump_failures
+        # (BaseTextFormatter then calls #dump_failure once for each failed example.)
         def start_dump
         end
 
@@ -95,7 +95,7 @@ module RSpec
         def dump_failures
         end
 
-        # Invoked after the dumping of examples and failures.
+        # This method is invoked after the dumping of examples and failures.
         def dump_summary(duration, example_count, failure_count, pending_count)
           @duration = duration
           @example_count = example_count
@@ -103,16 +103,14 @@ module RSpec
           @pending_count = pending_count
         end
 
-        # Invoked after the summary if option is set to do so.
+        # This gets invoked after the summary if option is set to do so.
         def dump_pending
         end
 
-        # @private not intended for use outside RSpec.
         def seed(number)
         end
 
-        # Invoked at the very end, `close` allows the formatter to clean
-        # up resources, e.g. open streams, etc.
+        # This method is invoked at the very end. Allows the formatter to clean up, like closing open streams.
         def close
           restore_sync_output
         end
@@ -131,8 +129,7 @@ module RSpec
           file_path, line_number = matching_line.match(/(.+?):(\d+)(|:\d+)/)[1..2]
 
           if File.exist?(file_path)
-            File.readlines(file_path)[line_number.to_i - 1] ||
-              "Unable to find matching line in #{file_path}"
+            File.readlines(file_path)[line_number.to_i - 1]
           else
             "Unable to find #{file_path} to read failed line"
           end
