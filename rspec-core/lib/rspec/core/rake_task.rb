@@ -108,14 +108,23 @@ module RSpec
         @rspec_opts = opts
       end
 
-      def initialize(*args)
+      def initialize(*args, &task_block)
         setup_ivars(args)
-        yield self if block_given?
 
         desc "Run RSpec code examples" unless ::Rake.application.last_comment
 
-        task name do
+        task name, *args do |t, task_args|
           RakeFileUtils.send(:verbose, verbose) do
+            unless task_block.nil?
+              case task_block.arity
+                when 0
+                  task_block.call
+                when 1
+                  task_block.call(self)
+                when 2
+                  task_block.call(self, task_args)
+              end
+            end
             run_task verbose
           end
         end
@@ -141,13 +150,14 @@ module RSpec
       def run_task(verbose)
         files = has_files?
         if files
+          command = spec_command
           begin
-            puts spec_command if verbose
-            success = system(spec_command)
+            puts command if verbose
+            success = system(command)
           rescue
             puts failure_message if failure_message
           end
-          raise("#{spec_command} failed") if fail_on_error unless success
+          raise("#{command} failed") if fail_on_error unless success
         end
       end
 
@@ -162,10 +172,6 @@ module RSpec
       end
 
       def spec_command
-        @spec_command ||= default_spec_command
-      end
-
-      def default_spec_command
         cmd_parts = []
         cmd_parts << RUBY
         cmd_parts << ruby_opts
