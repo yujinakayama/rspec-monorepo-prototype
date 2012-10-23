@@ -11,7 +11,7 @@ module RSpec
         @object = object
         @proxy = proxy
 
-        @stashed_method = StashedInstanceMethod.new(object_singleton_class, @method_name)
+        @method_stasher = InstanceMethodStasher.new(object_singleton_class, @method_name)
         @method_is_proxied = false
         store(:expectations, [])
         store(:stubs, [])
@@ -42,9 +42,9 @@ module RSpec
 
       # @private
       def original_method
-        if @stashed_method.method_is_stashed?
+        if @method_stasher.method_is_stashed?
           # Example: a singleton method defined on @object
-          method_handle_for(@object, @stashed_method.stashed_method_name)
+          method_handle_for(@object, @method_stasher.stashed_method_name)
         else
           begin
             # Example: an instance method defined on @object's class.
@@ -66,32 +66,22 @@ module RSpec
           end
         end
       rescue NameError
-        # No matching method object can be located, but the object
-        # may use method_missing to respond to the message.
-        method_missing = method_handle_for(@object, :method_missing)
-
-        # If it's the root method_missing implementation, we can give
-        # the user early feedback that there's definitely no original
-        # implementation for this message, so bubble the error up to
-        # the caller.
-        raise if method_missing.owner == ROOT_METHOD_MISSING_OWNER
-
         # We have no way of knowing if the object's method_missing
         # will handle this message or not...but we can at least try.
         # If it's not handled, a `NoMethodError` will be raised, just
         # like normally.
         Proc.new do |*args, &block|
-          method_missing.call(@method_name, *args, &block)
+          @object.__send__(:method_missing, @method_name, *args, &block)
         end
       end
 
+      # @private
       OBJECT_METHOD_METHOD = ::Object.instance_method(:method)
 
+      # @private
       def method_handle_for(object, method_name)
         OBJECT_METHOD_METHOD.bind(object).call(method_name)
       end
-
-      ROOT_METHOD_MISSING_OWNER = Object.instance_method(:method_missing).owner
 
       # @private
       def object_singleton_class
@@ -102,7 +92,7 @@ module RSpec
       def configure_method
         RSpec::Mocks::space.add(@object) if RSpec::Mocks::space
         warn_if_nil_class
-        @stashed_method.stash unless @method_is_proxied
+        @method_stasher.stash unless @method_is_proxied
         define_proxy_method
       end
 
@@ -129,7 +119,7 @@ module RSpec
         return unless @method_is_proxied
 
         object_singleton_class.__send__(:remove_method, @method_name)
-        @stashed_method.restore
+        @method_stasher.restore
         @method_is_proxied = false
       end
 
