@@ -3,7 +3,7 @@ module RSpec
     # @private
     class MethodDouble < Hash
       # @private
-      attr_reader :method_name
+      attr_reader :method_name, :object
 
       # @private
       def initialize(object, method_name, proxy)
@@ -11,7 +11,7 @@ module RSpec
         @object = object
         @proxy = proxy
 
-        @stashed_method = StashedInstanceMethod.new(object_singleton_class, @method_name)
+        @method_stasher = InstanceMethodStasher.new(object_singleton_class, @method_name)
         @method_is_proxied = false
         store(:expectations, [])
         store(:stubs, [])
@@ -41,6 +41,49 @@ module RSpec
       end
 
       # @private
+      def original_method
+        if @method_stasher.method_is_stashed?
+          # Example: a singleton method defined on @object
+          method_handle_for(@object, @method_stasher.stashed_method_name)
+        else
+          begin
+            # Example: an instance method defined on @object's class.
+            @object.class.instance_method(@method_name).bind(@object)
+          rescue NameError
+            raise unless @object.respond_to?(:superclass)
+
+            # Example: a singleton method defined on @object's superclass.
+            #
+            # Note: we have to give precedence to instance methods
+            # defined on @object's class, because in a case like:
+            #
+            # `klass.should_receive(:new).and_call_original`
+            #
+            # ...we want `Class#new` bound to `klass` (which will return
+            # an instance of `klass`), not `klass.superclass.new` (which
+            # would return an instance of `klass.superclass`).
+            @object.superclass.singleton_class.instance_method(@method_name).bind(@object)
+          end
+        end
+      rescue NameError
+        # We have no way of knowing if the object's method_missing
+        # will handle this message or not...but we can at least try.
+        # If it's not handled, a `NoMethodError` will be raised, just
+        # like normally.
+        Proc.new do |*args, &block|
+          @object.__send__(:method_missing, @method_name, *args, &block)
+        end
+      end
+
+      # @private
+      OBJECT_METHOD_METHOD = ::Object.instance_method(:method)
+
+      # @private
+      def method_handle_for(object, method_name)
+        OBJECT_METHOD_METHOD.bind(object).call(method_name)
+      end
+
+      # @private
       def object_singleton_class
         class << @object; self; end
       end
@@ -49,7 +92,7 @@ module RSpec
       def configure_method
         RSpec::Mocks::space.add(@object) if RSpec::Mocks::space
         warn_if_nil_class
-        @stashed_method.stash unless @method_is_proxied
+        @method_stasher.stash unless @method_is_proxied
         define_proxy_method
       end
 
@@ -76,7 +119,7 @@ module RSpec
         return unless @method_is_proxied
 
         object_singleton_class.__send__(:remove_method, @method_name)
-        @stashed_method.restore
+        @method_stasher.restore
         @method_is_proxied = false
       end
 
@@ -104,7 +147,8 @@ module RSpec
         expectation = if existing_stub = stubs.first
                         existing_stub.build_child(expected_from, 1, opts, &implementation)
                       else
-                        MessageExpectation.new(error_generator, expectation_ordering, expected_from, @method_name, 1, opts, &implementation)
+                        MessageExpectation.new(error_generator, expectation_ordering,
+                                               expected_from, self, 1, opts, &implementation)
                       end
         expectations << expectation
         expectation
@@ -113,7 +157,8 @@ module RSpec
       # @private
       def add_negative_expectation(error_generator, expectation_ordering, expected_from, &implementation)
         configure_method
-        expectation = NegativeMessageExpectation.new(error_generator, expectation_ordering, expected_from, @method_name, &implementation)
+        expectation = NegativeMessageExpectation.new(error_generator, expectation_ordering,
+                                                     expected_from, self, &implementation)
         expectations.unshift expectation
         expectation
       end
@@ -121,7 +166,8 @@ module RSpec
       # @private
       def add_stub(error_generator, expectation_ordering, expected_from, opts={}, &implementation)
         configure_method
-        stub = MessageExpectation.new(error_generator, expectation_ordering, expected_from, @method_name, :any, opts, &implementation)
+        stub = MessageExpectation.new(error_generator, expectation_ordering, expected_from,
+                                      self, :any, opts, &implementation)
         stubs.unshift stub
         stub
       end
