@@ -9,7 +9,7 @@ describe "and_call_original" do
         end
 
         def meth_2(x)
-          yield x, 3
+          yield x, :additional_yielded_arg
         end
 
         def self.new_instance
@@ -27,8 +27,8 @@ describe "and_call_original" do
 
     it 'passes args and blocks through to the original method' do
       instance.should_receive(:meth_2).and_call_original
-      value = instance.meth_2(2) { |a, b| a * b }
-      expect(value).to eq(6)
+      value = instance.meth_2(:submitted_arg) { |a, b| [a, b] }
+      expect(value).to eq([:submitted_arg, :additional_yielded_arg])
     end
 
     it 'works for singleton methods' do
@@ -37,16 +37,33 @@ describe "and_call_original" do
       expect(instance.foo).to eq(:bar)
     end
 
-    it 'works for class methods defined on a superclass' do
-      subclass = Class.new(klass)
-      subclass.should_receive(:new_instance).and_call_original
-      expect(subclass.new_instance).to be_a(subclass)
-    end
+    if RUBY_VERSION.to_f > 1.8
+      it 'works for class methods defined on a superclass' do
+        subclass = Class.new(klass)
+        subclass.should_receive(:new_instance).and_call_original
+        expect(subclass.new_instance).to be_a(subclass)
+      end
 
-    it 'works for class methods defined on a grandparent class' do
-      sub_subclass = Class.new(Class.new(klass))
-      sub_subclass.should_receive(:new_instance).and_call_original
-      expect(sub_subclass.new_instance).to be_a(sub_subclass)
+      it 'works for class methods defined on a grandparent class' do
+        sub_subclass = Class.new(Class.new(klass))
+        sub_subclass.should_receive(:new_instance).and_call_original
+        expect(sub_subclass.new_instance).to be_a(sub_subclass)
+      end
+    else
+      it 'attempts to work for class methods defined on a superclass but ' +
+         'executes the method with `self` as the superclass' do
+        ::Kernel.stub(:warn)
+        subclass = Class.new(klass)
+        subclass.should_receive(:new_instance).and_call_original
+        expect(subclass.new_instance).to be_an_instance_of(klass)
+       end
+
+      it 'prints a warning to notify users that `self` will not be correct' do
+        subclass = Class.new(klass)
+        ::Kernel.should_receive(:warn).with(/may not work correctly/)
+        subclass.should_receive(:new_instance).and_call_original
+        subclass.new_instance
+      end
     end
 
     it 'works for class methods defined on the Class class' do
@@ -64,9 +81,14 @@ describe "and_call_original" do
     context 'on an object that defines method_missing' do
       before do
         klass.class_eval do
+          private
+
           def method_missing(name, *args)
-            return super unless name.to_s =~ /^greet_(.*)$/
-            "Hello, #{$1}"
+            if name.to_s == "greet_jack"
+              "Hello, jack"
+            else
+              super
+            end
           end
         end
       end
@@ -77,27 +99,18 @@ describe "and_call_original" do
       end
 
       it 'raises an error on invocation if method_missing does not handle the message' do
-        # Demonstration of weird 1.8.7 bug
-        obj = double('anything').as_null_object
-        # Uncomment this line to make the raise_error
-        # expectation below to fail--it changes the error class to NameError
-        # obj.should be_null_object
-
         instance.should_receive(:not_a_handled_message).and_call_original
+
+        # Note: it should raise a NoMethodError (and usually does), but
+        # due to a weird rspec-expectations issue (see #183) it sometimes
+        # raises a `NameError` when a `be_xxx` predicate matcher has been
+        # recently used. `NameError` is the superclass of `NoMethodError`
+        # so this example will pass regardless.
+        # If/when we solve the rspec-expectations issue, this can (and should)
+        # be changed to `NoMethodError`.
         expect {
           instance.not_a_handled_message
-        }.to raise_error(NoMethodError, /not_a_handled_message/)
-      end
-    end
-
-    context 'on an object that does not define method_missing' do
-      it 'raises an error when called on a method that does not exist' do
-        mock_expectation = instance.should_receive(:foo)
-        instance.foo # to satisfy the expectation
-
-        expect {
-          mock_expectation.and_call_original
-        }.to raise_error(/does not implement/)
+        }.to raise_error(NameError, /not_a_handled_message/)
       end
     end
   end
@@ -129,15 +142,6 @@ describe "and_call_original" do
 
       request.should_receive(:perform).and_call_original
       expect(request.perform).to eq(:a_response)
-    end
-
-    it 'raises an error if the object does not respond to the message' do
-      mock_expectation = request.should_receive(:blah)
-      request.blah # to satisfy the expectation
-
-      expect {
-        mock_expectation.and_call_original
-      }.to raise_error(/does not implement/)
     end
   end
 
