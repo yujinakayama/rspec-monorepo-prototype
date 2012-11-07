@@ -1,4 +1,5 @@
 require 'rspec/core/formatters/base_formatter'
+require 'rspec/core/formatters/terminal_color'
 
 module RSpec
   module Core
@@ -33,11 +34,11 @@ module RSpec
         # @param [String] string
         def colorise_summary(summary)
           if failure_count > 0
-            color(summary, RSpec.configuration.failure_color)
+            custom_color(summary, RSpec.configuration.failure_color)
           elsif pending_count > 0
-            color(summary, RSpec.configuration.pending_color)
+            custom_color(summary, RSpec.configuration.pending_color)
           else
-            color(summary, RSpec.configuration.success_color)
+            custom_color(summary, RSpec.configuration.success_color)
           end
         end
 
@@ -61,7 +62,7 @@ module RSpec
           output.puts
 
           failed_examples.each do |example|
-            output.puts(failure_color("rspec #{RSpec::Core::Metadata::relative_path(example.location)}") + " " + detail_color("# #{example.full_description}"))
+            output.puts(red("rspec #{RSpec::Core::Metadata::relative_path(example.location)}") + " " + cyan("# #{example.full_description}"))
           end
         end
 
@@ -83,7 +84,7 @@ module RSpec
 
           sorted_examples.each do |example|
             output.puts "  #{example.full_description}"
-            output.puts detail_color("    #{failure_color(format_seconds(example.execution_result[:run_time]))} #{failure_color("seconds")} #{format_caller(example.location)}")
+            output.puts cyan("    #{red(format_seconds(example.execution_result[:run_time]))} #{red("seconds")} #{format_caller(example.location)}")
           end
         end
 
@@ -103,9 +104,9 @@ module RSpec
             output.puts
             output.puts "Pending:"
             pending_examples.each do |pending_example|
-              output.puts pending_color("  #{pending_example.full_description}")
-              output.puts detail_color("    # #{pending_example.execution_result[:pending_message]}")
-              output.puts detail_color("    # #{format_caller(pending_example.location)}")
+              output.puts yellow("  #{pending_example.full_description}")
+              output.puts cyan("    # #{pending_example.execution_result[:pending_message]}")
+              output.puts cyan("    # #{format_caller(pending_example.location)}")
               if pending_example.execution_result[:exception] \
                 && RSpec.configuration.show_failures_in_pending_blocks?
                 dump_failure_info(pending_example)
@@ -125,58 +126,46 @@ module RSpec
           output.close if IO === output && output != $stdout
         end
 
-        VT100_COLORS = {
-          :black => 30,
-          :red => 31,
-          :green => 32,
-          :yellow => 33,
-          :blue => 34,
-          :magenta => 35,
-          :cyan => 36,
-          :white => 37
-        }
-
-        def colorize(text, code_or_symbol)
-          if VT100_COLORS.key?(code_or_symbol) || VT100_COLORS.value?(code_or_symbol)
-            code = VT100_COLORS.fetch(code_or_symbol) { code_or_symbol }
-            "\e[#{code}m#{text}\e[0m"
-          else # defaults to white
-             "\e[37m#{text}\e[0m"
-          end
-        end
-
       protected
 
-        def bold(text)
-          color_enabled? ? "\e[1m#{text}\e[0m" : text
-        end
-
         def color(text, color_code)
-          color_enabled? ? colorize(text, color_code) : text
+          color_enabled? ? "#{color_code}#{text}\e[0m" : text
         end
         
-        def failure_color(text)
-          color(text, RSpec.configuration.failure_color)
+        def custom_color(text, color_code)
+          color_enabled? ? RSpec::Core::Formatters::TerminalColor.colorize(text, color_code) : text
         end
 
-        def success_color(text)
-          color(text, RSpec.configuration.success_color)
+        def bold(text)
+          color(text, "\e[1m")
         end
 
-        def pending_color(text)
-          color(text, RSpec.configuration.pending_color)
-        end
-        
-        def fixed_color(text)
-          color(text, RSpec.configuration.fixed_color)
+        def red(text)
+          color(text, "\e[31m")
         end
 
-        def detail_color(text)
-          color(text, RSpec.configuration.detail_color)
+        def green(text)
+          color(text, "\e[32m")
         end
 
-        def default_color(text)
-          color(text, RSpec.configuration.default_color)
+        def yellow(text)
+          color(text, "\e[33m")
+        end
+
+        def blue(text)
+          color(text, "\e[34m")
+        end
+
+        def magenta(text)
+          color(text, "\e[35m")
+        end
+
+        def cyan(text)
+          color(text, "\e[36m")
+        end
+
+        def white(text)
+          color(text, "\e[37m")
         end
 
         def short_padding
@@ -195,13 +184,13 @@ module RSpec
 
         def dump_backtrace(example)
           format_backtrace(example.execution_result[:exception].backtrace, example).each do |backtrace_info|
-            output.puts detail_color("#{long_padding}# #{backtrace_info}")
+            output.puts cyan("#{long_padding}# #{backtrace_info}")
           end
         end
 
         def dump_pending_fixed(example, index)
           output.puts "#{short_padding}#{index.next}) #{example.full_description} FIXED"
-          output.puts fixed_color("#{long_padding}Expected pending '#{example.metadata[:execution_result][:pending_message]}' to fail. No Error was raised.")
+          output.puts blue("#{long_padding}Expected pending '#{example.metadata[:execution_result][:pending_message]}' to fail. No Error was raised.")
         end
 
         def pending_fixed?(example)
@@ -215,9 +204,9 @@ module RSpec
 
         def dump_failure_info(example)
           exception = example.execution_result[:exception]
-          output.puts "#{long_padding}#{failure_color("Failure/Error:")} #{failure_color(read_failed_line(exception, example).strip)}"
-          output.puts "#{long_padding}#{failure_color(exception.class.name << ":")}" unless exception.class.name =~ /RSpec/
-          exception.message.to_s.split("\n").each { |line| output.puts "#{long_padding}  #{failure_color(line)}" } if exception.message
+          output.puts "#{long_padding}#{red("Failure/Error:")} #{red(read_failed_line(exception, example).strip)}"
+          output.puts "#{long_padding}#{red(exception.class.name << ":")}" unless exception.class.name =~ /RSpec/
+          exception.message.to_s.split("\n").each { |line| output.puts "#{long_padding}  #{red(line)}" } if exception.message
           if shared_group = find_shared_group(example)
             dump_shared_failure_info(shared_group)
           end
