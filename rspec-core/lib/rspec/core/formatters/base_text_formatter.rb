@@ -1,5 +1,4 @@
 require 'rspec/core/formatters/base_formatter'
-require 'rspec/core/formatters/terminal_color'
 
 module RSpec
   module Core
@@ -126,6 +125,26 @@ module RSpec
           output.close if IO === output && output != $stdout
         end
 
+        VT100_COLORS = {
+          :black => 30,
+          :red => 31,
+          :green => 32,
+          :yellow => 33,
+          :blue => 34,
+          :magenta => 35,
+          :cyan => 36,
+          :white => 37
+        }
+
+        def colorize(text, code_or_symbol)
+          if VT100_COLORS.key?(code_or_symbol) || VT100_COLORS.value?(code_or_symbol)
+            code = VT100_COLORS.fetch(code_or_symbol) { code_or_symbol }
+            "\e[#{code}m#{text}\e[0m"
+          else # defaults to white
+             "\e[37m#{text}\e[0m"
+          end
+        end
+
       protected
 
         def color(text, color_code)
@@ -133,7 +152,7 @@ module RSpec
         end
         
         def custom_color(text, color_code)
-          color_enabled? ? RSpec::Core::Formatters::TerminalColor.colorize(text, color_code) : text
+          color_enabled? ? colorize(text, color_code) : text
         end
 
         def bold(text)
