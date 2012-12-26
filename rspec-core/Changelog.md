@@ -1,3 +1,20 @@
+### dev
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.12.2...master)
+
+Enhancements
+
+* Allow `--profile` option to take a count argument that
+  determines the number of slow examples to dump
+  (Greggory Rothmeier).
+
+Bug fixes
+
+* Don't blow up when dumping error output for instances
+  of anonymous error classes (Myron Marston).
+* Fix default backtrace filters so lines from projects
+  containing "gems" in the name are not filtered, but
+  lines from installed gems still are (Myron Marston).
+
 ### 2.12.2 / 2012-12-13
 [full changelog](http://github.com/rspec/rspec-core/compare/v2.12.1...v2.12.2)
 

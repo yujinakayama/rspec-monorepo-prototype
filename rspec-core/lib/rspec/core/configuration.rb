@@ -122,20 +122,12 @@ MESSAGE
       # Load files matching this pattern (default: `'**/*_spec.rb'`)
       add_setting :pattern, :alias_with => :filename_pattern
 
-      # Report the times for the 10 slowest examples (default: `false`).
+      # Report the times for the slowest examples (default: `false`).
+      # Use this to specify the number of examples to include in the profile.
       add_setting :profile_examples
 
       # Run all examples if none match the configured filters (default: `false`).
       add_setting :run_all_when_everything_filtered
-
-      # Allow user to configure their own success/pending/failure colors
-      # @param [Symbol] should be one of the following: [:black, :white, :red, :green, :yellow, :blue, :magenta, :cyan]
-      add_setting :success_color
-      add_setting :pending_color
-      add_setting :failure_color
-      add_setting :default_color
-      add_setting :fixed_color
-      add_setting :detail_color
 
       # Seed for random ordering (default: generated randomly each run).
       #
@@ -185,7 +177,7 @@ MESSAGE
         /\/lib\d*\/ruby\//,
         /org\/jruby\//,
         /bin\//,
-        /gems/,
+        %r|/gems/|,
         /spec\/spec_helper\.rb/,
         /lib\/rspec\/(core|expectations|matchers|mocks)/
       ]
@@ -204,12 +196,7 @@ MESSAGE
         @filter_manager = FilterManager.new
         @preferred_options = {}
         @seed = srand % 0xFFFF
-        @failure_color = :red
-        @success_color = :green
-        @pending_color = :yellow
-        @default_color = :white
-        @fixed_color = :blue
-        @detail_color = :cyan
+        @profile_examples = false
       end
 
       # @private
@@ -519,6 +506,19 @@ EOM
                         add_formatter('progress') if formatters.empty?
                         Reporter.new(*formatters)
                       end
+      end
+
+      # @api private
+      #
+      # Defaults `profile_examples` to 10 examples when `@profile_examples` is `true`.
+      #
+      def profile_examples
+        profile = value_for(:profile_examples, @profile_examples)
+        if profile && !profile.is_a?(Integer)
+          10
+        else
+          profile
+        end
       end
 
       # @private
