@@ -379,4 +379,51 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
       output.string.should =~ /, 100.0% of total time\):/
     end
   end
+
+  describe "custom_colors" do
+    it "uses the custom success color" do
+      RSpec.configure do |config|
+        config.color_enabled = true
+        config.tty = true
+        config.success_color = :cyan
+      end
+      formatter.dump_summary(0,1,0,0)
+      output.string.should include("\e[36m")
+    end
+  end
+
+  describe "#colorize" do
+    it "accepts a VT100 integer code and formats the text with it" do
+       formatter.colorize('abc', 32).should == "\e[32mabc\e[0m"
+    end
+
+    it "accepts a symbol as a color parameter and translates it to the correct integer code, then formats the text with it" do
+       formatter.colorize('abc', :green).should == "\e[32mabc\e[0m"
+    end
+
+    it "accepts a non-default color symbol as a parameter and translates it to the correct integer code, then formats the text with it" do
+       formatter.colorize('abc', :cyan).should == "\e[36mabc\e[0m"
+    end
+  end
+
+  described_class::VT100_COLORS.each do |name, number|
+    next if name == :black
+
+    describe "##{name}" do
+      before do
+        RSpec.configuration.stub(:color_enabled?) { true }
+        RSpec.stub(:warn)
+      end
+
+      it "prints the text using the color code for #{name}" do
+        expect(formatter.send(name, "text")).to eq("\e[#{number}mtext\e[0m")
+      end
+
+      it "prints a deprecation warning" do
+        RSpec.should_receive(:warn).with(/#{name}/)
+        formatter.send(name, "text")
+      end
+    end
+  end
+
 end
