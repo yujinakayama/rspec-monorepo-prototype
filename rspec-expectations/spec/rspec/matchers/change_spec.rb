@@ -6,7 +6,7 @@ class SomethingExpected
   attr_accessor :some_value
 end
 
-describe "should change(actual, message)" do
+describe "expect { ... }.to change(actual, message)" do
   context "with a numeric value" do
     before(:each) do
       @instance = SomethingExpected.new
@@ -22,9 +22,9 @@ describe "should change(actual, message)" do
         expect {}.to change(@instance, :some_value)
       end.to fail_with("some_value should have changed, but is still 5")
     end
-    
+
     it "provides a #description" do
-      change(@instance, :some_value).description.should == "change #some_value"
+      expect(change(@instance, :some_value).description).to eq "change #some_value"
     end
   end
 
@@ -135,7 +135,7 @@ describe "should change(actual, message)" do
   end
 end
 
-describe "should_not change(actual, message)" do
+describe "expect { ... }.not_to change(actual, message)" do
   before(:each) do
     @instance = SomethingExpected.new
     @instance.some_value = 5
@@ -152,7 +152,7 @@ describe "should_not change(actual, message)" do
   end
 end
 
-describe "should change { block }" do
+describe "expect { ... }.to change { block }" do
   o = SomethingExpected.new
   it_behaves_like "an RSpec matcher", :valid_value => lambda { o.some_value = 5 },
                                       :invalid_value => lambda { } do
@@ -173,19 +173,19 @@ describe "should change { block }" do
       expect {}.to change{ @instance.some_value }
     end.to fail_with("result should have changed, but is still 5")
   end
-  
+
   it "warns if passed a block using do/end instead of {}" do
     expect do
       expect {}.to change do; end
     end.to raise_error(SyntaxError, /block passed to should or should_not/)
   end
-  
+
   it "provides a #description" do
-    change { @instance.some_value }.description.should == "change #result"
+    expect(change { @instance.some_value }.description).to eq "change #result"
   end
 end
 
-describe "should_not change { block }" do
+describe "expect { ... }.not_to change { block }" do
   before(:each) do
     @instance = SomethingExpected.new
     @instance.some_value = 5
@@ -200,7 +200,7 @@ describe "should_not change { block }" do
       expect {@instance.some_value = 6}.to_not change { @instance.some_value }
     end.to fail_with("result should not have changed, but did change from 5 to 6")
   end
-  
+
   it "warns if passed a block using do/end instead of {}" do
     expect do
       expect {}.to_not change do; end
@@ -208,7 +208,7 @@ describe "should_not change { block }" do
   end
 end
 
-describe "should change(actual, message).by(expected)" do
+describe "expect { ... }.to change(actual, message).by(expected)" do
   before(:each) do
     @instance = SomethingExpected.new
     @instance.some_value = 5
@@ -235,7 +235,7 @@ describe "should change(actual, message).by(expected)" do
   end
 end
 
-describe "should change{ block }.by(expected)" do
+describe "expect { ... }.to change { block }.by(expected)" do
   before(:each) do
     @instance = SomethingExpected.new
     @instance.some_value = 5
@@ -258,7 +258,7 @@ describe "should change{ block }.by(expected)" do
   end
 end
 
-describe "should change(actual, message).by_at_least(expected)" do
+describe "expect { ... }.to change(actual, message).by_at_least(expected)" do
   before(:each) do
     @instance = SomethingExpected.new
     @instance.some_value = 5
@@ -267,10 +267,10 @@ describe "should change(actual, message).by_at_least(expected)" do
   it "passes when attribute is changed by greater than the expected amount" do
     expect { @instance.some_value += 2 }.to change(@instance, :some_value).by_at_least(1)
   end
-  
+
   it "passes when attribute is changed by the expected amount" do
     expect { @instance.some_value += 2 }.to change(@instance, :some_value).by_at_least(2)
-  end  
+  end
 
   it "fails when the attribute is changed by less than the expected amount" do
     expect do
@@ -280,7 +280,7 @@ describe "should change(actual, message).by_at_least(expected)" do
 
 end
 
-describe "should change{ block }.by_at_least(expected)" do
+describe "expect { ... }.to change { block }.by_at_least(expected)" do
   before(:each) do
     @instance = SomethingExpected.new
     @instance.some_value = 5
@@ -289,10 +289,10 @@ describe "should change{ block }.by_at_least(expected)" do
   it "passes when attribute is changed by greater than expected amount" do
     expect { @instance.some_value += 2 }.to change{@instance.some_value}.by_at_least(1)
   end
-  
+
   it "passes when attribute is changed by the expected amount" do
     expect { @instance.some_value += 2 }.to change{@instance.some_value}.by_at_least(2)
-  end  
+  end
 
   it "fails when the attribute is changed by less than the unexpected amount" do
     expect do
@@ -302,7 +302,7 @@ describe "should change{ block }.by_at_least(expected)" do
 end
 
 
-describe "should change(actual, message).by_at_most(expected)" do
+describe "expect { ... }.to change(actual, message).by_at_most(expected)" do
   before(:each) do
     @instance = SomethingExpected.new
     @instance.some_value = 5
@@ -311,10 +311,10 @@ describe "should change(actual, message).by_at_most(expected)" do
   it "passes when attribute is changed by less than the expected amount" do
     expect { @instance.some_value += 2 }.to change(@instance, :some_value).by_at_most(3)
   end
-  
+
   it "passes when attribute is changed by the expected amount" do
     expect { @instance.some_value += 2 }.to change(@instance, :some_value).by_at_most(2)
-  end  
+  end
 
   it "fails when the attribute is changed by greater than the expected amount" do
     expect do
@@ -324,7 +324,7 @@ describe "should change(actual, message).by_at_most(expected)" do
 
 end
 
-describe "should change{ block }.by_at_most(expected)" do
+describe "expect { ... }.to change { block }.by_at_most(expected)" do
   before(:each) do
     @instance = SomethingExpected.new
     @instance.some_value = 5
@@ -333,10 +333,10 @@ describe "should change{ block }.by_at_most(expected)" do
   it "passes when attribute is changed by less than expected amount" do
     expect { @instance.some_value += 2 }.to change{@instance.some_value}.by_at_most(3)
   end
-  
+
   it "passes when attribute is changed by the expected amount" do
     expect { @instance.some_value += 2 }.to change{@instance.some_value}.by_at_most(2)
-  end  
+  end
 
   it "fails when the attribute is changed by greater than the unexpected amount" do
     expect do
@@ -345,7 +345,7 @@ describe "should change{ block }.by_at_most(expected)" do
   end
 end
 
-describe "should change(actual, message).from(old)" do
+describe "expect { ... }.to change(actual, message).from(old)" do
   context "with boolean values" do
     before(:each) do
       @instance = SomethingExpected.new
@@ -386,7 +386,7 @@ describe "should change(actual, message).from(old)" do
   end
 end
 
-describe "should change{ block }.from(old)" do
+describe "expect { ... }.to change { block }.from(old)" do
   before(:each) do
     @instance = SomethingExpected.new
     @instance.some_value = 'string'
@@ -409,13 +409,13 @@ describe "should change{ block }.from(old)" do
   end
 end
 
-describe "should change(actual, message).to(new)" do
+describe "expect { ... }.to change(actual, message).to(new)" do
   context "with boolean values" do
     before(:each) do
       @instance = SomethingExpected.new
       @instance.some_value = true
     end
-    
+
     it "passes when attribute is == to expected value after executing block" do
       expect { @instance.some_value = false }.to change(@instance, :some_value).to(false)
     end
@@ -431,7 +431,7 @@ describe "should change(actual, message).to(new)" do
       @instance = SomethingExpected.new
       @instance.some_value = 'string'
     end
-    
+
     it "passes when attribute is === to expected value after executing block" do
       expect { @instance.some_value = "cat" }.to change(@instance, :some_value).to("cat")
     end
@@ -450,12 +450,12 @@ describe "should change(actual, message).to(new)" do
   end
 end
 
-describe "should change{ block }.to(new)" do
+describe "expect { ... }.to change { block }.to(new)" do
   before(:each) do
     @instance = SomethingExpected.new
     @instance.some_value = 'string'
   end
-  
+
   it "passes when attribute is === to expected value after executing block" do
     expect { @instance.some_value = "cat" }.to change{@instance.some_value}.to("cat")
   end
@@ -473,12 +473,12 @@ describe "should change{ block }.to(new)" do
   end
 end
 
-describe "should change(actual, message).from(old).to(new)" do
+describe "expect { ... }.to change(actual, message).from(old).to(new)" do
   before(:each) do
     @instance = SomethingExpected.new
     @instance.some_value = 'string'
   end
-  
+
   it "passes when #to comes before #from" do
     expect { @instance.some_value = "cat" }.to change(@instance, :some_value).to("cat").from("string")
   end
@@ -486,13 +486,13 @@ describe "should change(actual, message).from(old).to(new)" do
   it "passes when #from comes before #to" do
     expect { @instance.some_value = "cat" }.to change(@instance, :some_value).from("string").to("cat")
   end
-  
+
   it "shows the correct messaging when #after and #to are different" do
     expect do
       expect { @instance.some_value = "cat" }.to change(@instance, :some_value).from("string").to("dog")
     end.to fail_with("some_value should have been changed to \"dog\", but is now \"cat\"")
   end
-  
+
   it "shows the correct messaging when #before and #from are different" do
     expect do
       expect { @instance.some_value = "cat" }.to change(@instance, :some_value).from("not_string").to("cat")
@@ -500,12 +500,12 @@ describe "should change(actual, message).from(old).to(new)" do
   end
 end
 
-describe "should change{ block }.from(old).to(new)" do
+describe "expect { ... }.to change { block }.from(old).to(new)" do
   before(:each) do
     @instance = SomethingExpected.new
     @instance.some_value = 'string'
   end
-  
+
   it "passes when #to comes before #from" do
     expect { @instance.some_value = "cat" }.to change{@instance.some_value}.to("cat").from("string")
   end
@@ -520,7 +520,7 @@ describe RSpec::Matchers::BuiltIn::Change do
     @instance = SomethingExpected.new
     @instance.some_value = "string"
     def @instance.send(*args); raise "DOH! Library developers shouldn't use #send!" end
-    
+
     expect {
       expect { @instance.some_value = "cat" }.to change(@instance, :some_value)
     }.to_not raise_error
