@@ -128,7 +128,23 @@ module RSpec
       #   # You can also use most message expectations:
       #   expect(invitation).to have_received(:accept).with(mailer).once
       def have_received(method_name)
-        HaveReceived.new(method_name)
+        Matchers::HaveReceived.new(method_name)
+      end
+
+      def receive(method_name, &block)
+        Matchers::Receive.new(method_name, block)
+      end
+
+      def allow(target)
+        AllowanceTarget.new(target)
+      end
+
+      def expect_any_instance_of(klass)
+        AnyInstanceExpectationTarget.new(klass)
+      end
+
+      def allow_any_instance_of(klass)
+        AnyInstanceAllowanceTarget.new(klass)
       end
 
     private
