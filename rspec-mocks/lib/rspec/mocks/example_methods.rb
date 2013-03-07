@@ -31,15 +31,13 @@ module RSpec
         declare_double('Double', *args)
       end
 
-      # Deprecated: Use [double](#double-instance_method).
+      # Effectively an alias for [double](#double-instance_method).
       def mock(*args)
-        RSpec::Mocks.warn_deprecation "\nDEPRECATION: use #double instead of #mock. #{caller(0)[1]}\n"
         declare_double('Mock', *args)
       end
 
-      # Deprecated: Use [double](#double-instance_method).
+      # Effectively an alias for [double](#double-instance_method).
       def stub(*args)
-        RSpec::Mocks.warn_deprecation "\nDEPRECATION: use #double instead of #stub. #{caller(0)[1]}\n"
         declare_double('Stub', *args)
       end
 

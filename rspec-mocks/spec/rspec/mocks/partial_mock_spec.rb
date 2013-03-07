@@ -135,7 +135,7 @@ module RSpec
 
     describe "Partially mocking an object that defines ==, after another mock has been defined" do
       before(:each) do
-        double("existing mock", :foo => :foo)
+        stub("existing mock", :foo => :foo)
       end
 
       let(:klass) do
