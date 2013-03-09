@@ -26,7 +26,8 @@ module RSpec
       #   card.rank  #=> "A"
       #
       def double(*args)
-        declare_double('Double', *args)
+        args << {} unless Hash === args.last
+        RSpec::Mocks::Mock.new(*args)
       end
 
       # Disables warning messages about expectations being set on nil.
@@ -113,12 +114,12 @@ module RSpec
       #
       #   # You can also use most message expectations:
       #   expect(invitation).to have_received(:accept).with(mailer).once
-      def have_received(method_name)
-        Matchers::HaveReceived.new(method_name)
+      def have_received(method_name, &block)
+        Matchers::HaveReceived.new(method_name, &block)
       end
 
       def self.included(klass)
-        klass.class_eval do
+        klass.class_exec do
           # This gets mixed in so that if `RSpec::Matchers` is included in
           # `klass` later, it's definition of `expect` will take precedence.
           include ExpectHost unless method_defined?(:expect)
@@ -126,13 +127,6 @@ module RSpec
       end
 
     private
-
-      def declare_double(declared_as, *args)
-        args << {} unless Hash === args.last
-        args.last[:__declared_as] = declared_as
-        RSpec::Mocks::Mock.new(*args)
-      end
-
       # This module exists to host the `expect` method for cases where
       # rspec-mocks is used w/o rspec-expectations.
       module ExpectHost
