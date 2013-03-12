@@ -52,17 +52,7 @@ module RSpec
 
       def coerce_to_string(string_or_array)
         return string_or_array unless Array === string_or_array
-        diffably_stringify(string_or_array).join("\n")
-      end
-
-      def diffably_stringify(array)
-        array.map do |entry|
-          if Array === entry
-            entry.inspect
-          else
-            entry.to_s.gsub("\n", "\\n")
-          end
-        end
+        string_or_array.join(',')
       end
 
       if String.method_defined?(:encoding)

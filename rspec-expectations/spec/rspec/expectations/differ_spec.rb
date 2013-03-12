@@ -1,4 +1,3 @@
-# encoding: utf-8
 require 'spec_helper'
 require 'ostruct'
 
@@ -14,11 +13,10 @@ module RSpec
         # color disabled context
 
       describe '#diff_as_string' do
-        subject { differ.diff_as_string(@expected, @actual) }
         it "outputs unified diff of two strings" do
-          @expected="foo\nbar\nzap\nthis\nis\nsoo\nvery\nvery\nequal\ninsert\na\nline\n"
-          @actual="foo\nzap\nbar\nthis\nis\nsoo\nvery\nvery\nequal\ninsert\na\nanother\nline\n"
-          expect(subject).to eql(<<-'EOD')
+          expected="foo\nbar\nzap\nthis\nis\nsoo\nvery\nvery\nequal\ninsert\na\nline\n"
+          actual="foo\nzap\nbar\nthis\nis\nsoo\nvery\nvery\nequal\ninsert\na\nanother\nline\n"
+          expected_diff= <<'EOD'
 
 
 @@ -1,6 +1,6 @@
@@ -37,29 +35,8 @@ module RSpec
  line
 EOD
 
-        end
-        if RUBY_VERSION.to_f > 1.9
-          it 'copes with encoded strings' do
-            pending "awaiting patch on diff-lcs"
-            @expected="Tu avec carté {count} itém has".encode('UTF-16LE')
-            @actual="Tu avec carte {count} item has".encode('UTF-16LE')
-            expect(subject).to eql(<<-EOD.encode('UTF-16LE'))
-
-@@ -1,2 +1,2 @@
--Tu avec carté {count} itém has
-+Tu avec carte {count} item has
-EOD
-          end
-          it 'copes with encoded strings' do
-            @expected="Tu avec carté {count} itém has".encode('UTF-16LE')
-            @actual="Tu avec carte {count} item has".encode('UTF-16LE')
-            expect(subject).to eql 'Could not produce a diff because of the encoding of the string (UTF-16LE)'
-          end
-          it 'ouputs a message when encountering differently encoded strings' do
-            @expected="Tu avec carté {count} itém has".encode('UTF-16LE')
-            @actual="Tu avec carte {count} item has"
-            expect(subject).to eql 'Could not produce a diff because the encoding of the actual string (UTF-8) differs from the encoding of the expected string (UTF-16LE)'
-          end
+          diff = differ.diff_as_string(expected, actual)
+          expect(diff).to eql(expected_diff)
         end
       end
 
