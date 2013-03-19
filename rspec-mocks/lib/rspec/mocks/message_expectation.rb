@@ -175,7 +175,7 @@ module RSpec
 
         begin
           if @implementation
-            call_implementation(*args, &block)
+            @implementation.call(*args, &block)
           elsif parent_stub
             parent_stub.invoke(nil, *args, &block)
           end
@@ -402,14 +402,6 @@ module RSpec
 
       protected
 
-      def call_implementation(*args, &block)
-        if @implementation.arity.zero?
-          @implementation.call(&block)
-        else
-          @implementation.call(*args, &block)
-        end
-      end
-
       def failed_fast?
         @failed_fast
       end
@@ -442,9 +434,9 @@ module RSpec
         super(error_generator, expectation_ordering, expected_from, method_double, 0, {}, &implementation)
       end
 
-      # no-op
-      # @deprecated and_return is not supported with negative message expectations.
       def and_return(*)
+        # no-op
+        # @deprecated and_return is not supported with negative message expectations.
         RSpec::Mocks.warn_deprecation <<-MSG
 
 DEPRECATION: `and_return` with `should_not_receive` is deprecated. Called from #{caller(0)[1]}
@@ -468,7 +460,7 @@ MSG
         @error_generator = error_generator
       end
 
-      def call(&block)
+      def call(*args_to_ignore,&block)
         default_return_value = perform_yield(&block)
         return default_return_value unless @values_to_return
 
