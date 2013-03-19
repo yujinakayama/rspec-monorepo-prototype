@@ -47,15 +47,8 @@ module RSpec
         __mock_proxy.remove_stub(message)
       end
 
-      def stub!(message_or_hash, opts={}, &block)
-        RSpec::Mocks.warn_deprecation "\nDEPRECATION: use #stub instead of #stub!.  #{caller(0)[1]}\n"
-        stub(message_or_hash, opts={}, &block)
-      end
-
-      def unstub!(message)
-        RSpec::Mocks.warn_deprecation "\nDEPRECATION: use #unstub instead of #unstub!.  #{caller(0)[1]}\n"
-        unstub(message)
-      end
+      alias_method :stub!, :stub
+      alias_method :unstub!, :unstub
 
       # @overload stub_chain(method1, method2)
       # @overload stub_chain("method1.method2")
@@ -85,7 +78,19 @@ module RSpec
       #     # Common use in Rails/ActiveRecord:
       #     Article.stub_chain("recent.published") { [Article.new] }
       def stub_chain(*chain, &blk)
-        StubChain.stub_chain_on(self, *chain, &blk)
+        chain, blk = format_chain(*chain, &blk)
+        if chain.length > 1
+          if matching_stub = __mock_proxy.__send__(:find_matching_method_stub, chain[0].to_sym)
+            chain.shift
+            matching_stub.invoke(nil).stub_chain(*chain, &blk)
+          else
+            next_in_chain = Mock.new
+            stub(chain.shift) { next_in_chain }
+            next_in_chain.stub_chain(*chain, &blk)
+          end
+        else
+          stub(chain.shift, &blk)
+        end
       end
 
       # Tells the object to respond to all messages. If specific stub values
@@ -133,6 +138,17 @@ module RSpec
 
       def __remove_mock_proxy
         @mock_proxy = nil
+      end
+
+      def format_chain(*chain, &blk)
+        if Hash === chain.last
+          hash = chain.pop
+          hash.each do |k,v|
+            chain << k
+            blk = lambda { v }
+          end
+        end
+        return chain.join('.').split('.'), blk
       end
     end
   end
