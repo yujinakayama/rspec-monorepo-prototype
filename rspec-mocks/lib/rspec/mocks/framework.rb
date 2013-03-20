@@ -20,5 +20,3 @@ require 'rspec/mocks/space'
 require 'rspec/mocks/serialization'
 require 'rspec/mocks/any_instance'
 require 'rspec/mocks/mutate_const'
-require 'rspec/mocks/stub_chain'
-
