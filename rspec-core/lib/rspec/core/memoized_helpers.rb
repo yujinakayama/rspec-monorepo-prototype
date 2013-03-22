@@ -36,6 +36,13 @@ module RSpec
       #     it { should be_eligible_to_vote }
       #   end
       #
+      # @note Because `subject` is designed to create state that is reset between
+      #   each example, and `before(:all)` is designed to setup state that is
+      #   shared across _all_ examples in an example group, `subject` is _not_
+      #   intended to be used in a `before(:all)` hook. RSpec 2.13.1 prints
+      #   a warning when you reference a `subject` from `before(:all)` and we plan
+      #   to have it raise an error in RSpec 3.
+      #
       # @see #should
       def subject
         raise NotImplementedError, 'This definition is here for documentation purposes only'
@@ -161,6 +168,13 @@ EOS
         #   behave in surprising ways in examples that spawn separate threads,
         #   though we have yet to see this in practice. You've been warned.
         #
+        # @note Because `let` is designed to create state that is reset between
+        #   each example, and `before(:all)` is designed to setup state that is
+        #   shared across _all_ examples in an example group, `let` is _not_
+        #   intended to be used in a `before(:all)` hook. RSpec 2.13.1 prints
+        #   a warning when you reference a `let` from `before(:all)` and we plan
+        #   to have it raise an error in RSpec 3.
+        #
         # @example
         #
         #   describe Thing do
@@ -276,7 +290,7 @@ EOS
         def subject(name=nil, &block)
           if name
             let(name, &block)
-            subject { __send__ name }
+            alias_method :subject, name
 
             self::NamedSubjectPreventSuper.define_method(name) do
               raise NotImplementedError, "`super` in named subjects is not supported"

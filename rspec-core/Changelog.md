@@ -1,3 +1,23 @@
+### dev
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.13.1...master)
+
+Enhancements
+
+* Rather than always adding `spec` to the load path, add the configured
+  `--default-path` to the load path (which defaults to `spec`). This
+  better supports folks who choose to put their specs in a different
+  directory (John Feminella).
+* Add some logic to test time duration precision. Make it a
+  function of time, dropping precision as the time increases. (Aaron Kromer)
+
+Bug fixes
+
+* Fix named subjects so that if an inner group defines a method that
+  overrides the named method, `subject` still retains the originally
+  declared value (Myron Marston).
+* Fix random ordering so that it does not cause `rand` in examples in
+  nested sibling contexts to return the same value (Max Shytikov).
+
 ### 2.13.1 / 2013-03-12
 [full changelog](http://github.com/rspec/rspec-core/compare/v2.13.0...v2.13.1)
 

@@ -17,6 +17,37 @@ module RSpec::Core
     end
 
     describe "#load_spec_files" do
+      include_context "isolate load path mutation"
+
+      def absolute_path_to(dir)
+        File.expand_path("../../../../#{dir}", __FILE__)
+      end
+
+      it 'adds `lib` to the load path' do
+        lib_dir = absolute_path_to("lib")
+        $LOAD_PATH.delete(lib_dir)
+
+        expect($LOAD_PATH).not_to include(lib_dir)
+        config.load_spec_files
+        expect($LOAD_PATH).to include(lib_dir)
+      end
+
+      it 'adds the configured `default_path` to the load path' do
+        config.default_path = 'features'
+        foo_dir = absolute_path_to("features")
+
+        expect($LOAD_PATH).not_to include(foo_dir)
+        config.load_spec_files
+        expect($LOAD_PATH).to include(foo_dir)
+      end
+
+      context "when `default_path` refers to a file rather than a directory" do
+        it 'does not add it to the load path' do
+          config.default_path = 'Rakefile'
+          config.load_spec_files
+          expect($LOAD_PATH).not_to include(match /Rakefile/)
+        end
+      end
 
       it "loads files using load" do
         config.files_to_run = ["foo.bar", "blah_spec.rb"]
