@@ -10,16 +10,6 @@ RSpec::Matchers.define :include_method do |expected|
   end
 end
 
-module VerifyAndResetHelpers
-  def verify(object)
-    RSpec::Mocks.space.mock_proxy_for(object).verify
-  end
-
-  def reset(object)
-    RSpec::Mocks.space.mock_proxy_for(object).reset
-  end
-end
-
 RSpec.configure do |config|
   config.mock_with :rspec
   config.color_enabled = true
@@ -42,7 +32,5 @@ RSpec.configure do |config|
   config.after(:each, :silence_warnings) do
     $VERBOSE = old_verbose
   end
-
-  config.include VerifyAndResetHelpers
 end
 

@@ -9,7 +9,7 @@ module RSpec
       end
 
       after(:each) do
-        verify @double
+        @double.rspec_verify
       end
 
       context "handling argument matchers" do

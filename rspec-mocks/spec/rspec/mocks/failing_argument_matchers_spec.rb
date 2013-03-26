@@ -9,7 +9,7 @@ module RSpec
       end
 
       after(:each) do
-        reset @double
+        @double.rspec_reset
       end
 
       it "rejects non boolean" do

@@ -2,29 +2,21 @@ module RSpec
   module Mocks
     # @api private
     class Space
-      attr_reader :mock_proxies
-
-      def initialize
-        @mock_proxies = {}
+      def add(obj)
+        receivers << obj unless receivers.detect {|m| m.equal? obj}
       end
 
       def verify_all
-        mock_proxies.values.each do |object|
-          object.verify
+        receivers.each do |mock|
+          mock.rspec_verify
         end
-
-        AnyInstance.verify_all
       end
 
       def reset_all
-        ConstantMutator.reset_all
-        AnyInstance.reset_all
-
-        mock_proxies.values.each do |object|
-          object.reset
+        receivers.each do |mock|
+          mock.rspec_reset
         end
-
-        mock_proxies.clear
+        receivers.clear
         expectation_ordering.clear
       end
 
@@ -32,20 +24,10 @@ module RSpec
         @expectation_ordering ||= OrderGroup.new
       end
 
-      def mock_proxy_for(object)
-        mock_proxies.fetch(object.object_id) do
-          mock_proxies[object.object_id] = if TestDouble === object
-            object.__build_mock_proxy
-          else
-            Proxy.new(object)
-          end
-        end
-      end
+    private
 
-      alias ensure_registered mock_proxy_for
-
-      def registered?(object)
-        mock_proxies.has_key?(object.object_id)
+      def receivers
+        @receivers ||= []
       end
     end
   end

@@ -5,7 +5,7 @@ module RSpec
 
     describe "ordering" do
       before { @double = double("test double") }
-      after  { reset @double }
+      after  { @double.rspec_reset }
 
       it "passes when messages are received in order" do
         @double.should_receive(:one).ordered
@@ -65,8 +65,8 @@ module RSpec
         expect {
           a.three
         }.to raise_error(RSpec::Mocks::MockExpectationError, "Double \"test double\" received :three out of order")
-        reset a
-        reset b
+        a.rspec_reset
+        b.rspec_reset
       end
 
       it "ignores order of non ordered messages" do
@@ -86,7 +86,7 @@ module RSpec
         @double.ignored_2
         @double.ordered_3
         @double.ignored_1
-        verify @double
+        @double.rspec_verify
       end
 
       it "supports duplicate messages" do
