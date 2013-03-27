@@ -18,14 +18,22 @@ module RSpec
 
         klass.foo(:fizbaz)
         klass.foo(:bazbar)
-        verify klass
+        klass.rspec_verify
 
-        reset klass
+        klass.rspec_reset
         expect(klass.foo(:yeah)).to equal(:original_value)
       end
     end
 
     describe "when a class method is aliased on a subclass and the method is mocked" do
+      let(:klass) do
+        Class.new do
+          class << self
+            alias alternate_new new
+          end
+        end
+      end
+
       it "restores the original aliased public method" do
         klass = Class.new do
           class << self
@@ -36,9 +44,9 @@ module RSpec
         klass.should_receive(:alternate_new)
         expect(klass.alternate_new).to be_nil
 
-        verify klass
+        klass.rspec_verify
 
-        reset klass
+        klass.rspec_reset
         expect(klass.alternate_new).to be_an_instance_of(klass)
       end
     end

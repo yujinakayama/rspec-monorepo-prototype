@@ -4,61 +4,53 @@ require 'rspec/mocks'
 module RSpec
   module Mocks
     describe Space do
-      let(:space) { RSpec::Mocks::Space.new }
-      let(:dbl_1) { Object.new }
-      let(:dbl_2) { Object.new }
-
-      before do
-        space.ensure_registered(dbl_1)
-        space.ensure_registered(dbl_2)
+      before :each do
+        @space = RSpec::Mocks::Space.new
+        klazz = Class.new do
+          def rspec_verify
+            @verified = true
+          end
+          def verified?
+            @verified
+          end
+          def rspec_reset
+            @reset = true
+          end
+          def reset?
+            @reset
+          end
+        end
+        @m1 = klazz.new
+        @m2 = klazz.new
       end
-
       it "verifies all mocks within" do
-        verifies = []
-
-        space.mock_proxy_for(dbl_1).stub(:verify) { verifies << :dbl_1 }
-        space.mock_proxy_for(dbl_2).stub(:verify) { verifies << :dbl_2 }
-
-        space.verify_all
-
-        expect(verifies).to match_array([:dbl_1, :dbl_2])
+        @space.add(@m1)
+        @space.add(@m2)
+        @space.verify_all
+        expect(@m1).to be_verified
+        expect(@m2).to be_verified
       end
-
       it "resets all mocks within" do
-        resets = []
-
-        space.mock_proxy_for(dbl_1).stub(:reset) { resets << :dbl_1 }
-        space.mock_proxy_for(dbl_2).stub(:reset) { resets << :dbl_2 }
-
-        space.reset_all
-
-        expect(resets).to match_array([:dbl_1, :dbl_2])
+        @space.add(m1 = double("mock1"))
+        @space.add(m2 = double("mock2"))
+        m1.should_receive(:rspec_reset)
+        m2.should_receive(:rspec_reset)
+        @space.reset_all
       end
-
-      it "does not leak mock proxies between examples" do
-        expect {
-          space.reset_all
-        }.to change { space.mock_proxies.size }.to(0)
+      it "clears internal mocks on reset_all" do
+        @space.add(double("mock"))
+        @space.reset_all
+        expect(@space.instance_eval { receivers.empty? }).to be_true
       end
-
       it "resets the ordering" do
-        space.expectation_ordering.register :some_expectation
-
-        expect {
-          space.reset_all
-        }.to change { space.expectation_ordering.empty? }.from(false).to(true)
+        @space.reset_all
+        expect(@space.expectation_ordering).to be_empty
       end
-
       it "only adds an instance once" do
-        m1 = double("mock1")
-
-        expect {
-          space.ensure_registered(m1)
-        }.to change { space.mock_proxies }
-
-        expect {
-          space.ensure_registered(m1)
-        }.not_to change { space.mock_proxies }
+        @space.add(m1 = double("mock1"))
+        @space.add(m1)
+        m1.should_receive(:rspec_verify)
+        @space.verify_all
       end
     end
   end

@@ -60,13 +60,13 @@ module RSpec
       it "fails verification when explicit exception not met" do
         expect {
           @double.should_receive(:something)
-          verify @double
+          @double.rspec_verify
         }.to raise_error(RSpec::Mocks::MockExpectationError)
       end
 
       it "ignores unexpected methods" do
         @double.random_call("a", "d", "c")
-        verify @double
+        @double.rspec_verify
       end
 
       it "allows expected message with different args first" do
