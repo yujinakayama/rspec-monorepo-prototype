@@ -72,18 +72,6 @@ module RSpec
                 "available on a partial mock object."
       end
 
-      # @private
-      def raise_expectation_on_unstubbed_method(method)
-        __raise "#{intro} expected to have received #{method}, but that " +
-                "method has not been stubbed."
-      end
-
-      # @private
-      def raise_expectation_on_mocked_method(method)
-        __raise "#{intro} expected to have received #{method}, but that " +
-                "method has been mocked instead of stubbed."
-      end
-
       private
 
       def intro
