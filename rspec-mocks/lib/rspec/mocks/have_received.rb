@@ -53,13 +53,13 @@ module RSpec
       end
 
       def ensure_count_unconstrained
-        if count_constrait
+        if count_constraint
           raise RSpec::Mocks::MockExpectationError,
-            "can't use #{count_constrait} when negative"
+            "can't use #{count_constraint} when negative"
         end
       end
 
-      def count_constrait
+      def count_constraint
         @constraints.map(&:first).detect do |constraint|
           COUNT_CONSTRAINTS.include?(constraint)
         end
@@ -77,7 +77,7 @@ module RSpec
       end
 
       def mock_proxy
-        @subject.__send__(:__mock_proxy)
+        RSpec::Mocks.proxy_for(@subject)
       end
     end
   end
