@@ -16,6 +16,10 @@ Enhancements
   backtrace, even if they match an exclusion pattern, too (Sam Phippen).
 * Support ERB trim mode using the `-` when parsing `.rspec` as ERB
   (Gabor Garami).
+* Give a better error message when let and subject are called without a block.
+  (Sam Phippen).
+* List the precedence of `.rspec-local` in the configuration documentation
+  (Sam Phippen)
 
 Bug fixes
 
