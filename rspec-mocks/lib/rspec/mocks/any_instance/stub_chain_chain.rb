@@ -4,17 +4,19 @@ module RSpec
       # @private
       class StubChainChain < StubChain
 
-        private
-
-        def create_message_expectation_on(instance)
-          ::RSpec::Mocks::StubChain.stub_chain_on(instance, *@expectation_args, &@expectation_block)
+        # @private
+        def initialize(*args, &block)
+          record(:stub_chain, *args, &block)
         end
+
+        private
 
         def invocation_order
           @invocation_order ||= {
-            :and_return => [nil],
-            :and_raise => [nil],
-            :and_yield => [nil]
+            :stub_chain => [nil],
+            :and_return => [:stub_chain],
+            :and_raise => [:stub_chain],
+            :and_yield => [:stub_chain]
           }
         end
       end
