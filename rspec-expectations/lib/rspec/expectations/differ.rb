@@ -6,16 +6,19 @@ module RSpec
   module Expectations
     class Differ
       # This is snagged from diff/lcs/ldiff.rb (which is a commandline tool)
-      def diff_as_string(data_new, data_old)
-        data_old = data_old.split(/\n/).map! { |e| e.chomp }
-        data_new = data_new.split(/\n/).map! { |e| e.chomp }
+      def diff_as_string(input_data_new, input_data_old)
+        output = matching_encoding("", input_data_old)
+        data_old = input_data_old.split(matching_encoding("\n", input_data_old)).map! { |e| e.chomp }
+        data_new = input_data_new.split(matching_encoding("\n", input_data_new)).map! { |e| e.chomp }
         diffs = Diff::LCS.diff(data_old, data_new)
-        output = ""
         return output if diffs.empty?
         oldhunk = hunk = nil
         file_length_difference = 0
         diffs.each do |piece|
           begin
+            if data_old == []
+              data_old = [""]
+            end
             hunk = Diff::LCS::Hunk.new(
               data_old, data_new, piece, context_lines, file_length_difference
             )
@@ -25,24 +28,26 @@ module RSpec
             # diff includes lines of context. Otherwise, we might print
             # redundant lines.
             if (context_lines > 0) and hunk.overlaps?(oldhunk)
-              if hunk.respond_to?(:merge)
-                # diff-lcs 1.2.x
-                hunk.merge(oldhunk)
-              else
-                # diff-lcs 1.1.3
-                hunk.unshift(oldhunk)
-              end
+              hunk.merge(oldhunk)
             else
-              output << oldhunk.diff(format)
+              output << matching_encoding(oldhunk.diff(format).to_s, output)
             end
           ensure
             oldhunk = hunk
-            output << "\n"
+            output << matching_encoding("\n", output)
           end
         end
         #Handle the last remaining hunk
-        output << oldhunk.diff(format) << "\n"
+        output << matching_encoding(oldhunk.diff(format).to_s,output)
+        output << matching_encoding("\n",output)
         color_diff output
+      rescue Encoding::CompatibilityError
+        if input_data_new.encoding != input_data_old.encoding
+          "Could not produce a diff because the encoding of the actual string (#{input_data_old.encoding}) "+
+          "differs from the encoding of the expected string (#{input_data_new.encoding})"
+        else
+          "Could not produce a diff because of the encoding of the string (#{input_data_old.encoding})"
+        end
       end
 
       def diff_as_object(actual, expected)
@@ -106,6 +111,16 @@ module RSpec
           object =~ /\n/ ? object : object.inspect
         else
           PP.pp(object,"")
+        end
+      end
+
+      if String.method_defined?(:encoding)
+        def matching_encoding(string, source)
+          string.encode(source.encoding)
+        end
+      else
+        def matching_encoding(string, source)
+          string
         end
       end
     end
