@@ -1,5 +1,5 @@
 module RSpec
-  # RSpec::Matchers provides a number of useful matchers we use to define
+  # RSpec::Matchers provides a number of useful matchers we use to compose
   # expectations. A matcher is any object that responds to the following:
   #
   #     matches?(actual)
@@ -20,29 +20,28 @@ module RSpec
   # A Ruby predicate is a method that ends with a "?" and returns true or false.
   # Common examples are `empty?`, `nil?`, and `instance_of?`.
   #
-  # All you need to do is write `expect(..).to be_` followed by the predicate
-  # without the question mark, and RSpec will figure it out from there.
-  # For example:
+  # All you need to do is write `should be_` followed by the predicate without
+  # the question mark, and RSpec will figure it out from there. For example:
   #
-  #     expect([]).to be_empty     # => [].empty?() | passes
-  #     expect([]).not_to be_empty # => [].empty?() | fails
+  #     [].should be_empty     # => [].empty?() | passes
+  #     [].should_not be_empty # => [].empty?() | fails
   #
   # In addtion to prefixing the predicate matchers with "be_", you can also use "be_a_"
   # and "be_an_", making your specs read much more naturally:
   #
-  #     expect("a string").to be_an_instance_of(String) # =>"a string".instance_of?(String) # passes
+  #     "a string".should be_an_instance_of(String) =>"a string".instance_of?(String) #passes
   #
-  #     expect(3).to be_a_kind_of(Fixnum)        # => 3.kind_of?(Numeric)     | passes
-  #     expect(3).to be_a_kind_of(Numeric)       # => 3.kind_of?(Numeric)     | passes
-  #     expect(3).to be_an_instance_of(Fixnum)   # => 3.instance_of?(Fixnum)  | passes
-  #     expect(3).not_to be_an_instance_of(Numeric) # => 3.instance_of?(Numeric) | fails
+  #     3.should be_a_kind_of(Fixnum)        # => 3.kind_of?(Numeric)     | passes
+  #     3.should be_a_kind_of(Numeric)       # => 3.kind_of?(Numeric)     | passes
+  #     3.should be_an_instance_of(Fixnum)   # => 3.instance_of?(Fixnum)  | passes
+  #     3.should_not be_instance_of(Numeric) # => 3.instance_of?(Numeric) | fails
   #
   # RSpec will also create custom matchers for predicates like `has_key?`. To
   # use this feature, just state that the object should have_key(:key) and RSpec will
   # call has_key?(:key) on the target. For example:
   #
-  #     expect(:a => "A").to have_key(:a)
-  #     expect(:a => "A").to have_key(:b) # fails
+  #     {:a => "A"}.should have_key(:a) # => {:a => "A"}.has_key?(:a) | passes
+  #     {:a => "A"}.should have_key(:b) # => {:a => "A"}.has_key?(:b) | fails
   #
   # You can use this feature to invoke any predicate that begins with "has_", whether it is
   # part of the Ruby libraries (like `Hash#has_key?`) or a method you wrote on your own class.
@@ -59,15 +58,15 @@ module RSpec
   # zones on a virtual board. To specify that bob should be in zone 4, you
   # could say:
   #
-  #     expect(bob.current_zone).to eql(Zone.new("4"))
+  #     bob.current_zone.should eql(Zone.new("4"))
   #
   # But you might find it more expressive to say:
   #
-  #     expect(bob).to be_in_zone("4")
+  #     bob.should be_in_zone("4")
   #
   # and/or
   #
-  #     expect(bob).not_to be_in_zone("3")
+  #     bob.should_not be_in_zone("3")
   #
   # You can create such a matcher like so:
   #
@@ -103,7 +102,7 @@ module RSpec
   # passed to the <tt>create</tt> method (in this case, <tt>zone</tt>). The
   # failure message methods (<tt>failure_message_for_should</tt> and
   # <tt>failure_message_for_should_not</tt>) are passed the actual value (the
-  # receiver of <tt>expect(..)</tt> or <tt>expect(..).not_to</tt>).
+  # receiver of <tt>should</tt> or <tt>should_not</tt>).
   #
   # ### Custom Matcher from scratch
   #
@@ -206,12 +205,12 @@ module RSpec
     end
 
     # @example
-    #   expect(actual).to     be_true
-    #   expect(actual).to     be_false
-    #   expect(actual).to     be_nil
-    #   expect(actual).to     be_[arbitrary_predicate](*args)
-    #   expect(actual).not_to be_nil
-    #   expect(actual).not_to be_[arbitrary_predicate](*args)
+    #   actual.should be_true
+    #   actual.should be_false
+    #   actual.should be_nil
+    #   actual.should be_[arbitrary_predicate](*args)
+    #   actual.should_not be_nil
+    #   actual.should_not be_[arbitrary_predicate](*args)
     #
     # Given true, false, or nil, will pass if actual value is true, false or
     # nil (respectively). Given no args means the caller should satisfy an if
@@ -241,9 +240,9 @@ module RSpec
     #
     # @example
     #
-    #   expect(5).to     be_an_instance_of(Fixnum)
-    #   expect(5).not_to be_an_instance_of(Numeric)
-    #   expect(5).not_to be_an_instance_of(Float)
+    #   5.should be_instance_of(Fixnum)
+    #   5.should_not be_instance_of(Numeric)
+    #   5.should_not be_instance_of(Float)
     def be_an_instance_of(expected)
       BuiltIn::BeAnInstanceOf.new(expected)
     end
@@ -254,9 +253,9 @@ module RSpec
     #
     # @example
     #
-    #   expect(5).to     be_a_kind_of(Fixnum)
-    #   expect(5).to     be_a_kind_of(Numeric)
-    #   expect(5).not_to be_a_kind_of(Float)
+    #   5.should be_kind_of(Fixnum)
+    #   5.should be_kind_of(Numeric)
+    #   5.should_not be_kind_of(Float)
     def be_a_kind_of(expected)
       BuiltIn::BeAKindOf.new(expected)
     end
@@ -267,8 +266,8 @@ module RSpec
     #
     # @example
     #
-    #   expect(result).to     be_within(0.5).of(3.0)
-    #   expect(result).not_to be_within(0.5).of(3.0)
+    #   result.should be_within(0.5).of(3.0)
+    #   result.should_not be_within(0.5).of(3.0)
     def be_within(delta)
       BuiltIn::BeWithin.new(delta)
     end
@@ -284,59 +283,55 @@ module RSpec
     #
     # When passing a block, it must use the <tt>{ ... }</tt> format, not
     # do/end, as <tt>{ ... }</tt> binds to the +change+ method, whereas do/end
-    # would errantly bind to the +expect(..)+ or +expect(..).not_to+ method.
+    # would errantly bind to the +should+ or +should_not+ method.
     #
     # @example
     #
-    #   expect {
+    #   lambda {
     #     team.add_player(player)
-    #   }.to change(roster, :count)
+    #   }.should change(roster, :count)
     #
-    #   expect {
+    #   lambda {
     #     team.add_player(player)
-    #   }.to change(roster, :count).by(1)
+    #   }.should change(roster, :count).by(1)
     #
-    #   expect {
+    #   lambda {
     #     team.add_player(player)
-    #   }.to change(roster, :count).by_at_least(1)
+    #   }.should change(roster, :count).by_at_least(1)
     #
-    #   expect {
+    #   lambda {
     #     team.add_player(player)
-    #   }.to change(roster, :count).by_at_most(1)
+    #   }.should change(roster, :count).by_at_most(1)
     #
     #   string = "string"
-    #   expect {
+    #   lambda {
     #     string.reverse!
-    #   }.to change { string }.from("string").to("gnirts")
+    #   }.should change { string }.from("string").to("gnirts")
     #
-    #   string = "string"
-    #   expect {
-    #     string
-    #   }.not_to change { string }
-    #
-    #   expect {
+    #   lambda {
     #     person.happy_birthday
-    #   }.to change(person, :birthday).from(32).to(33)
+    #   }.should change(person, :birthday).from(32).to(33)
     #
-    #   expect {
+    #   lambda {
     #     employee.develop_great_new_social_networking_app
-    #   }.to change(employee, :title).from("Mail Clerk").to("CEO")
+    #   }.should change(employee, :title).from("Mail Clerk").to("CEO")
     #
-    #   expect {
+    #   lambda {
     #     doctor.leave_office
-    #   }.to change(doctor, :sign).from(/is in/).to(/is out/)
+    #   }.should change(doctor, :sign).from(/is in/).to(/is out/)
     #
     #   user = User.new(:type => "admin")
-    #   expect {
+    #   lambda {
     #     user.symbolize_type
-    #   }.to change(user, :type).from(String).to(Symbol)
+    #   }.should change(user, :type).from(String).to(Symbol)
     #
     # == Notes
     #
     # Evaluates <tt>receiver.message</tt> or <tt>block</tt> before and after it
-    # evaluates the block passed to <tt>expect</tt>.
+    # evaluates the proc object (generated by the lambdas in the examples
+    # above).
     #
-    # <tt>expect( ... ).not_to change</tt> only supports the form with no subsequent
+    # <tt>should_not change</tt> only supports the form with no subsequent
     # calls to <tt>by</tt>, <tt>by_at_least</tt>, <tt>by_at_most</tt>,
     # <tt>to</tt> or <tt>from</tt>.
     def change(receiver=nil, message=nil, &block)
@@ -348,11 +343,11 @@ module RSpec
     # and it will only pass if all args are found in Range.
     #
     # @example
-    #   expect(1..10).to     cover(5)
-    #   expect(1..10).to     cover(4, 6)
-    #   expect(1..10).to     cover(4, 6, 11) # fails
-    #   expect(1..10).not_to cover(11)
-    #   expect(1..10).not_to cover(5)        # fails
+    #   (1..10).should cover(5)
+    #   (1..10).should cover(4, 6)
+    #   (1..10).should cover(4, 6, 11) # will fail
+    #   (1..10).should_not cover(11)
+    #   (1..10).should_not cover(5)    # will fail
     #
     # ### Warning:: Ruby >= 1.9 only
     def cover(*values)
@@ -366,48 +361,45 @@ module RSpec
     #
     # @example
     #
-    #   expect("this string").to   end_with "string"
-    #   expect([0, 1, 2, 3, 4]).to end_with 4
-    #   expect([0, 2, 3, 4, 4]).to end_with 3, 4
+    #   "this string".should end_with "string"
+    #   [0, 1, 2, 3, 4].should end_with 4
+    #   [0, 2, 3, 4, 4].should end_with 3, 4
     def end_with(*expected)
       BuiltIn::EndWith.new(*expected)
     end
 
     # Passes if <tt>actual == expected</tt>.
     #
-    # See http://www.ruby-doc.org/core/classes/Object.html#M001057 for more
-    # information about equality in Ruby.
+    # See http://www.ruby-doc.org/core/classes/Object.html#M001057 for more information about equality in Ruby.
     #
     # @example
     #
-    #   expect(5).to     eq(5)
-    #   expect(5).not_to eq(3)
+    #   5.should eq(5)
+    #   5.should_not eq(3)
     def eq(expected)
       BuiltIn::Eq.new(expected)
     end
 
     # Passes if +actual.eql?(expected)+
     #
-    # See http://www.ruby-doc.org/core/classes/Object.html#M001057 for more
-    # information about equality in Ruby.
+    # See http://www.ruby-doc.org/core/classes/Object.html#M001057 for more information about equality in Ruby.
     #
     # @example
     #
-    #   expect(5).to     eql(5)
-    #   expect(5).not_to eql(3)
+    #   5.should eql(5)
+    #   5.should_not eql(3)
     def eql(expected)
       BuiltIn::Eql.new(expected)
     end
 
     # Passes if <tt>actual.equal?(expected)</tt> (object identity).
     #
-    # See http://www.ruby-doc.org/core/classes/Object.html#M001057 for more
-    # information about equality in Ruby.
+    # See http://www.ruby-doc.org/core/classes/Object.html#M001057 for more information about equality in Ruby.
     #
     # @example
     #
-    #   expect(5).to       equal(5)   # Fixnums are equal
-    #   expect("5").not_to equal("5") # Strings that look the same are not the same object
+    #   5.should equal(5) # Fixnums are equal
+    #   "5".should_not equal("5") # Strings that look the same are not the same object
     def equal(expected)
       BuiltIn::Equal.new(expected)
     end
@@ -415,7 +407,7 @@ module RSpec
     # Passes if `actual.exist?` or `actual.exists?`
     #
     # @example
-    #   expect(File).to exist("path/to/file")
+    #   File.should exist("path/to/file")
     def exist(*args)
       BuiltIn::Exist.new(*args)
     end
@@ -438,16 +430,16 @@ module RSpec
     # @example
     #
     #   # Passes if team.players.size == 11
-    #   expect(team).to have(11).players
+    #   team.should have(11).players
     #
     #   # Passes if [1,2,3].length == 3
-    #   expect([1,2,3]).to have(3).items #"items" is pure sugar
+    #   [1,2,3].should have(3).items #"items" is pure sugar
     #
     #   # Passes if ['a', 'b', 'c'].count == 3
-    #   expect([1,2,3]).to have(3).items #"items" is pure sugar
+    #   [1,2,3].should have(3).items #"items" is pure sugar
     #
     #   # Passes if "this string".length == 11
-    #   expect("this string").to have(11).characters #"characters" is pure sugar
+    #   "this string".should have(11).characters #"characters" is pure sugar
     def have(n)
       BuiltIn::Have.new(n)
     end
@@ -456,11 +448,11 @@ module RSpec
     # Exactly like have() with >=.
     #
     # @example
-    #   expect("this").to have_at_least(3).letters
+    #   "this".should have_at_least(3).letters
     #
     # ### Warning:
     #
-    # `expect(..).not_to have_at_least` is not supported
+    # `should_not have_at_least` is not supported
     def have_at_least(n)
       BuiltIn::Have.new(n, :at_least)
     end
@@ -468,11 +460,11 @@ module RSpec
     # Exactly like have() with <=.
     #
     # @example
-    #   expect("this").to have_at_most(4).letters
+    #   should have_at_most(number).items
     #
     # ### Warning:
     #
-    # `expect(..).not_to have_at_most` is not supported
+    # `should_not have_at_most` is not supported
     def have_at_most(n)
       BuiltIn::Have.new(n, :at_most)
     end
@@ -483,12 +475,12 @@ module RSpec
     #
     # @example
     #
-    #   expect([1,2,3]).to      include(3)
-    #   expect([1,2,3]).to      include(2,3)
-    #   expect([1,2,3]).to      include(2,3,4) # fails
-    #   expect([1,2,3]).not_to  include(4)
-    #   expect("spread").to     include("read")
-    #   expect("spread").not_to include("red")
+    #   [1,2,3].should include(3)
+    #   [1,2,3].should include(2,3) #would pass
+    #   [1,2,3].should include(2,3,4) #would fail
+    #   [1,2,3].should_not include(4)
+    #   "spread".should include("read")
+    #   "spread".should_not include("red")
     def include(*expected)
       BuiltIn::Include.new(*expected)
     end
@@ -497,10 +489,10 @@ module RSpec
     #
     # @example
     #
-    #   expect(email).to   match(/^([^\s]+)((?:[-a-z0-9]+\.)+[a-z]{2,})$/i)
-    #   expect(email).to   match("@example.com")
-    #   expect(zipcode).to match_regex(/\A\d{5}(-\d{4})?\z/)
-    #   expect(zipcode).to match_regex("90210")
+    #   email.should match(/^([^\s]+)((?:[-a-z0-9]+\.)+[a-z]{2,})$/i)
+    #   email.should match("@example.com")
+    #   zipcode.should match_regex(/\A\d{5}(-\d{4})?\z/)
+    #   zipcode.should match_regex("90210")
     #
     # @note Due to Ruby's method dispatch mechanism, using the `#match` matcher
     # within a custom matcher defined via the matcher DSL
@@ -521,16 +513,16 @@ module RSpec
     #
     # @example
     #
-    #   expect { do_something_risky }.to raise_error
-    #   expect { do_something_risky }.to raise_error(PoorRiskDecisionError)
-    #   expect { do_something_risky }.to raise_error(PoorRiskDecisionError) { |error| expect(error.data).to eq 42 }
-    #   expect { do_something_risky }.to raise_error(PoorRiskDecisionError, "that was too risky")
-    #   expect { do_something_risky }.to raise_error(PoorRiskDecisionError, /oo ri/)
+    #   lambda { do_something_risky }.should raise_error
+    #   lambda { do_something_risky }.should raise_error(PoorRiskDecisionError)
+    #   lambda { do_something_risky }.should raise_error(PoorRiskDecisionError) { |error| error.data.should == 42 }
+    #   lambda { do_something_risky }.should raise_error(PoorRiskDecisionError, "that was too risky")
+    #   lambda { do_something_risky }.should raise_error(PoorRiskDecisionError, /oo ri/)
     #
-    #   expect { do_something_risky }.not_to raise_error
-    #   expect { do_something_risky }.not_to raise_error(PoorRiskDecisionError)
-    #   expect { do_something_risky }.not_to raise_error(PoorRiskDecisionError, "that was too risky")
-    #   expect { do_something_risky }.not_to raise_error(PoorRiskDecisionError, /oo ri/)
+    #   lambda { do_something_risky }.should_not raise_error
+    #   lambda { do_something_risky }.should_not raise_error(PoorRiskDecisionError)
+    #   lambda { do_something_risky }.should_not raise_error(PoorRiskDecisionError, "that was too risky")
+    #   lambda { do_something_risky }.should_not raise_error(PoorRiskDecisionError, /oo ri/)
     def raise_error(error=Exception, message=nil, &block)
       BuiltIn::RaiseError.new(error, message, &block)
     end
@@ -541,8 +533,6 @@ module RSpec
     # provided. Names can be Strings or Symbols.
     #
     # @example
-    #
-    # expect("string").to respond_to(:length)
     #
     def respond_to(*names)
       BuiltIn::RespondTo.new(*names)
@@ -560,7 +550,9 @@ module RSpec
     #
     # @example
     #
-    #   expect(5).to satisfy { |n| n > 3 }
+    #   5.should satisfy { |n|
+    #     n > 3
+    #   }
     def satisfy(&block)
       BuiltIn::Satisfy.new(&block)
     end
@@ -572,9 +564,9 @@ module RSpec
     #
     # @example
     #
-    #   expect("this string").to   start_with "this s"
-    #   expect([0, 1, 2, 3, 4]).to start_with 0
-    #   expect([0, 2, 3, 4, 4]).to start_with 0, 1
+    #   "this string".should start_with "this s"
+    #   [0, 1, 2, 3, 4].should start_with 0
+    #   [0, 2, 3, 4, 4].should start_with 0, 1
     def start_with(*expected)
       BuiltIn::StartWith.new(*expected)
     end
@@ -588,13 +580,13 @@ module RSpec
     #
     # @example
     #
-    #   expect { do_something_risky }.to throw_symbol
-    #   expect { do_something_risky }.to throw_symbol(:that_was_risky)
-    #   expect { do_something_risky }.to throw_symbol(:that_was_risky, 'culprit')
+    #   lambda { do_something_risky }.should throw_symbol
+    #   lambda { do_something_risky }.should throw_symbol(:that_was_risky)
+    #   lambda { do_something_risky }.should throw_symbol(:that_was_risky, culprit)
     #
-    #   expect { do_something_risky }.not_to throw_symbol
-    #   expect { do_something_risky }.not_to throw_symbol(:that_was_risky)
-    #   expect { do_something_risky }.not_to throw_symbol(:that_was_risky, 'culprit')
+    #   lambda { do_something_risky }.should_not throw_symbol
+    #   lambda { do_something_risky }.should_not throw_symbol(:that_was_risky)
+    #   lambda { do_something_risky }.should_not throw_symbol(:that_was_risky, culprit)
     def throw_symbol(expected_symbol=nil, expected_arg=nil)
       BuiltIn::ThrowSymbol.new(expected_symbol, expected_arg)
     end
@@ -687,14 +679,17 @@ module RSpec
     #
     # @note This is also available using the `=~` operator with `should`,
     #       but `=~` is not supported with `expect`.
-    #
-    # @note This matcher only supports positive expectations.
-    #       expect(..).not_to match_array(other_array) is not supported.
+    # @note There is no should_not version of array.should =~ other_array
     #
     # @example
     #
     #   expect([1,2,3]).to match_array([1,2,3])
     #   expect([1,2,3]).to match_array([1,3,2])
+    #   [1,2,3].should   =~ [1,2,3]   # => would pass
+    #   [1,2,3].should   =~ [2,3,1]   # => would pass
+    #   [1,2,3,4].should =~ [1,2,3]   # => would fail
+    #   [1,2,2,3].should =~ [1,2,3]   # => would fail
+    #   [1,2,3].should   =~ [1,2,3,4] # => would fail
     def match_array(array)
       BuiltIn::MatchArray.new(array)
     end

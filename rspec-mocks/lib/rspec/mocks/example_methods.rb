@@ -128,22 +128,7 @@ module RSpec
       #   # You can also use most message expectations:
       #   expect(invitation).to have_received(:accept).with(mailer).once
       def have_received(method_name)
-        Matchers::HaveReceived.new(method_name)
-      end
-
-      def self.included(klass)
-        klass.class_eval do
-          unless method_defined?(:expect)
-            # We define `expect` in a superclass module so that if `RSpec::Matchers`
-            # is included in `klass` later, it's definition of `expect` will take
-            # precedence.
-            include Module.new {
-              def expect(target)
-                ::RSpec::Mocks::ExpectationTarget.new(target)
-              end
-            }
-          end
-        end
+        HaveReceived.new(method_name)
       end
 
     private
