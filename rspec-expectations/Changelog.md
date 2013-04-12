@@ -7,6 +7,15 @@ Enhancements
   number of times: `expect { }.to yield_control.exactly(3).times`,
   `expect { }.to yield_control.at_least(2).times`, etc (Bartek
   Borkowski).
+* Make the differ that is used when an expectation fails better handle arrays
+  by splitting each element of the array onto its own line. (Sam Phippen)
+
+Bug fixes
+
+* Fix differ to not raise errors when dealing with differently-encoded
+  strings (Jon Rowe).
+* Fix `expect(something).to be_within(x).percent_of(y)` where x and y are both
+  integers (Sam Phippen).
 
 ### 2.13.0 / 2013-02-23
 [full changelog](http://github.com/rspec/rspec-expectations/compare/v2.12.1...v2.13.0)
