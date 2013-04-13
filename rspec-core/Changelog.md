@@ -22,8 +22,6 @@ Enhancements
   (Sam Phippen)
 * Support `{a,b}` shell expansion syntax in `--pattern` option
   (Konstantin Haase).
-* Add cucumber documentation for --require commandline option
-  (Bradley Schaefer)
 
 Bug fixes
 
