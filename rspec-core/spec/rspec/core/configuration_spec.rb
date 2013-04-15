@@ -16,7 +16,7 @@ module RSpec::Core
       end
     end
 
-    describe "#load_spec_files" do
+    describe "#setup_load_path_and_require" do
       include_context "isolate load path mutation"
 
       def absolute_path_to(dir)
@@ -28,7 +28,7 @@ module RSpec::Core
         $LOAD_PATH.delete(lib_dir)
 
         expect($LOAD_PATH).not_to include(lib_dir)
-        config.load_spec_files
+        config.setup_load_path_and_require []
         expect($LOAD_PATH).to include(lib_dir)
       end
 
@@ -37,18 +37,26 @@ module RSpec::Core
         foo_dir = absolute_path_to("features")
 
         expect($LOAD_PATH).not_to include(foo_dir)
-        config.load_spec_files
+        config.setup_load_path_and_require []
         expect($LOAD_PATH).to include(foo_dir)
+      end
+
+      it 'stores the required files' do
+        config.should_receive(:require).with('a/path')
+        config.setup_load_path_and_require ['a/path']
+        expect(config.requires).to eq ['a/path']
       end
 
       context "when `default_path` refers to a file rather than a directory" do
         it 'does not add it to the load path' do
           config.default_path = 'Rakefile'
-          config.load_spec_files
+          config.setup_load_path_and_require []
           expect($LOAD_PATH).not_to include(match /Rakefile/)
         end
       end
+    end
 
+    describe "#load_spec_files" do
       it "loads files using load" do
         config.files_to_run = ["foo.bar", "blah_spec.rb"]
         config.should_receive(:load).twice
@@ -385,7 +393,7 @@ module RSpec::Core
           %w[ a/2.rb a/1.rb a/3.rb ],
           %w[ a/3.rb a/2.rb a/1.rb ]
         ].map do |files|
-          Dir.should_receive(:[]).with(/^a/) { files }
+          Dir.should_receive(:[]).with(/^\{?a/) { files }
           yield
           config.files_to_run
         end
@@ -461,6 +469,14 @@ module RSpec::Core
 
           it "supports comma separated values with spaces" do
             config.send(setter, "**/*_foo.rb, **/*_bar.rb")
+            dir = File.expand_path(File.dirname(__FILE__) + "/resources")
+            config.files_or_directories_to_run = dir
+            expect(config.files_to_run).to include("#{dir}/a_foo.rb")
+            expect(config.files_to_run).to include("#{dir}/a_bar.rb")
+          end
+
+          it "supports curly braces glob syntax" do
+            config.send(setter, "**/*_{foo,bar}.rb")
             dir = File.expand_path(File.dirname(__FILE__) + "/resources")
             config.files_or_directories_to_run = dir
             expect(config.files_to_run).to include("#{dir}/a_foo.rb")
@@ -1059,6 +1075,8 @@ module RSpec::Core
     end
 
     describe "#libs=" do
+      include_context "isolate load path mutation"
+
       it "adds directories to the LOAD_PATH" do
         $LOAD_PATH.should_receive(:unshift).with("a/dir")
         config.libs = ["a/dir"]
@@ -1066,9 +1084,18 @@ module RSpec::Core
     end
 
     describe "#requires=" do
-      it "requires paths" do
+      before { RSpec.should_receive :deprecate }
+
+      it "requires the configured files" do
+        config.should_receive(:require).with('foo').ordered
+        config.should_receive(:require).with('bar').ordered
+        config.requires = ['foo', 'bar']
+      end
+
+      it "stores require paths" do
         config.should_receive(:require).with("a/path")
         config.requires = ["a/path"]
+        expect(config.requires).to eq(['a/path'])
       end
     end
 
