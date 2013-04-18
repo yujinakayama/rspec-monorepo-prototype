@@ -20,6 +20,10 @@ Enhancements
   (Sam Phippen).
 * List the precedence of `.rspec-local` in the configuration documentation
   (Sam Phippen)
+* Support `{a,b}` shell expansion syntax in `--pattern` option
+  (Konstantin Haase).
+* Add cucumber documentation for --require command line option
+  (Bradley Schaefer)
 
 Bug fixes
 
@@ -37,6 +41,9 @@ Bug fixes
 * Fix ordering of `before` hooks so that `before` hooks declared in
   `RSpec.configure` run before `before` hooks declared in a shared
   context (Michi Huber and Tejas Dinkar).
+* Fix `Example#full_description` so that it gets filled in by the last
+  matcher description (as `Example#description` already did) when no
+  doc string has been provided (David Chelimsky).
 
 Deprecations
 
@@ -44,6 +51,9 @@ Deprecations
   `Configuration#backtrace_exclusion_patterns` for greater consistency
   and symmetry with new `backtrace_inclusion_patterns` config option
   (Sam Phippen).
+* Deprecate `Configuration#requires=` in favor of using ruby's
+  `require`. Requires specified by the command line can still be
+  accessed by the `Configuration#require` reader. (Bradley Schaefer)
 
 ### 2.13.1 / 2013-03-12
 [full changelog](http://github.com/rspec/rspec-core/compare/v2.13.0...v2.13.1)

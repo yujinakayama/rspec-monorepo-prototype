@@ -108,6 +108,12 @@ MESSAGE
       # load order for files, declaration order for groups and examples).
       define_reader :order
 
+      # Indicates files configured to be required
+      define_reader :requires
+
+      # Returns dirs that have been prepended to the load path by #lib=
+      define_reader :libs
+
       # Default: `$stdout`.
       # Also known as `output` and `out`
       add_setting :output_stream, :alias_with => [:output, :out]
@@ -200,6 +206,8 @@ MESSAGE
         @fixed_color = :blue
         @detail_color = :cyan
         @profile_examples = false
+        @requires = []
+        @libs = []
       end
 
       # @private
@@ -458,6 +466,10 @@ MESSAGE
         @expectation_frameworks.push(*modules)
       end
 
+      def full_backtrace
+        @backtrace_cleaner.full_backtrace
+      end
+
       def full_backtrace=(true_or_false)
         @backtrace_cleaner.full_backtrace = true_or_false
       end
@@ -488,11 +500,17 @@ MESSAGE
       define_predicate_for :color_enabled, :color
 
       def libs=(libs)
-        libs.map {|lib| $LOAD_PATH.unshift lib}
+        libs.map do |lib|
+          @libs.unshift lib
+          $LOAD_PATH.unshift lib
+        end
       end
 
       def requires=(paths)
+        RSpec.deprecate("RSpec::Core::Configuration#requires=(paths)",
+                        "paths.each {|path| require path}")
         paths.map {|path| require path}
+        @requires += paths
       end
 
       def debug=(bool)
@@ -516,13 +534,25 @@ EOM
         end
       end
 
+      def debug
+        !!defined?(Debugger)
+      end
+
       # Run examples defined on `line_numbers` in all files to run.
       def line_numbers=(line_numbers)
         filter_run :line_numbers => line_numbers.map{|l| l.to_i}
       end
 
+      def line_numbers
+        filter.fetch(:line_numbers,[])
+      end
+
       def full_description=(description)
         filter_run :full_description => Regexp.union(*Array(description).map {|d| Regexp.new(d) })
+      end
+
+      def full_description
+        filter.fetch :full_description, false
       end
 
       # @overload add_formatter(formatter)
@@ -827,9 +857,11 @@ EOM
       end
 
       # @private
-      def add_project_paths(*paths)
-        directories = paths.select { |p| File.directory? p }
+      def setup_load_path_and_require(paths)
+        directories = ['lib', default_path].select { |p| File.directory? p }
         RSpec::Core::RubyProject.add_to_load_path(*directories)
+        paths.each {|path| require path}
+        @requires += paths
       end
 
       # @private
@@ -857,7 +889,6 @@ EOM
 
       # @private
       def load_spec_files
-        add_project_paths 'lib', default_path
         files_to_run.uniq.each {|f| load File.expand_path(f) }
         raise_if_rspec_1_is_loaded
       end
@@ -977,17 +1008,16 @@ EOM
     private
 
       def get_files_to_run(paths)
-        patterns = pattern.split(",")
         paths.map do |path|
           path = path.gsub(File::ALT_SEPARATOR, File::SEPARATOR) if File::ALT_SEPARATOR
-          File.directory?(path) ? gather_directories(path, patterns) : extract_location(path)
+          File.directory?(path) ? gather_directories(path) : extract_location(path)
         end.flatten.sort
       end
 
-      def gather_directories(path, patterns)
-        patterns.map do |pattern|
-          pattern =~ /^#{path}/ ? Dir[pattern.strip].sort : Dir["#{path}/{#{pattern.strip}}"].sort
-        end
+      def gather_directories(path)
+        stripped = "{#{pattern.gsub(/\s*,\s*/, ',')}}"
+        files    = pattern.start_with?(path) ? Dir[stripped] : Dir["#{path}/#{stripped}"]
+        files.sort
       end
 
       def extract_location(path)
