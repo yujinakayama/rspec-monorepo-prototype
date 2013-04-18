@@ -128,15 +128,7 @@ module RSpec
       #   # You can also use most message expectations:
       #   expect(invitation).to have_received(:accept).with(mailer).once
       def have_received(method_name)
-        Matchers::HaveReceived.new(method_name)
-      end
-
-      def self.included(klass)
-        klass.class_eval do
-          # This gets mixed in so that if `RSpec::Matchers` is included in
-          # `klass` later, it's definition of `expect` will take precedence.
-          include ExpectHost unless method_defined?(:expect)
-        end
+        HaveReceived.new(method_name)
       end
 
     private
@@ -147,10 +139,6 @@ module RSpec
         RSpec::Mocks::Mock.new(*args)
       end
 
-      # This module exists to host the `expect` method for cases where
-      # rspec-mocks is used w/o rspec-expectations.
-      module ExpectHost
-      end
     end
   end
 end

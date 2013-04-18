@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module RSpec
   module Mocks
-    describe "Passing argument matchers" do
+    describe Methods do
       before(:each) do
         @double = double('double')
         Kernel.stub(:warn)
