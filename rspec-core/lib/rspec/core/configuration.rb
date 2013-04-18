@@ -111,9 +111,6 @@ MESSAGE
       # Indicates files configured to be required
       define_reader :requires
 
-      # Returns dirs that have been prepended to the load path by #lib=
-      define_reader :libs
-
       # Default: `$stdout`.
       # Also known as `output` and `out`
       add_setting :output_stream, :alias_with => [:output, :out]
@@ -207,7 +204,6 @@ MESSAGE
         @detail_color = :cyan
         @profile_examples = false
         @requires = []
-        @libs = []
       end
 
       # @private
@@ -466,10 +462,6 @@ MESSAGE
         @expectation_frameworks.push(*modules)
       end
 
-      def full_backtrace
-        @backtrace_cleaner.full_backtrace
-      end
-
       def full_backtrace=(true_or_false)
         @backtrace_cleaner.full_backtrace = true_or_false
       end
@@ -500,10 +492,7 @@ MESSAGE
       define_predicate_for :color_enabled, :color
 
       def libs=(libs)
-        libs.map do |lib|
-          @libs.unshift lib
-          $LOAD_PATH.unshift lib
-        end
+        libs.map {|lib| $LOAD_PATH.unshift lib}
       end
 
       def requires=(paths)
@@ -534,25 +523,13 @@ EOM
         end
       end
 
-      def debug
-        !!defined?(Debugger)
-      end
-
       # Run examples defined on `line_numbers` in all files to run.
       def line_numbers=(line_numbers)
         filter_run :line_numbers => line_numbers.map{|l| l.to_i}
       end
 
-      def line_numbers
-        filter.fetch(:line_numbers,[])
-      end
-
       def full_description=(description)
         filter_run :full_description => Regexp.union(*Array(description).map {|d| Regexp.new(d) })
-      end
-
-      def full_description
-        filter.fetch :full_description, false
       end
 
       # @overload add_formatter(formatter)
