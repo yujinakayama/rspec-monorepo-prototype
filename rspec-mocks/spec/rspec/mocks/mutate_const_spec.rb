@@ -12,13 +12,6 @@ class TestClass
   end
 end
 
-class TestClassThatDefinesSend
-  C = :c
-
-  def self.send
-  end
-end
-
 class TestSubClass < TestClass
   P = :p
 end
@@ -53,7 +46,7 @@ module RSpec
         after { change_const_value_to(original_const_value) }
 
         def change_const_value_to(value)
-          parent_const.__send__(:remove_const, last_const_part)
+          parent_const.send(:remove_const, last_const_part)
           parent_const.const_set(last_const_part, value)
         end
 
@@ -150,11 +143,6 @@ module RSpec
       end
 
       describe "#hide_const" do
-        context "for a loaded constant nested in a module that redefines `send`" do
-          it_behaves_like "loaded constant hiding", "TestClassThatDefinesSend::C"
-        end
-
-
         context 'for a loaded nested constant' do
           it_behaves_like "loaded constant hiding", "TestClass::Nested"
         end
@@ -217,10 +205,6 @@ module RSpec
       end
 
       describe "#stub_const" do
-        context "for a loaded constant nested in a module that redefines `send`" do
-          it_behaves_like "loaded constant stubbing", "TestClassThatDefinesSend::C"
-        end
-
         context 'for a loaded unnested constant' do
           it_behaves_like "loaded constant stubbing", "TestClass"
 
@@ -323,10 +307,6 @@ module RSpec
 
         context 'for an unloaded constant prefixed with ::' do
           it_behaves_like 'unloaded constant stubbing', "::SomeUndefinedConst"
-        end
-
-        context "for an unloaded constant nested in a module that redefines `send`" do
-          it_behaves_like 'unloaded constant stubbing', "TestClassThatDefinesSend::SomeUndefinedConst"
         end
 
         context 'for an unloaded constant with nested name that matches a top-level constant' do
