@@ -136,7 +136,9 @@ it is a bit confusing.
         def matches?(actual)
           @actual = actual
 
-          raise "UnsupportedOperationError: expectation set on private method `#{predicate}`" if is_private_on?( @actual )
+          if is_private_on?( @actual )
+            raise Expectations::ExpectationNotMetError.new("expectation set on private method `#{predicate}`")
+          end
 
           begin
             return @result = actual.__send__(predicate, *@args, &@block)
@@ -168,7 +170,7 @@ it is a bit confusing.
         # support 187
         if methods.first.is_a? String
           def is_private_on? actual
-            actual.private_methods.include? "#{predicate}"
+            actual.private_methods.include? predicate.to_s
           end
         else
           def is_private_on? actual
