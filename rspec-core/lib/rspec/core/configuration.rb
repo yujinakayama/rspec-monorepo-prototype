@@ -104,6 +104,9 @@ MESSAGE
       # The exit code to return if there are any failures (default: 1).
       add_setting :failure_exit_code
 
+      # Configures $VERBOSITY during example runs (equivalent to running ruby -w)
+      add_setting :warnings
+
       # Determines the order in which examples are run (default: OS standard
       # load order for files, declaration order for groups and examples).
       define_reader :order
@@ -466,8 +469,8 @@ MESSAGE
         @expectation_frameworks.push(*modules)
       end
 
-      def full_backtrace
-        @backtrace_cleaner.full_backtrace
+      def full_backtrace?
+        @backtrace_cleaner.full_backtrace?
       end
 
       def full_backtrace=(true_or_false)
@@ -534,7 +537,7 @@ EOM
         end
       end
 
-      def debug
+      def debug?
         !!defined?(Debugger)
       end
 
@@ -552,7 +555,7 @@ EOM
       end
 
       def full_description
-        filter.fetch :full_description, false
+        filter.fetch :full_description, nil
       end
 
       # @overload add_formatter(formatter)
