@@ -220,6 +220,7 @@ MESSAGE
           set_order_and_seed(hash)
         end
         @preferred_options.merge!(hash)
+        self.warnings = value_for :warnings, nil
       end
 
       # @private
@@ -466,8 +467,8 @@ MESSAGE
         @expectation_frameworks.push(*modules)
       end
 
-      def full_backtrace
-        @backtrace_cleaner.full_backtrace
+      def full_backtrace?
+        @backtrace_cleaner.full_backtrace?
       end
 
       def full_backtrace=(true_or_false)
@@ -534,7 +535,7 @@ EOM
         end
       end
 
-      def debug
+      def debug?
         !!defined?(Debugger)
       end
 
@@ -552,7 +553,7 @@ EOM
       end
 
       def full_description
-        filter.fetch :full_description, false
+        filter.fetch :full_description, nil
       end
 
       # @overload add_formatter(formatter)
@@ -1003,6 +1004,15 @@ EOM
       def order_groups_and_examples(&block)
         order_groups(&block)
         order_examples(&block)
+      end
+
+      # Set Ruby warnings on or off
+      def warnings= value
+        $VERBOSE = !!value
+      end
+
+      def warnings
+        $VERBOSE
       end
 
     private

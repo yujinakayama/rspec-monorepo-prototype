@@ -51,7 +51,7 @@ module RSpec::Core
         it 'does not add it to the load path' do
           config.default_path = 'Rakefile'
           config.setup_load_path_and_require []
-          expect($LOAD_PATH).not_to include(match /Rakefile/)
+          expect($LOAD_PATH).not_to include(match(/Rakefile/))
         end
       end
     end
@@ -502,13 +502,13 @@ module RSpec::Core
 
       it 'is possible to access the full description regular expression' do
         config.full_description = "foo"
-        expect(config.full_description).to eq /foo/
+        expect(config.full_description).to eq(/foo/)
       end
     end
 
     context "without full_description having been set" do
-      it 'returns false from #full_description' do
-        expect(config.full_description).to eq false
+      it 'returns nil from #full_description' do
+        expect(config.full_description).to eq nil
       end
     end
 
@@ -1016,12 +1016,12 @@ module RSpec::Core
     describe 'full_backtrace' do
       it 'returns true when backtrace patterns is empty' do
         config.backtrace_exclusion_patterns = []
-        expect(config.full_backtrace).to eq true
+        expect(config.full_backtrace?).to eq true
       end
 
       it 'returns false when backtrace patterns isnt empty' do
         config.backtrace_exclusion_patterns = [:lib]
-        expect(config.full_backtrace).to eq false
+        expect(config.full_backtrace?).to eq false
       end
     end
 
@@ -1098,7 +1098,7 @@ module RSpec::Core
 
       it 'sets the reader to true' do
         config.debug = true
-        expect(config.debug).to eq true
+        expect(config.debug?).to eq true
       end
     end
 
@@ -1110,7 +1110,7 @@ module RSpec::Core
 
       it 'sets the reader to false' do
         config.debug = false
-        expect(config.debug).to eq false
+        expect(config.debug?).to eq false
       end
     end
 
@@ -1461,7 +1461,7 @@ module RSpec::Core
       it 'sets a block that determines the ordering of a collection extended with Extensions::Ordered::Examples' do
         examples = [1, 2, 3, 4]
         examples.extend Extensions::Ordered::Examples
-        config.order_examples { |examples| examples.reverse }
+        config.order_examples { |examples_to_order| examples_to_order.reverse }
         expect(examples.ordered).to eq([4, 3, 2, 1])
       end
 
@@ -1483,7 +1483,7 @@ module RSpec::Core
       it 'sets a block that determines the ordering of a collection extended with Extensions::Ordered::ExampleGroups' do
         groups = [1, 2, 3, 4]
         groups.extend Extensions::Ordered::ExampleGroups
-        config.order_groups { |groups| groups.reverse }
+        config.order_groups { |groups_to_order| groups_to_order.reverse }
         expect(groups.ordered).to eq([4, 3, 2, 1])
       end
 
@@ -1516,5 +1516,33 @@ module RSpec::Core
         expect(groups.ordered).to eq([4, 3, 2, 1])
       end
     end
+
+    describe '#warnings' do
+      around do |example|
+        @_original_setting = $VERBOSE
+        example.run
+        $VERBOSE = @_original_setting
+      end
+
+      it "sets verbose to true when true" do
+        config.warnings = true
+        expect($VERBOSE).to eq true
+      end
+
+      it "sets verbose to false when true" do
+        config.warnings = false
+        expect($VERBOSE).to eq false
+      end
+
+      it 'returns the verbosity setting' do
+        expect(config.warnings).to eq $VERBOSE
+      end
+
+      it 'is loaded from config by #force' do
+        config.force :warnings => true
+        expect($VERBOSE).to eq true
+      end
+    end
+
   end
 end

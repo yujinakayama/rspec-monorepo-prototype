@@ -46,8 +46,8 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
 
       run_all_and_dump_failures
 
-      expect(output.string).to match /group name example name/m
-      expect(output.string).to match /(\s+)expected: \"that\"\n\1     got: \"this\"/m
+      expect(output.string).to match(/group name example name/m)
+      expect(output.string).to match(/(\s+)expected: \"that\"\n\1     got: \"this\"/m)
     end
 
     context "with an exception without a message" do
@@ -87,7 +87,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
       it "does not show the error class" do
         group.example("example name") { raise NameError.new('foo') }
         run_all_and_dump_failures
-        expect(output.string).to match /NameError/m
+        expect(output.string).to match(/NameError/m)
       end
     end
 
@@ -95,7 +95,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
       it "does not show the error class" do
         group.example("example name") { expect("this").to eq("that") }
         run_all_and_dump_failures
-        expect(output.string).not_to match /RSpec/m
+        expect(output.string).not_to match(/RSpec/m)
       end
     end
 
@@ -103,7 +103,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
       it "does not show the error class" do
         group.example("example name") { "this".should_receive("that") }
         run_all_and_dump_failures
-        expect(output.string).not_to match /RSpec/m
+        expect(output.string).not_to match(/RSpec/m)
       end
     end
 
@@ -209,8 +209,8 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
 
         run_all_and_dump_pending
 
-        expect(output.string).to match /group name example name/m
-        expect(output.string).to match /(\s+)expected: \"that\"\n\1     got: \"this\"/m
+        expect(output.string).to match(/group name example name/m)
+        expect(output.string).to match(/(\s+)expected: \"that\"\n\1     got: \"this\"/m)
       end
 
       context "with an exception without a message" do
@@ -226,7 +226,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
         it "does not show the error class" do
           group.example("example name") { pending { raise NameError.new('foo') } }
           run_all_and_dump_pending
-          expect(output.string).to match /NameError/m
+          expect(output.string).to match(/NameError/m)
         end
       end
 
@@ -234,7 +234,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
         it "does not show the error class" do
           group.example("example name") { pending { expect("this").to eq("that") } }
           run_all_and_dump_pending
-          expect(output.string).not_to match /RSpec/m
+          expect(output.string).not_to match(/RSpec/m)
         end
       end
 
@@ -242,7 +242,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
         it "does not show the error class" do
           group.example("example name") { pending { "this".should_receive("that") } }
           run_all_and_dump_pending
-          expect(output.string).not_to match /RSpec/m
+          expect(output.string).not_to match(/RSpec/m)
         end
       end
 
@@ -336,12 +336,12 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
       it "does not output the failure information" do
         group.example("example name") { pending { expect("this").to eq("that") } }
         run_all_and_dump_pending
-        expect(output.string).not_to match /(\s+)expected: \"that\"\n\1     got: \"this\"/m
+        expect(output.string).not_to match(/(\s+)expected: \"that\"\n\1     got: \"this\"/m)
       end
     end
   end
 
-  describe "#dump_profile" do
+  describe "#dump_profile_slowest_examples" do
     example_line_number = nil
 
     before do
@@ -358,25 +358,88 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
     end
 
     it "names the example" do
-      formatter.dump_profile
-      expect(output.string).to match /group example/m
+      formatter.dump_profile_slowest_examples
+      expect(output.string).to match(/group example/m)
     end
 
     it "prints the time" do
-      formatter.dump_profile
-      expect(output.string).to match /0(\.\d+)? seconds/
+      formatter.dump_profile_slowest_examples
+      expect(output.string).to match(/0(\.\d+)? seconds/)
     end
 
     it "prints the path" do
-      formatter.dump_profile
+      formatter.dump_profile_slowest_examples
       filename = __FILE__.split(File::SEPARATOR).last
 
-      expect(output.string).to match /#{filename}\:#{example_line_number}/
+      expect(output.string).to match(/#{filename}\:#{example_line_number}/)
     end
 
     it "prints the percentage taken from the total runtime" do
-      formatter.dump_profile
-      expect(output.string).to match /, 100.0% of total time\):/
+      formatter.dump_profile_slowest_examples
+      expect(output.string).to match(/, 100.0% of total time\):/)
+    end
+  end
+
+  describe "#dump_profile_slowest_example_groups" do
+    let(:group) do 
+      RSpec::Core::ExampleGroup.describe("slow group") do
+        # Use a sleep so there is some measurable time, to ensure
+        # the reported percent is 100%, not 0%.
+        example("example") { sleep 0.01 }
+      end 
+    end
+    let(:rpt) { double('reporter').as_null_object }
+
+    before do
+      group.run(rpt)
+      RSpec.configuration.stub(:profile_examples) { 10 }
+    end
+
+    context "with one example group" do
+      before { formatter.stub(:examples) { group.examples } }
+
+      it "doesn't profile a single example group" do
+        formatter.dump_profile_slowest_example_groups
+        expect(output.string).not_to match(/slowest example groups/)
+      end
+    end
+
+    context "with multiple example groups" do
+      before do
+        group2 = RSpec::Core::ExampleGroup.describe("fast group") do
+          example("example 1") { sleep 0.004 }
+          example("example 2") { sleep 0.007 }
+        end
+        group2.run(rpt)
+
+        formatter.stub(:examples) { group.examples + group2.examples }
+      end
+
+      it "prints the slowest example groups" do
+        formatter.dump_profile_slowest_example_groups
+        expect(output.string).to match(/slowest example groups/)
+      end
+
+      it "prints the time" do
+        formatter.dump_profile_slowest_example_groups
+        expect(output.string).to match(/0(\.\d+)? seconds/)
+      end
+
+      it "ranks the example groups by average time" do
+        formatter.dump_profile_slowest_example_groups
+        expect(output.string).to match(/slow group(.*)fast group/m)
+      end
+    end
+
+    it "depends on parent_groups to get the top level example group" do
+      ex = ""
+      group.describe("group 2") do 
+        describe "group 3" do
+          ex = example("nested example 1") 
+        end
+      end
+
+      expect(ex.example_group.parent_groups.last).to eq(group)
     end
   end
 

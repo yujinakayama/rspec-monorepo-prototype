@@ -3,6 +3,8 @@
 
 Enhancements
 
+* Add profiling of the slowest example groups to `--profile` option.
+  The output is sorted by the slowest average example groups.
 * Don't show slow examples if there's a failure and both `--fail-fast`
   and `--profile` options are used (Paweł Gościcki).
 * Rather than always adding `spec` to the load path, add the configured
@@ -24,6 +26,15 @@ Enhancements
   (Konstantin Haase).
 * Add cucumber documentation for --require command line option
   (Bradley Schaefer)
+* Expose configruation options via config:
+  * `config.libs` returns the libs configured to be added onto the load path
+  * `full_backtrace?` returns the state of the backtrace cleaner
+  * `debug?` returns true when the debugger is loaded
+  * `line_numbers` returns the line numbers we are filtering by (if any)
+  * `full_description` returns the RegExp used to filter descriptions
+  (Jon Rowe)
+* Add setters for RSpec.world and RSpec.configuration (Alex Soulim)
+* Configure ruby's warning behaviour with `--warnings` (Jon Rowe)
 
 Bug fixes
 
@@ -44,6 +55,8 @@ Bug fixes
 * Fix `Example#full_description` so that it gets filled in by the last
   matcher description (as `Example#description` already did) when no
   doc string has been provided (David Chelimsky).
+* Fix the memoized methods (`let` and `subject`) leaking `define_method`
+  as a `public` method. (Thomas Holmes and Jon Rowe) (#873)
 
 Deprecations
 

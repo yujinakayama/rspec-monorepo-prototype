@@ -61,6 +61,12 @@ module RSpec
   end
 
   # @private
+  # Used internally to set the global object
+  def self.world=(new_world)
+    @world = new_world
+  end
+
+  # @private
   # Used internally to ensure examples get reloaded between multiple runs in
   # the same process.
   def self.reset
@@ -94,6 +100,12 @@ WARNING
     @configuration ||= RSpec::Core::Configuration.new
   end
 
+  # @private
+  # Used internally to set the global object
+  def self.configuration=(new_configuration)
+    @configuration = new_configuration
+  end
+
   # Yields the global configuration to a block.
   # @yield [Configuration] global configuration
   #
@@ -114,7 +126,7 @@ WARNING
 
   # @private
   def self.windows_os?
-    /mswin|mingw/ === ::RbConfig::CONFIG['host_os']
+    RbConfig::CONFIG['host_os'] =~ /cygwin|mswin|mingw|bccwin|wince|emx/
   end
 
   module Core
