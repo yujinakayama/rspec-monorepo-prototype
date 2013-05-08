@@ -126,7 +126,7 @@ WARNING
 
   # @private
   def self.windows_os?
-    RbConfig::CONFIG['host_os'] =~ /cygwin|mswin|mingw|bccwin|wince|emx/
+    /mswin|mingw/ === ::RbConfig::CONFIG['host_os']
   end
 
   module Core
