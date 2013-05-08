@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module RSpec
   module Mocks
-    describe HaveReceived do
+    describe Matchers::HaveReceived do
       describe "expect(...).to have_received" do
         it 'passes when the double has received the given message' do
           dbl = double_with_met_expectation(:expected_method)
@@ -73,11 +73,6 @@ module RSpec
               expect(dbl).to have_received(:expected_method).with(:unexpected, :args)
             }.to raise_error(/with unexpected arguments/)
           end
-        end
-
-        it 'generates a useful description' do
-          matcher = have_received(:expected_method).with(:expected_args).once
-          expect(matcher.description).to eq 'have received expected_method(:expected_args) 1 time'
         end
 
         context "counts" do
