@@ -146,7 +146,7 @@ module RSpec
         rescue
           puts failure_message if failure_message
         end
-        abort("#{command} failed") if fail_on_error unless success
+        raise("#{command} failed") if fail_on_error unless success
       end
 
     private
