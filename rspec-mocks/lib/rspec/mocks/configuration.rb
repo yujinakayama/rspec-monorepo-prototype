@@ -19,37 +19,10 @@ module RSpec
       #
       def add_stub_and_should_receive_to(*modules)
         modules.each do |mod|
-          Syntax.enable_should(mod)
+          mod.__send__(:include, RSpec::Mocks::Methods)
         end
-      end
-
-      def syntax=(values)
-        if Array(values).include?(:expect)
-          Syntax.enable_expect
-        else
-          Syntax.disable_expect
-        end
-
-        if Array(values).include?(:should)
-          Syntax.enable_should
-        else
-          Syntax.disable_should
-        end
-      end
-
-      def syntax
-        syntaxes = []
-        syntaxes << :should  if Syntax.should_enabled?
-        syntaxes << :expect if Syntax.expect_enabled?
-        syntaxes
       end
     end
-
-    def self.configuration
-      @configuration ||= Configuration.new
-    end
-
-    configuration.syntax = [:should, :expect]
   end
 end
 

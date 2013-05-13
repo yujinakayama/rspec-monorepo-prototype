@@ -19,9 +19,6 @@ Enhancements:
   number of calls given in the expectation (Sam Phippen)
 * Make `with` style receive expectations print the args they were expecting, and
   the args that they got (Sam Phippen)
-* Fix some warnings seen under ruby 2.0.0p0 (Sam Phippen).
-* Add a new `:expect` syntax for message expectations
-  (Myron Marston and Sam Phippen).
 
 Bug fixes
 
@@ -44,7 +41,6 @@ Deprecations
   have only one term (Michi Huber).
 * Deprecate `stub!` and `unstub!` in favor of `stub` and `unstub`
   (Jon Rowe).
-* Deprecate `at_least(0).times` and `any_number_of_times` (Michi Huber).
 
 ### 2.13.0 / 2013-02-23
 [full changelog](http://github.com/rspec/rspec-mocks/compare/v2.12.2...v2.13.0)

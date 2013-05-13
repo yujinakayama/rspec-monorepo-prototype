@@ -50,13 +50,13 @@ module RSpec
 
       # @private
       def received_part_of_expectation_error(actual_received_count, *args)
-        "received: #{count_message(actual_received_count)}" +
+        result = "received: #{count_message(actual_received_count)}" +
           method_call_args_description(args)
       end
 
       # @private
       def expected_part_of_expectation_error(expected_received_count, expectation_count_type, argument_list_matcher)
-        "expected: #{count_message(expected_received_count, expectation_count_type)}" +
+        result = "expected: #{count_message(expected_received_count, expectation_count_type)}" +
           method_call_args_description(argument_list_matcher.expected_args)
       end
 
