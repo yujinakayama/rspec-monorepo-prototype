@@ -55,7 +55,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
         exception_without_message = Exception.new()
         exception_without_message.stub(:message) { nil }
         group.example("example name") { raise exception_without_message }
-        expect { run_all_and_dump_failures }.not_to raise_error
+        expect { run_all_and_dump_failures }.not_to raise_error(NoMethodError)
       end
 
       it "preserves ancestry" do
@@ -70,7 +70,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
         gonzo_exception = RuntimeError.new
         gonzo_exception.stub(:message) { gonzo_exception }
         group.example("example name") { raise gonzo_exception }
-        expect { run_all_and_dump_failures }.not_to raise_error
+        expect { run_all_and_dump_failures }.not_to raise_error(NoMethodError)
       end
     end
 
@@ -110,7 +110,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
     context 'for #share_examples_for' do
       it 'outputs the name and location' do
 
-        share_examples_for 'foo bar' do
+        group.share_examples_for 'foo bar' do
           it("example name") { expect("this").to eq("that") }
         end
 
@@ -127,7 +127,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
 
       context 'that contains nested example groups' do
         it 'outputs the name and location' do
-          share_examples_for 'foo bar' do
+          group.share_examples_for 'foo bar' do
             describe 'nested group' do
               it("example name") { expect("this").to eq("that") }
             end
@@ -151,7 +151,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
 
       it 'outputs the name and location' do
 
-        share_as :FooBar do
+        group.share_as :FooBar do
           it("example name") { expect("this").to eq("that") }
         end
 
@@ -169,7 +169,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
       context 'that contains nested example groups' do
         it 'outputs the name and location' do
 
-          share_as :NestedFoo do
+          group.share_as :NestedFoo do
             describe 'nested group' do
               describe 'hell' do
                 it("example name") { expect("this").to eq("that") }
@@ -218,7 +218,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
           exception_without_message = Exception.new()
           exception_without_message.stub(:message) { nil }
           group.example("example name") { pending { raise exception_without_message } }
-          expect { run_all_and_dump_pending }.not_to raise_error
+          expect { run_all_and_dump_pending }.not_to raise_error(NoMethodError)
         end
       end
 
@@ -249,7 +249,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
       context 'for #share_examples_for' do
         it 'outputs the name and location' do
 
-          share_examples_for 'foo bar' do
+          group.share_examples_for 'foo bar' do
             it("example name") { pending { expect("this").to eq("that") } }
           end
 
@@ -266,7 +266,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
 
         context 'that contains nested example groups' do
           it 'outputs the name and location' do
-            share_examples_for 'foo bar' do
+            group.share_examples_for 'foo bar' do
               describe 'nested group' do
                 it("example name") { pending { expect("this").to eq("that") } }
               end
@@ -290,7 +290,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
 
         it 'outputs the name and location' do
 
-          share_as :FooBar2 do
+          group.share_as :FooBar2 do
             it("example name") { pending { expect("this").to eq("that") } }
           end
 
@@ -308,7 +308,7 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
         context 'that contains nested example groups' do
           it 'outputs the name and location' do
 
-            share_as :NestedFoo2 do
+            group.share_as :NestedFoo2 do
               describe 'nested group' do
                 describe 'hell' do
                   it("example name") { pending { expect("this").to eq("that") } }

@@ -139,7 +139,6 @@ EOS
 
           @example_group_instance.class.class_eval do
             hash.each do |key, value|
-              undef_method(key) if method_defined?(key)
               define_method(key) { value }
             end
           end
