@@ -103,14 +103,5 @@ module RSpec
         expect(obj).not_to be_null_object
       end
     end
-
-    describe "when using the :expect syntax" do
-      include_context "with syntax", :expect
-
-      it 'still supports null object doubles' do
-        obj = double("foo").as_null_object
-        expect(obj.foo.bar.bazz).to be(obj)
-      end
-    end
   end
 end
