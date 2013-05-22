@@ -1,47 +1,26 @@
 module RSpec
-  class << self
-    # @private
-    #
-    # Used internally to print deprecation warnings
-    def deprecate(method, alternate_method=nil, version=nil)
-      lines = ["#{method} is deprecated"]
-      if version
-        lines.last << ", and will be removed from rspec-#{version}"
+  module Core
+    module Deprecation
+      # @private
+      #
+      # Used internally to print deprecation warnings
+      def deprecate(deprecated_or_hash, replacement=nil, version=nil)
+        # Temporarily supporting old and new APIs while we transition the other rspec libs to use a hash
+        if Hash === deprecated_or_hash
+          RSpec.configuration.reporter.deprecation deprecated_or_hash.merge(:called_from => caller(0)[2])
+        else
+          RSpec.configuration.reporter.deprecation :deprecated => deprecated_or_hash, :replacement => replacement, :called_from => caller(0)[2]
+        end
       end
-      if alternate_method
-        lines << "use #{alternate_method} instead"
-      end
 
-      lines << "called from #{caller(0)[2]}"
-
-      warn_deprecation "\n" + lines.map {|l| "DEPRECATION: #{l}"}.join("\n") + "\n"
-    end
-
-    # @private
-    #
-    # Used internally to print deprecation warnings
-    def warn_deprecation(message)
-      RSpec.configuration.deprecation_io.puts(message)
-    end
-
-    # @private
-    #
-    # Used internally to print the count of deprecation warnings
-    def deprecations?
-      RSpec.configuration.deprecation_io.deprecations > 0
-    end
-
-    # @private
-    #
-    # Used internally to print deprecation summary
-    def deprecations_summary
-      io = RSpec.configuration.deprecation_io
-      if io.deprecations == 1
-        "There was 1 deprecation logged to #{io.description}"
-      else
-        "There were #{io.deprecations} deprecations logged to #{io.description}"
+      # @private
+      #
+      # Used internally to print deprecation warnings
+      def warn_deprecation(message)
+        deprecate(:message => message)
       end
     end
-
   end
+
+  RSpec.extend(RSpec::Core::Deprecation)
 end
