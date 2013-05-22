@@ -14,20 +14,20 @@ describe RSpec::Core::Deprecation do
       end
 
       it "adds the call site" do
-        expect(RSpec.configuration.reporter).to receive(:deprecation).with(hash_including :called_from => caller(0)[1])
+        expect(RSpec.configuration.reporter).to receive(:deprecation).with(hash_including :call_site => caller(0)[1])
         RSpec.deprecate("deprecated_method")
       end
     end
 
-    context "new API with a hash" do
+    context "new API with a hash after the first arg" do
       it "passes the hash to the reporter" do
         expect(RSpec.configuration.reporter).to receive(:deprecation).with(hash_including :deprecated => "deprecated_method", :replacement => "replacement")
-        RSpec.deprecate(:deprecated => "deprecated_method", :replacement => "replacement")
+        RSpec.deprecate("deprecated_method", :replacement => "replacement")
       end
 
       it "adds the call site" do
-        expect(RSpec.configuration.reporter).to receive(:deprecation).with(hash_including :called_from => caller(0)[1])
-        RSpec.deprecate(:deprecated => "deprecated_method")
+        expect(RSpec.configuration.reporter).to receive(:deprecation).with(hash_including :call_site => caller(0)[1])
+        RSpec.deprecate("deprecated_method")
       end
     end
   end
