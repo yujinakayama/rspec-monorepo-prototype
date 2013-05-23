@@ -16,7 +16,7 @@ module RSpec
             @deprecation_stream.print "DEPRECATION: " unless File === @deprecation_stream
             @deprecation_stream.print "#{data[:deprecated]} is deprecated."
             @deprecation_stream.print " Use #{data[:replacement]} instead." if data[:replacement]
-            @deprecation_stream.print " Called from #{data[:called_from]}." if data[:called_from]
+            @deprecation_stream.print " Called from #{data[:call_site]}." if data[:call_site]
             @deprecation_stream.puts
           end
         end
@@ -26,7 +26,7 @@ module RSpec
             @summary_stream.print "\n#{@count} deprecation"
             @summary_stream.print "s" if @count > 1
             @summary_stream.print " logged to "
-            @summary_stream.puts File === @deprecation_stream ? @deprecation_stream.path : @deprecation_stream.inspect
+            @summary_stream.puts @deprecation_stream.path
           end
         end
       end
