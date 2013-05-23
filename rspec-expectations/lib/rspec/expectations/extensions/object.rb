@@ -6,7 +6,17 @@ module RSpec
       def const_missing(name)
         case name
         when :Rspec, :Spec
-          RSpec.deprecate(name.to_s, :replacement => "RSpec")
+          RSpec.warn_deprecation <<-WARNING
+*****************************************************************
+DEPRECATION WARNING: you are using a deprecated constant that will
+be removed from a future version of RSpec.
+
+#{caller(0)[2]}
+
+* #{name} is deprecated.
+* RSpec is the new top-level module in RSpec-2
+***************************************************************
+WARNING
           RSpec
         else
           begin
@@ -21,7 +31,7 @@ module RSpec
 
     # @deprecated (no replacement)
     def differ=(ignore)
-      RSpec.deprecate("RSpec::Expectations.differ=(differ)")
+      RSpec.deprecate("RSpec::Expectations.differ=(differ)", "nothing at all (diffing is now automatic and no longer configurable)")
     end
   end
 end

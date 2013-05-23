@@ -52,12 +52,12 @@ module RSpec
         return if deprecated_should_enabled?
 
         def should(*args)
-          RSpec.deprecate "`expect { }.should`", :replacement => "`expect { }.to`"
+          RSpec.deprecate "`expect { }.should`", "`expect { }.to`", 3
           @target.should(*args)
         end
 
         def should_not(*args)
-          RSpec.deprecate "`expect { }.should_not`", :replacement => "`expect { }.not_to`"
+          RSpec.deprecate "`expect { }.should_not`", "`expect { }.not_to`", 3
           @target.should_not(*args)
         end
 
