@@ -32,9 +32,13 @@ describe "expect(...).to be_predicate" do
   end
 
   it 'fails when :predicate? is private' do
-    expect {
-      expect(Class.new { def happy?; false; end; private :happy? }).to be_happy
-    }.to raise_error
+    privately_happy = Class.new do
+      private
+        def happy?
+          true
+        end
+    end
+    expect { expect(privately_happy.new).to be_happy }.to raise_error
   end
 
   it "fails on error other than NameError" do
