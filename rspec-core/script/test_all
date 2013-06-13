@@ -2,14 +2,6 @@
 
 set -e -x
 
-function is_jruby() {
-  if ruby -e 'exit RUBY_PLATFORM == "java"'; then
-    return 0
-  else
-    return 1
-  fi
-}
-
 # Needed by Bundler 1.3: https://github.com/carlhuda/bundler/issues/2382
 export RUBYOPT='-rrbconfig'
 
@@ -28,13 +20,9 @@ echo
 echo "--------------------------------------------------------------------"
 echo
 
-if is_jruby; then
-  echo "Skipping one-by-one spec runs due to expensive JVM load time"
-else
-  for file in `find spec -iname '*_spec.rb'`; do
-    NO_COVERALLS=1 bin/rspec $file -b --format progress
-  done
-fi
+for file in `find spec -iname '*_spec.rb'`; do
+  NO_COVERALLS=1 bin/rspec $file -b --format progress
+done
 
 # Prepare RUBYOPT for scenarios that are shelling out to ruby,
 # and PATH for those that are using `rspec` or `rake`.

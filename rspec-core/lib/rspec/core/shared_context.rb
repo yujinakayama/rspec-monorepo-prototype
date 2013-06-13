@@ -17,37 +17,31 @@ module RSpec
     #       # ...
     #     end
     module SharedContext
-      # @api private
+      include Hooks
+      include MemoizedHelpers::ClassMethods
+
       def included(group)
-        __shared_context_recordings.each do |recording|
-          recording.playback_onto(group)
+        [:before, :after].each do |type|
+          [:all, :each].each do |scope|
+            group.hooks[type][scope].concat hooks[type][scope]
+          end
+        end
+        _nested_group_declarations.each do |name, block, *args|
+          group.describe name, *args, &block
         end
       end
 
-      # @api private
-      def __shared_context_recordings
-        @__shared_context_recordings ||= []
+      def describe(name, *args, &block)
+        _nested_group_declarations << [name, block, *args]
       end
 
-      Recording = Struct.new(:method_name, :args, :block) do
-        def playback_onto(group)
-          group.__send__(method_name, *args, &block)
-        end
-      end
+      alias_method :context, :describe
 
-      # @api private
-      def self.record(methods)
-        methods.each do |meth|
-          class_eval <<-EOS, __FILE__, __LINE__ + 1
-            def #{meth}(*args, &block)
-              __shared_context_recordings << Recording.new(:#{meth}, args, block)
-            end
-          EOS
-        end
-      end
+      private
 
-      record [:describe, :context] + Hooks.instance_methods(false) +
-        MemoizedHelpers::ClassMethods.instance_methods(false)
+      def _nested_group_declarations
+        @_nested_group_declarations ||= []
+      end
     end
   end
 
