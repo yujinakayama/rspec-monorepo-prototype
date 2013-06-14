@@ -14,11 +14,9 @@ module RSpec
     # is declared.
     class ExampleGroup
       extend  MetadataHashBuilder::WithDeprecationWarning
-      extend  Extensions::ModuleEvalWithArgs
       extend  Hooks
 
       include MemoizedHelpers
-      include Extensions::InstanceEvalWithArgs
       include Pending
       include SharedExampleGroup
 
@@ -161,7 +159,7 @@ module RSpec
         raise ArgumentError, "Could not find shared #{label} #{name.inspect}" unless
         shared_block = shared_example_groups[name]
 
-        module_eval_with_args(*args, &shared_block)
+        module_exec(*args, &shared_block)
         module_eval(&customization_block) if customization_block
       end
 
@@ -237,6 +235,13 @@ module RSpec
         subclass = Class.new(parent)
         subclass.set_it_up(*args)
         subclass.module_eval(&example_group_block) if example_group_block
+
+        # The LetDefinitions module must be included _after_ other modules
+        # to ensure that it takes precendence when there are name collisions.
+        # Thus, we delay including it until after the example group block
+        # has been eval'd.
+        MemoizedHelpers.define_helpers_on(subclass)
+
         subclass
       end
 
