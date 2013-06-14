@@ -4,15 +4,12 @@ Breaking Changes for 3.0.0:
 
 * Raise an explicit error if `should_not_receive(...).and_return` is used. (Sam
   Phippen)
+* Remove 1.8.6 workarounds (Jon Rowe)
 
 Enhancements:
 
 * Document test spies in the readme. (Adarsh Pandit)
 * Add an `array_including` matcher. (Sam Phippen)
-
-Bug Fixes:
-
-* Bypass RSpec::Mocks::Syntax when mass-assigning stubs via double(). (Paul Annesley)
 
 ### 2.14.0.rc1 / 2013-05-27
 [full changelog](http://github.com/rspec/rspec-mocks/compare/v2.13.0...v2.14.0.rc1)
