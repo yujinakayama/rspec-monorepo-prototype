@@ -23,16 +23,13 @@ Gem::Specification.new do |s|
   s.rdoc_options     = ["--charset=UTF-8"]
   s.require_path     = "lib"
 
-  s.required_ruby_version = '>= 1.8.7'
-
   s.add_development_dependency "rake",     "~> 10.0.0"
   s.add_development_dependency "cucumber", "~> 1.1.9"
   s.add_development_dependency "aruba",    "~> 0.5"
 
   s.add_development_dependency "ZenTest",  "~> 4.6"
   s.add_development_dependency "nokogiri", "1.5.2"
-  s.add_development_dependency "coderay",  "~> 1.0.9"
-
+  s.add_development_dependency "syntax",   "1.0.0"
 
   s.add_development_dependency "mocha",    "~> 0.13.0"
   s.add_development_dependency "rr",       "~> 1.0.4"

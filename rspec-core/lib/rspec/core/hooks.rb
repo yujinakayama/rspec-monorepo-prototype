@@ -18,7 +18,7 @@ module RSpec
 
       class BeforeHook < Hook
         def run(example)
-          example.instance_exec(example, &block)
+          example.instance_eval(&block)
         end
 
         def display_name
@@ -28,7 +28,7 @@ module RSpec
 
       class AfterHook < Hook
         def run(example)
-          example.instance_exec_with_rescue("in an after hook", &block)
+          example.instance_eval_with_rescue("in an after hook", &block)
         end
 
         def display_name
@@ -84,7 +84,7 @@ module RSpec
         def run
           inject(@initial_procsy) do |procsy, around_hook|
             Example.procsy(procsy.metadata) do
-              @example.instance_exec(procsy, &around_hook.block)
+              @example.instance_eval_with_args(procsy, &around_hook.block)
             end
           end.call
         end

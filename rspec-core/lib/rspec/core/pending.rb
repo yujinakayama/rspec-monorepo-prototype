@@ -76,7 +76,7 @@ module RSpec
       #         # ...
       #       end
       def pending(*args)
-        return self.class.before(:each) { pending(*args) } unless @_current_rspec_example
+        return self.class.before(:each) { pending(*args) } unless example
 
         options = args.last.is_a?(Hash) ? args.pop : {}
         message = args.first || NO_REASON_GIVEN
@@ -85,17 +85,18 @@ module RSpec
           return block_given? ? yield : nil
         end
 
-        @_current_rspec_example.metadata[:pending] = true
-        @_current_rspec_example.metadata[:execution_result][:pending_message] = message
+        example.metadata[:pending] = true
+        example.metadata[:execution_result][:pending_message] = message
         if block_given?
           begin
             result = begin
                        yield
-                       @_current_rspec_example.example_group_instance.instance_eval { verify_mocks_for_rspec }
+                       example.example_group_instance.instance_eval { verify_mocks_for_rspec }
+                       true
                      end
-            @_current_rspec_example.metadata[:pending] = false
+            example.metadata[:pending] = false
           rescue Exception => e
-            @_current_rspec_example.execution_result[:exception] = e
+            example.execution_result[:exception] = e
           ensure
             teardown_mocks_for_rspec
           end

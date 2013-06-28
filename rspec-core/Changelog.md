@@ -1,13 +1,8 @@
-### Development
-
-Breaking Changes for 3.0.0:
-
-* Remove explicit support for 1.8.6 (Jon Rowe)
+### Dev
 
 Enhancements
 
 * Clean up some internal use of Enumerable methods. (Vipul A M)
-* Replace unmaintained syntax gem with coderay gem. (Xavier Shay)
 
 Bug fix
 
