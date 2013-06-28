@@ -2,7 +2,7 @@ Feature: define matcher with fluent interface
 
   Use the chain() method to define matchers with a fluent interface.
 
-  Scenario: chained method with argument
+  Scenario: chained method with argumetn
     Given a file named "between_spec.rb" with:
       """ruby
       RSpec::Matchers.define :be_bigger_than do |first|
