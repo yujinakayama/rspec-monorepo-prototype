@@ -28,8 +28,7 @@ module RSpec
       private
 
       def warn method_name
-        non_rspec_caller = caller.find { |line| !line.include?('lib/rspec/mocks') }
-        Kernel.warn("An expectation of :#{method_name} was set on nil. Called from #{non_rspec_caller}. Use allow_message_expectations_on_nil to disable warnings.")
+        Kernel.warn("An expectation of :#{method_name} was set on nil. Called from #{caller[2]}. Use allow_message_expectations_on_nil to disable warnings.")
       end
 
     end

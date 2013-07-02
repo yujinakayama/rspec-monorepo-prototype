@@ -60,7 +60,8 @@ module RSpec
         end
 
         def should_not_receive(method_name, &block)
-          should_receive(method_name, &block).never
+          observe!(method_name)
+          message_chains.add(method_name, NegativeExpectationChain.new(method_name, &block))
         end
 
         # Removes any previously recorded stubs, stub_chains or message

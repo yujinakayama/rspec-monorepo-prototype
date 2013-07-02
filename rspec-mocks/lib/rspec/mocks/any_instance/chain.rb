@@ -7,7 +7,9 @@ module RSpec
           @expectation_block = block
         end
 
-        module Customizations
+        class << self
+          private
+
           # @macro [attach] record
           #   @method $1(*args, &block)
           #   Records the `$1` message for playback against an instance that
@@ -15,31 +17,29 @@ module RSpec
           #
           #   @see RSpec::Mocks::MessageExpectation#$1
           #
-          def self.record(method_name)
+          def record(method_name)
             class_eval(<<-EOM, __FILE__, __LINE__ + 1)
               def #{method_name}(*args, &block)
                 record(:#{method_name}, *args, &block)
               end
             EOM
           end
-
-          record :and_return
-          record :and_raise
-          record :and_throw
-          record :and_yield
-          record :and_call_original
-          record :with
-          record :once
-          record :twice
-          record :any_number_of_times
-          record :exactly
-          record :times
-          record :never
-          record :at_least
-          record :at_most
         end
 
-        include Customizations
+        record :and_return
+        record :and_raise
+        record :and_throw
+        record :and_yield
+        record :and_call_original
+        record :with
+        record :once
+        record :twice
+        record :any_number_of_times
+        record :exactly
+        record :times
+        record :never
+        record :at_least
+        record :at_most
 
         # @private
         def playback!(instance)
@@ -63,16 +63,7 @@ module RSpec
           @expectation_fulfilled = true
         end
 
-        def never
-          ErrorGenerator.raise_double_negation_error("expect_any_instance_of(MyClass)") if negated?
-          super
-        end
-
         private
-
-        def negated?
-          messages.any? { |(message, *_), _| message.to_sym == :never }
-        end
 
         def messages
           @messages ||= []

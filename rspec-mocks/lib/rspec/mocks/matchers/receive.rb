@@ -22,11 +22,7 @@ module RSpec
         alias matches? setup_expectation
 
         def setup_negative_expectation(subject, &block)
-          # ensure `never` goes first for cases like `never.and_return(5)`,
-          # where `and_return` is meant to raise an error
-          @recorded_customizations.unshift Customization.new(:never, [], nil)
-
-          setup_expectation(subject, &block)
+          setup_mock_proxy_method_substitute(subject, :add_negative_message_expectation, block)
         end
         alias does_not_match? setup_negative_expectation
 
