@@ -34,6 +34,16 @@ module RSpec
             ::RSpec::Mocks.space.proxy_for(self).remove_stub(message)
           end
 
+          def stub!(message_or_hash, opts={}, &block)
+            ::RSpec.deprecate "stub!", :replacement => "stub"
+            stub(message_or_hash, opts={}, &block)
+          end
+
+          def unstub!(message)
+            ::RSpec.deprecate "unstub!", :replacement => "unstub"
+            unstub(message)
+          end
+
           def stub_chain(*chain, &blk)
             ::RSpec::Mocks::StubChain.stub_chain_on(self, *chain, &blk)
           end
@@ -71,6 +81,8 @@ module RSpec
           undef should_not_receive
           undef stub
           undef unstub
+          undef stub!
+          undef unstub!
           undef stub_chain
           undef as_null_object
           undef null_object?
