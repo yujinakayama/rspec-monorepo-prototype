@@ -48,7 +48,7 @@ describe "expect { ... }.to raise_error {|err| ... }" do
     expect { non_existent_method }.to raise_error {|e|
       ran = true
     }
-    expect(ran).to be_truthy
+    expect(ran).to be_true
   end
 
   it "passes the error to the block" do
@@ -359,8 +359,8 @@ describe "expect { ... }.to raise_error(NamedError, error_message) { |err| ... }
       }
     }.to fail_with(/expected: 4/m)
 
-    expect(ran).to    be_truthy
-    expect(passed).to be_falsey
+    expect(ran).to    be_true
+    expect(passed).to be_false
   end
 
   it "does NOT yield exception if no error was thrown" do

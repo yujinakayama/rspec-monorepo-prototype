@@ -235,34 +235,34 @@ describe "expect(...).not_to be_predicate(*args, &block)" do
   end
 end
 
-describe "expect(...).to be_truthy" do
+describe "expect(...).to be_true" do
   it "passes when actual equal?(true)" do
-    expect(true).to be_truthy
+    expect(true).to be_true
   end
 
   it "passes when actual is 1" do
-    expect(1).to be_truthy
+    expect(1).to be_true
   end
 
   it "fails when actual equal?(false)" do
     expect {
-      expect(false).to be_truthy
+      expect(false).to be_true
     }.to fail_with("expected: true value\n     got: false")
   end
 end
 
-describe "expect(...).to be_falsey" do
+describe "expect(...).to be_false" do
   it "passes when actual equal?(false)" do
-    expect(false).to be_falsey
+    expect(false).to be_false
   end
 
   it "passes when actual equal?(nil)" do
-    expect(nil).to be_falsey
+    expect(nil).to be_false
   end
 
   it "fails when actual equal?(true)" do
     expect {
-      expect(true).to be_falsey
+      expect(true).to be_false
     }.to fail_with("expected: false value\n     got: true")
   end
 end
