@@ -80,15 +80,17 @@ module RSpec
 
       def method_missing(message, *args, &block)
         if __mock_proxy.null_object?
-          return 0   if message == :to_int
-          return nil if [:to_a,:to_ary].include? message
+          case message
+          when :to_int        then return 0
+          when :to_a, :to_ary then return nil
+          end
         end
         __mock_proxy.record_message_received(message, *args, &block)
 
         begin
           __mock_proxy.null_object? ? self : super
         rescue NameError
-          # for 1.9.2
+          # Required wrapping doubles in an Array on Ruby 1.9.2
           raise NoMethodError if [:to_a, :to_ary].include? message
           __mock_proxy.raise_unexpected_message_error(message, *args)
         end
