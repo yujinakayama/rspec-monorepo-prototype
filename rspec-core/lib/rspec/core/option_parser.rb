@@ -75,6 +75,10 @@ module RSpec::Core
           options[:order] = "rand:#{seed}"
         end
 
+        parser.on('-d', '--debugger', 'Enable debugging.') do |o|
+          options[:debug] = true
+        end
+
         parser.on('--fail-fast', 'Abort the run on first failure.') do |o|
           options[:fail_fast] = true
         end
@@ -92,7 +96,6 @@ module RSpec::Core
         end
 
         parser.on('--init', 'Initialize your project with RSpec.') do |cmd|
-          require 'rspec/core/project_initializer'
           ProjectInitializer.new(cmd).run
           exit
         end
@@ -108,6 +111,7 @@ module RSpec::Core
                 '  [p]rogress (default - dots)',
                 '  [d]ocumentation (group and example names)',
                 '  [h]tml',
+                '  [t]extmate',
                 '  [j]son',
                 '  custom formatter class name') do |o|
           options[:formatters] ||= []
