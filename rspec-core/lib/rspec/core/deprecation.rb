@@ -8,12 +8,10 @@ module RSpec
         # Temporarily support old and new APIs while we transition the other
         # rspec libs to use a hash for the 2nd arg and no version arg
         data = Hash === replacement_or_hash ? replacement_or_hash : { :replacement => replacement_or_hash }
-        call_site = caller.find { |line| line !~ %r{/lib/rspec/(core|mocks|expectations|matchers|rails)/} }
-
         RSpec.configuration.reporter.deprecation(
           {
             :deprecated => deprecated,
-            :call_site => call_site
+            :call_site => caller(0)[2]
           }.merge(data)
         )
       end

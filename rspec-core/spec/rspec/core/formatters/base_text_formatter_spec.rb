@@ -145,6 +145,50 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
         end
       end
     end
+
+    context 'for #share_as' do
+      before { allow(RSpec).to receive(:deprecate) }
+
+      it 'outputs the name and location' do
+
+        group.share_as :FooBar do
+          it("example name") { expect("this").to eq("that") }
+        end
+
+        line = __LINE__.next
+        group.send(:include, FooBar)
+
+        run_all_and_dump_failures
+
+        expect(output.string).to include(
+          'Shared Example Group: "FooBar" called from ' +
+            "./spec/rspec/core/formatters/base_text_formatter_spec.rb:#{line}"
+        )
+      end
+
+      context 'that contains nested example groups' do
+        it 'outputs the name and location' do
+
+          group.share_as :NestedFoo do
+            describe 'nested group' do
+              describe 'hell' do
+                it("example name") { expect("this").to eq("that") }
+              end
+            end
+          end
+
+          line = __LINE__.next
+          group.send(:include, NestedFoo)
+
+          run_all_and_dump_failures
+
+          expect(output.string).to include(
+            'Shared Example Group: "NestedFoo" called from ' +
+              "./spec/rspec/core/formatters/base_text_formatter_spec.rb:#{line}"
+          )
+        end
+      end
+    end
   end
 
   describe "#dump_pending" do
@@ -235,6 +279,50 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
 
             expect(output.string).to include(
               'Shared Example Group: "foo bar" called from ' +
+              "./spec/rspec/core/formatters/base_text_formatter_spec.rb:#{line}"
+            )
+          end
+        end
+      end
+
+      context 'for #share_as' do
+        before { allow(RSpec).to receive(:deprecate) }
+
+        it 'outputs the name and location' do
+
+          group.share_as :FooBar2 do
+            it("example name") { pending { expect("this").to eq("that") } }
+          end
+
+          line = __LINE__.next
+          group.send(:include, FooBar2)
+
+          run_all_and_dump_pending
+
+          expect(output.string).to include(
+            'Shared Example Group: "FooBar2" called from ' +
+            "./spec/rspec/core/formatters/base_text_formatter_spec.rb:#{line}"
+          )
+        end
+
+        context 'that contains nested example groups' do
+          it 'outputs the name and location' do
+
+            group.share_as :NestedFoo2 do
+              describe 'nested group' do
+                describe 'hell' do
+                  it("example name") { pending { expect("this").to eq("that") } }
+                end
+              end
+            end
+
+            line = __LINE__.next
+            group.send(:include, NestedFoo2)
+
+            run_all_and_dump_pending
+
+            expect(output.string).to include(
+              'Shared Example Group: "NestedFoo2" called from ' +
               "./spec/rspec/core/formatters/base_text_formatter_spec.rb:#{line}"
             )
           end
@@ -380,27 +468,4 @@ describe RSpec::Core::Formatters::BaseTextFormatter do
        expect(formatter.colorize('abc', :cyan)).to eq "\e[36mabc\e[0m"
     end
   end
-
-  described_class::VT100_COLORS.each do |name, number|
-    next if name == :black
-
-    describe "##{name}" do
-      before do
-        allow(RSpec.configuration).to receive(:color_enabled?) { true }
-        allow(RSpec).to receive(:deprecate)
-      end
-
-      it "prints the text using the color code for #{name}" do
-        expect(formatter.send(name, "text")).to eq("\e[#{number}mtext\e[0m")
-      end
-
-      it "prints a deprecation warning" do
-        expect(RSpec).to receive(:deprecate) {|*args|
-          expect(args.first).to match(/#{name}/)
-        }
-        formatter.send(name, "text")
-      end
-    end
-  end
-
 end

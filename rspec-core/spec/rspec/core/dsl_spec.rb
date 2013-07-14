@@ -9,6 +9,7 @@ describe "The RSpec DSL" do
     :shared_examples_for,
     :shared_examples,
     :shared_context,
+    :share_as
   ]
 
   methods.each do |method_name|

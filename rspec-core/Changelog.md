@@ -4,21 +4,13 @@
 Breaking Changes for 3.0.0:
 
 * Remove explicit support for 1.8.6 (Jon Rowe)
+* Remove color aliases on BaseTextFormatter. (Sam Phippen)
 * Remove `RSpec::Core::ExampleGroup#example` and
   `RSpec::Core::ExampleGroup#running_example` methods. If you need
   access to the example (e.g. to get its metadata), use a block arg
   instead (David Chelimsky).
 * Remove TextMateFormatter, it has been replaced by rspec-tmbundle. (Aaron Kromer)
 * Remove RCov integration (Jon Rowe)
-* Remove deprecated support for RSpec 1 constructs (Myron Marston):
-  * The `Spec` and `Rspec` constants (rather than `RSpec`).
-  * `Spec::Runner.configure` rather than `RSpec.configure`.
-  * `Rake::SpecTask` rather than `RSpec::Core::RakeTask`.
-* Remove deprecated support for `share_as` (Myron Marston).
-* Remove `--debug` option (and corresponding option on
-  `RSpec::Core::Configuration`). Instead, use `-r<debugger gem name>` to
-  load whichever debugger gem you wish to use (e.g. `ruby-debug`,
-  `debugger`, or `pry`) (Myron Marston).
 
 Enhancements
 
@@ -26,15 +18,6 @@ Enhancements
 * Block-based DSL methods that run in the context of an example
   (`it`, `before(:each)`, `after(:each)`, `let` and `subject`)
   now yield the example as a block argument (David Chelimsky).
-
-### 2.14.3 / 2013-07-13
-[full changelog](http://github.com/rspec/rspec-core/compare/v2.14.2...v2.14.3)
-
-Bug fixes
-
-* Fix deprecation notices issued from `RSpec::Core::RakeTask` so
-  that they work properly when all of rspec-core is not loaded.
-  (This was a regression in 2.14) (Jon Rowe)
 
 ### 2.14.2 / 2013-07-09
 [full changelog](http://github.com/rspec/rspec-core/compare/v2.14.1...v2.14.2)
