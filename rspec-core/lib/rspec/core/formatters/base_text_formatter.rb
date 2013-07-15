@@ -89,7 +89,7 @@ module RSpec
 
           sorted_examples.each do |example|
             output.puts "  #{example.full_description}"
-            output.puts "    #{bold(format_seconds(example.execution_result[:run_time]))} #{bold("seconds")} #{format_caller(example.location)}"
+            output.puts detail_color("    #{failure_color(format_seconds(example.execution_result[:run_time]))} #{failure_color("seconds")} #{format_caller(example.location)}")
           end
         end
 
@@ -117,11 +117,11 @@ module RSpec
 
           output.puts "\nTop #{sorted_groups.size} slowest example groups:"
           sorted_groups.each do |loc, hash| 
-            average = "#{bold(format_seconds(hash[:average]))} #{bold("seconds")} average"
+            average = "#{failure_color(format_seconds(hash[:average]))} #{failure_color("seconds")} average"
             total   = "#{format_seconds(hash[:total_time])} seconds"
             count   = pluralize(hash[:count], "example")
             output.puts "  #{hash[:description]}"
-            output.puts "    #{average} (#{total} / #{count}) #{loc}"
+            output.puts detail_color("    #{average} (#{total} / #{count}) #{loc}")
           end
         end
 
@@ -222,41 +222,6 @@ module RSpec
 
         def default_color(text)
           color(text, RSpec.configuration.default_color)
-        end
-
-        def red(text)
-          RSpec.deprecate("RSpec::Core::Formatters::BaseTextFormatter#red", :replacement => "#failure_color")
-          color(text, :red)
-        end
-
-        def green(text)
-          RSpec.deprecate("RSpec::Core::Formatters::BaseTextFormatter#green", :replacement => "#success_color")
-          color(text, :green)
-        end
-
-        def yellow(text)
-          RSpec.deprecate("RSpec::Core::Formatters::BaseTextFormatter#yellow", :replacement => "#pending_color")
-          color(text, :yellow)
-        end
-
-        def blue(text)
-          RSpec.deprecate("RSpec::Core::Formatters::BaseTextFormatter#blue", :replacement => "#fixed_color")
-          color(text, :blue)
-        end
-
-        def magenta(text)
-          RSpec.deprecate("RSpec::Core::Formatters::BaseTextFormatter#magenta")
-          color(text, :magenta)
-        end
-
-        def cyan(text)
-          RSpec.deprecate("RSpec::Core::Formatters::BaseTextFormatter#cyan", :replacement => "#detail_color")
-          color(text, :cyan)
-        end
-
-        def white(text)
-          RSpec.deprecate("RSpec::Core::Formatters::BaseTextFormatter#white", :replacement => "#default_color")
-          color(text, :white)
         end
 
         def short_padding
