@@ -8,7 +8,7 @@ module RSpec
 
       def self.with_yaml_loaded(&block)
         context 'with YAML loaded' do
-          module_exec(&block)
+          module_eval(&block)
         end
       end
 
@@ -17,16 +17,16 @@ module RSpec
           before do
             # We can't really unload yaml, but we can fake it here...
             hide_const("YAML")
-            Struct.class_exec do
+            Struct.class_eval do
               alias __old_to_yaml to_yaml
               undef to_yaml
             end
           end
 
-          module_exec(&block)
+          module_eval(&block)
 
           after do
-            Struct.class_exec do
+            Struct.class_eval do
               alias to_yaml __old_to_yaml
               undef __old_to_yaml
             end
