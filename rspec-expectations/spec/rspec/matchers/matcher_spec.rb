@@ -3,13 +3,13 @@ require 'spec_helper'
 class UnexpectedError < StandardError; end
 module MatcherHelperModule
   def self.included(base)
-    base.module_exec do
+    base.module_eval do
       def included_method; end
     end
   end
 
   def self.extended(base)
-    base.instance_exec do
+    base.instance_eval do
       def extended_method; end
     end
   end
