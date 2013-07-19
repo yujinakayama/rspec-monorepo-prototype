@@ -46,42 +46,6 @@ module RSpec
           expect(receiver.foo).to eq(:curly)
         end
 
-        it "takes a curly-bracket block and yields the arguments given to the stubbed method call" do
-          yielded = []
-          wrapped.to receive(:foo) { |*a|
-            yielded << a
-          }
-          receiver.foo(:a, :b, :c)
-          expect(yielded).to include([:a,:b,:c])
-        end
-
-        it "takes a do-end block and yields the arguments given to the stubbed method call" do
-          yielded = []
-          wrapped.to receive(:foo) do |*a|
-            yielded << a
-          end
-          receiver.foo(:a, :b, :c)
-          expect(yielded).to include([:a,:b,:c])
-        end
-
-        it "passes if expectations against the yielded arguments pass" do
-          expect {
-            wrapped.to receive(:foo) do |arg|
-              expect(arg).to eq(42)
-            end
-            receiver.foo(42)
-          }.to_not raise_error
-        end
-
-        it "fails if expectations against the yielded arguments fail" do
-          expect {
-            wrapped.to receive(:foo) do |arg|
-              expect(arg).to eq(42)
-            end
-            receiver.foo(43)
-          }.to raise_error(RSpec::Expectations::ExpectationNotMetError)
-        end
-
         it 'does not support other matchers', :unless => options.include?(:allow_other_matchers) do
           expect {
             wrapped.to eq(3)
@@ -245,7 +209,7 @@ module RSpec
         it 'can use the `expect` syntax' do
           dbl = double
 
-          framework.new.instance_eval do
+          framework.new.instance_exec do
             expect(dbl).to receive(:foo).and_return(3)
           end
 
@@ -255,7 +219,7 @@ module RSpec
         it 'expects the method to be called when `expect` is used' do
           dbl = double
 
-          framework.new.instance_eval do
+          framework.new.instance_exec do
             expect(dbl).to receive(:foo)
           end
 
@@ -265,7 +229,7 @@ module RSpec
         it 'supports `expect(...).not_to receive`' do
           dbl = double
 
-          framework.new.instance_eval do
+          framework.new.instance_exec do
             expect(dbl).not_to receive(:foo)
           end
 
@@ -275,7 +239,7 @@ module RSpec
         it 'supports `expect(...).to_not receive`' do
           dbl = double
 
-          framework.new.instance_eval do
+          framework.new.instance_exec do
             expect(dbl).to_not receive(:foo)
           end
 
@@ -298,7 +262,7 @@ module RSpec
 
         it 'cannot use `expect` with another matcher' do
           expect {
-            framework.new.instance_eval do
+            framework.new.instance_exec do
               expect(3).to eq(3)
             end
           }.to raise_error(/only the `receive` matcher is supported with `expect\(...\).to`/)
@@ -331,7 +295,7 @@ module RSpec
         include_examples "using rspec-mocks in another test framework"
 
         it 'can use `expect` with any matcher' do
-          framework.new.instance_eval do
+          framework.new.instance_exec do
             expect(3).to eq(3)
           end
         end
@@ -353,7 +317,7 @@ module RSpec
         include_examples "using rspec-mocks in another test framework"
 
         it 'can use `expect` with any matcher' do
-          framework.new.instance_eval do
+          framework.new.instance_exec do
             expect(3).to eq(3)
           end
         end
