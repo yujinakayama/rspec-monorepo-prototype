@@ -8,7 +8,7 @@ module RSpec
       attr_accessor :space
 
       def setup(host)
-        (class << host; self; end).class_exec do
+        (class << host; self; end).class_eval do
           include RSpec::Mocks::ExampleMethods
         end
         self.space ||= RSpec::Mocks::Space.new
