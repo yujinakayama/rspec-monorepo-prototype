@@ -25,14 +25,14 @@ describe "Matchers should be able to generate their own descriptions" do
     expect(RSpec::Matchers.generated_description).to eq "should not be empty"
   end
 
-  it "expect(...).to be true" do
-    expect(true).to be_true
-    expect(RSpec::Matchers.generated_description).to eq "should be true"
+  it "expect(...).to be truthy" do
+    expect(true).to be_truthy
+    expect(RSpec::Matchers.generated_description).to eq "should be truthy"
   end
 
-  it "expect(...).to be false" do
-    expect(false).to be_false
-    expect(RSpec::Matchers.generated_description).to eq "should be false"
+  it "expect(...).to be falsey" do
+    expect(false).to be_falsey
+    expect(RSpec::Matchers.generated_description).to eq "should be falsey"
   end
 
   it "expect(...).to be nil" do
@@ -90,6 +90,21 @@ describe "Matchers should be able to generate their own descriptions" do
 
     expect(object).to have_taste_for("wine", "cheese")
     expect(RSpec::Matchers.generated_description).to eq 'should have taste for "wine", "cheese"'
+  end
+
+  it "expect(...).to have n items" do
+    expect(team).to have(3).players
+    expect(RSpec::Matchers.generated_description).to eq "should have 3 players"
+  end
+
+  it "expect(...).to have at least n items" do
+    expect(team).to have_at_least(2).players
+    expect(RSpec::Matchers.generated_description).to eq "should have at least 2 players"
+  end
+
+  it "expect(...).to have at most n items" do
+    expect(team).to have_at_most(4).players
+    expect(RSpec::Matchers.generated_description).to eq "should have at most 4 players"
   end
 
   it "expect(...).to include(x)" do
