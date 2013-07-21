@@ -102,7 +102,7 @@ module RSpec
       # @param example_group_instance the instance of an ExampleGroup subclass
       def run(example_group_instance, reporter)
         @example_group_instance = example_group_instance
-        RSpec.current_example = self
+        @example_group_instance.example = self
 
         start(reporter)
 
@@ -137,8 +137,6 @@ module RSpec
         end
 
         finish(reporter)
-      ensure
-        RSpec.current_example = nil
       end
 
       # @api private

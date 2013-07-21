@@ -461,6 +461,14 @@ An error occurred in an after(:all) hook.
         ivars.each {|name, value| instance.instance_variable_set(name, value)}
       end
 
+      def initialize
+        @_current_rspec_example = nil
+      end
+
+      def example=(current_example)
+        @_current_rspec_example = current_example
+      end
+
       # Returns the class or module passed to the `describe` method (or alias).
       # Returns nil if the subject is not a class or module.
       # @example
@@ -482,11 +490,8 @@ An error occurred in an after(:all) hook.
         begin
           instance_exec(example, &hook)
         rescue Exception => e
-          if RSpec.current_example
-            RSpec.current_example.set_exception(e, context)
-          else
-            raise
-          end
+          raise unless @_current_rspec_example
+          @_current_rspec_example.set_exception(e, context)
         end
       end
     end
