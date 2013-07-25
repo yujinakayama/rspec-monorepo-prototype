@@ -235,35 +235,51 @@ describe "expect(...).not_to be_predicate(*args, &block)" do
   end
 end
 
-describe "expect(...).to be_true" do
+describe "expect(...).to be_truthy" do
   it "passes when actual equal?(true)" do
-    expect(true).to be_true
+    expect(true).to be_truthy
   end
 
   it "passes when actual is 1" do
-    expect(1).to be_true
+    expect(1).to be_truthy
   end
 
   it "fails when actual equal?(false)" do
     expect {
-      expect(false).to be_true
-    }.to fail_with("expected: true value\n     got: false")
+      expect(false).to be_truthy
+    }.to fail_with("expected: truthy value\n     got: false")
   end
 end
 
-describe "expect(...).to be_false" do
+describe "expect(...).to be_falsey" do
   it "passes when actual equal?(false)" do
-    expect(false).to be_false
+    expect(false).to be_falsey
   end
 
   it "passes when actual equal?(nil)" do
-    expect(nil).to be_false
+    expect(nil).to be_falsey
   end
 
   it "fails when actual equal?(true)" do
     expect {
-      expect(true).to be_false
-    }.to fail_with("expected: false value\n     got: true")
+      expect(true).to be_falsey
+    }.to fail_with("expected: falsey value\n     got: true")
+  end
+end
+
+describe "expect(...).to be_falsy" do
+  it "passes when actual equal?(false)" do
+    expect(false).to be_falsy
+  end
+
+  it "passes when actual equal?(nil)" do
+    expect(nil).to be_falsy
+  end
+
+  it "fails when actual equal?(true)" do
+    expect {
+      expect(true).to be_falsy
+    }.to fail_with("expected: falsey value\n     got: true")
   end
 end
 
