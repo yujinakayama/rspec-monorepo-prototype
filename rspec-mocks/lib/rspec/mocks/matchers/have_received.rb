@@ -6,15 +6,13 @@ module RSpec
         ARGS_CONSTRAINTS = %w(with)
         CONSTRAINTS = COUNT_CONSTRAINTS + ARGS_CONSTRAINTS
 
-        def initialize(method_name, &block)
+        def initialize(method_name)
           @method_name = method_name
-          @block = block
           @constraints = []
           @subject = nil
         end
 
-        def matches?(subject, &block)
-          @block ||= block
+        def matches?(subject)
           @subject = subject
           @expectation = expect
           expected_messages_received?
@@ -81,7 +79,7 @@ module RSpec
         end
 
         def expected_messages_received?
-          mock_proxy.replay_received_message_on @expectation, &@block
+          mock_proxy.replay_received_message_on @expectation
           @expectation.expected_messages_received?
         end
 

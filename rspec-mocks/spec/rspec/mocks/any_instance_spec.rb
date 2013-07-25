@@ -696,13 +696,13 @@ module RSpec
             context "public methods" do
               before(:each) do
                 klass.any_instance.stub(:existing_method).and_return(1)
-                expect(klass.method_defined?(:__existing_method_without_any_instance__)).to be_truthy
+                expect(klass.method_defined?(:__existing_method_without_any_instance__)).to be_true
               end
 
               it "restores the class to its original state after each example when no instance is created" do
                 space.verify_all
 
-                expect(klass.method_defined?(:__existing_method_without_any_instance__)).to be_falsey
+                expect(klass.method_defined?(:__existing_method_without_any_instance__)).to be_false
                 expect(klass.new.existing_method).to eq(existing_method_return_value)
               end
 
@@ -711,7 +711,7 @@ module RSpec
 
                 space.verify_all
 
-                expect(klass.method_defined?(:__existing_method_without_any_instance__)).to be_falsey
+                expect(klass.method_defined?(:__existing_method_without_any_instance__)).to be_false
                 expect(klass.new.existing_method).to eq(existing_method_return_value)
               end
 
@@ -721,7 +721,7 @@ module RSpec
 
                 space.verify_all
 
-                expect(klass.method_defined?(:__existing_method_without_any_instance__)).to be_falsey
+                expect(klass.method_defined?(:__existing_method_without_any_instance__)).to be_false
                 expect(klass.new.existing_method).to eq(existing_method_return_value)
               end
             end
@@ -733,11 +733,11 @@ module RSpec
               end
 
               it "cleans up the backed up method" do
-                expect(klass.method_defined?(:__existing_method_without_any_instance__)).to be_falsey
+                expect(klass.method_defined?(:__existing_method_without_any_instance__)).to be_false
               end
 
               it "restores a stubbed private method after the spec is run" do
-                expect(klass.private_method_defined?(:private_method)).to be_truthy
+                expect(klass.private_method_defined?(:private_method)).to be_true
               end
 
               it "ensures that the restored method behaves as it originally did" do
@@ -755,11 +755,11 @@ module RSpec
               end
 
               it "cleans up the backed up method" do
-                expect(klass.method_defined?(:__existing_method_without_any_instance__)).to be_falsey
+                expect(klass.method_defined?(:__existing_method_without_any_instance__)).to be_false
               end
 
               it "restores a stubbed private method after the spec is run" do
-                expect(klass.private_method_defined?(:private_method)).to be_truthy
+                expect(klass.private_method_defined?(:private_method)).to be_true
               end
 
               it "ensures that the restored method behaves as it originally did" do
@@ -827,6 +827,78 @@ module RSpec
           instance = klass.new
           instance.foo
           expect(RSpec::Mocks.space.proxies.keys).to include(instance.object_id)
+        end
+      end
+
+      context "passing the receiver to the implementation block" do
+        context "when configured to pass the instance" do
+          include_context 'with isolated configuration'
+          before(:each) do
+            RSpec::Mocks.configuration.yield_instance_from_any_instance_implementation_blocks = true
+          end
+
+          describe "an any instance stub" do
+            it "passes the instance as the first arg of the implementation block" do
+              instance = klass.new
+
+              expect { |b|
+                klass.any_instance.should_receive(:bees).with(:sup, &b)
+                instance.bees(:sup)
+              }.to yield_with_args(instance, :sup)
+            end
+
+            it "does not pass the instance to and_call_original" do
+              klass = Class.new do
+                def call(*args)
+                  args.first
+                end
+              end
+              klass.any_instance.should_receive(:call).and_call_original
+              instance = klass.new
+              expect(instance.call(:bees)).to be :bees
+            end
+          end
+
+          describe "an any instance expectation" do
+            it "doesn't effect with" do
+              instance = klass.new
+              klass.any_instance.should_receive(:bees).with(:sup)
+              instance.bees(:sup)
+            end
+
+            it "passes the instance as the first arg of the implementation block" do
+              instance = klass.new
+
+              expect { |b|
+                klass.any_instance.should_receive(:bees).with(:sup, &b)
+                instance.bees(:sup)
+              }.to yield_with_args(instance, :sup)
+            end
+          end
+        end
+
+        context "when configured not to pass the instance" do
+          include_context 'with isolated configuration'
+          before(:each) do
+            RSpec::Mocks.configuration.yield_instance_from_any_instance_implementation_blocks = false
+          end
+
+          describe "an any instance stub" do
+            it "does not pass the instance to the implementation block" do
+              instance = klass.new
+
+              expect { |b|
+                klass.any_instance.should_receive(:bees).with(:sup, &b)
+                instance.bees(:sup)
+              }.to yield_with_args(:sup)
+            end
+
+            it "does not cause with to fail when the instance is passed" do
+              instance = klass.new
+              klass.any_instance.should_receive(:bees).with(:faces)
+              instance.bees(:faces)
+            end
+          end
         end
       end
 
