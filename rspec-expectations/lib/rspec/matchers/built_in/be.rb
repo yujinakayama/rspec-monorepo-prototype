@@ -9,11 +9,11 @@ module RSpec
         end
 
         def failure_message_for_should
-          "expected: truthy value\n     got: #{actual.inspect}"
+          "expected: true value\n     got: #{actual.inspect}"
         end
 
         def failure_message_for_should_not
-          "expected: falsey value\n     got: #{actual.inspect}"
+          "expected: non-true value\n     got: #{actual.inspect}"
         end
       end
 
@@ -23,11 +23,11 @@ module RSpec
         end
 
         def failure_message_for_should
-          "expected: falsey value\n     got: #{actual.inspect}"
+          "expected: false value\n     got: #{actual.inspect}"
         end
 
         def failure_message_for_should_not
-          "expected: truthy value\n     got: #{actual.inspect}"
+          "expected: non-false value\n     got: #{actual.inspect}"
         end
       end
 
