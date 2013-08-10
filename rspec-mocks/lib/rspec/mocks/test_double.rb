@@ -68,7 +68,7 @@ module RSpec
     private
 
       def __initialize_as_test_double(name=nil, stubs={})
-        if Hash === name && stubs.empty?
+        if name.is_a?(Hash) && stubs.empty?
           stubs = name
           @name = nil
         else
