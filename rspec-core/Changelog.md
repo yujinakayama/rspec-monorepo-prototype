@@ -1,5 +1,5 @@
 ### Development
-[full changelog](http://github.com/rspec/rspec-core/compare/v2.14.2...master)
+[full changelog](http://github.com/rspec/rspec-core/compare/2-99-maintenance...master)
 
 Breaking Changes for 3.0.0:
 
@@ -31,8 +31,25 @@ Enhancements
   (Matthew Boedicker)
 * Add --no-fail-fast command line option. (Gonzalo Rodríguez-Baltanás Díaz)
 * Runner now considers the local system ip address when running under Drb (Adrian CB)
+* JsonFormatter now includes `--profile` information (Alex / @MasterLambaster)
+* Always treat symbols passed as metadata args as hash
+  keys with true values. RSpec 2 supported this with the
+  `treat_symbols_as_metadata_keys_with_true_values` but
+  now this behavior is always enabled (Myron Marston).
+Bug fixes:
 
-Bugfix
+
+Deprecations
+
+* `treat_symbols_as_metadata_keys_with_true_values` is deprecated and no
+  longer has an affect now that the behavior it enabled is always
+  enabled (Myron Marston).
+
+### 2.14.5 / 2013-08-13
+[full changelog](http://github.com/rspec/rspec-core/compare/v2.14.4...v2.14.5)
+
+Bug fixes:
+
 * Fix a `NoMethodError` that was being raised when there were no shared
   examples or contexts declared and `RSpec.world.reset` is invoked.
   (thepoho, Jon Rowe, Myron Marston)
@@ -41,6 +58,7 @@ Bugfix
   (Jon Rowe)
 * Fix after(:all) hooks so consecutive (same context) scopes will run even if
   one raises an error. (Jon Rowe, Trejkaz)
+* JsonFormatter no longer dies if `dump_profile` isn't defined (Alex / @MasterLambaster, Jon Rowe)
 
 ### 2.14.4 / 2013-07-21
 [full changelog](http://github.com/rspec/rspec-core/compare/v2.14.3...v2.14.4)
