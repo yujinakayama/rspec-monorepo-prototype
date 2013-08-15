@@ -29,6 +29,11 @@ module RSpec
       end
 
       # @private
+      def method_handle_for(message)
+        nil
+      end
+
+      # @private
       def already_proxied_respond_to
         @already_proxied_respond_to = true
       end
@@ -95,6 +100,10 @@ module RSpec
       # @private
       def add_stub(location, method_name, opts={}, &implementation)
         method_double[method_name].add_stub @error_generator, @expectation_ordering, location, opts, &implementation
+      end
+
+      def add_simple_stub(method_name, response)
+        method_double[method_name].add_simple_stub method_name, response
       end
 
       # @private
@@ -214,6 +223,29 @@ module RSpec
 
       def find_almost_matching_stub(method_name, *args)
         method_double[method_name].stubs.find {|stub| stub.matches_name_but_not_args(method_name, *args)}
+      end
+    end
+
+    class PartialMockProxy < Proxy
+      def method_handle_for(message)
+        if any_instance_class_recorder_observing_method?(@object.class, message)
+          message = ::RSpec::Mocks.
+            any_instance_recorder_for(@object.class).
+            build_alias_method_name(message)
+        end
+
+        ::RSpec::Mocks.method_handle_for(@object, message)
+      rescue NameError
+        nil
+      end
+
+    private
+
+      def any_instance_class_recorder_observing_method?(klass, method_name)
+        return true if ::RSpec::Mocks.any_instance_recorder_for(klass).already_observing?(method_name)
+        superklass = klass.superclass
+        return false if superklass.nil?
+        any_instance_class_recorder_observing_method?(superklass, method_name)
       end
     end
   end

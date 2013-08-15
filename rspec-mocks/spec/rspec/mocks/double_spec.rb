@@ -10,8 +10,10 @@ describe "double" do
     expect {double.foo}.to raise_error(/Double "name" received/)
   end
 
-  it "hides internals in its inspect representation" do
-    m = double('cup')
-    expect(m.inspect).to match(/#<RSpec::Mocks::Mock:0x[a-f0-9.]+ @name="cup">/)
+  it 'restores standard object methods on reset' do
+    dbl = double(:tainted? => true)
+    expect(dbl.tainted?).to eq(true)
+    reset dbl
+    expect(dbl.tainted?).to eq(false)
   end
 end
