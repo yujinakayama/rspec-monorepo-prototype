@@ -43,9 +43,7 @@ module RSpec
       #   x = 0
       #   RSpec::Mocks.allow_message(bar, :foo) { x += 1 }
       def allow_message(subject, message, opts={}, &block)
-        orig_caller = opts.fetch(:expected_from) {
-          CallerFilter.first_non_rspec_line
-        }
+        orig_caller = opts.fetch(:expected_from) { caller(1)[0] }
         ::RSpec::Mocks.proxy_for(subject).
           add_stub(orig_caller, message.to_sym, opts, &block)
       end
@@ -62,9 +60,7 @@ module RSpec
       #   RSpec::Mocks.expect_message(bar, :foo)
       #   bar.foo
       def expect_message(subject, message, opts={}, &block)
-        orig_caller = opts.fetch(:expected_from) {
-          CallerFilter.first_non_rspec_line
-        }
+        orig_caller = opts.fetch(:expected_from) { caller(1)[0] }
         ::RSpec::Mocks.proxy_for(subject).
           add_message_expectation(orig_caller, message.to_sym, opts, &block)
       end

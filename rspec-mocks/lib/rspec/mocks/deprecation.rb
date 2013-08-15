@@ -7,7 +7,7 @@ module RSpec
       def deprecate(deprecated, options={})
         message = "DEPRECATION: #{deprecated} is deprecated."
         message << " Use #{options[:replacement]} instead." if options[:replacement]
-        message << " Called from #{CallerFilter.first_non_rspec_line}."
+        message << " Called from #{caller(0)[2]}."
         warn message
       end
     end

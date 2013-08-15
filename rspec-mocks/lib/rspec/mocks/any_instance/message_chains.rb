@@ -2,63 +2,48 @@ module RSpec
   module Mocks
     module AnyInstance
       # @private
-      class MessageChains
+      class MessageChains < Hash
         def initialize
-          @chains_by_method_name = Hash.new { |h, k| h[k] = [] }
-        end
-
-        # @private
-        def [](method_name)
-          @chains_by_method_name[method_name]
+          super {|h,k| h[k] = []}
         end
 
         # @private
         def add(method_name, chain)
-          @chains_by_method_name[method_name] << chain
+          self[method_name] << chain
           chain
         end
 
         # @private
         def remove_stub_chains_for!(method_name)
-          @chains_by_method_name[method_name].reject! do |chain|
-            chain.is_a?(StubChain)
-          end
+          self[method_name].reject! {|chain| chain.is_a?(StubChain)}
         end
 
         # @private
         def has_expectation?(method_name)
-          @chains_by_method_name[method_name].find do |chain|
-            chain.is_a?(ExpectationChain)
-          end
+          self[method_name].find {|chain| chain.is_a?(ExpectationChain)}
         end
 
         # @private
         def all_expectations_fulfilled?
-          @chains_by_method_name.all? do |method_name, chains|
-            chains.all? { |chain| chain.expectation_fulfilled? }
-          end
+          all? {|method_name, chains| chains.all? {|chain| chain.expectation_fulfilled?}}
         end
 
         # @private
         def unfulfilled_expectations
-          @chains_by_method_name.map do |method_name, chains|
+          map do |method_name, chains|
             method_name.to_s if chains.last.is_a?(ExpectationChain) unless chains.last.expectation_fulfilled?
           end.compact
         end
 
         # @private
         def received_expected_message!(method_name)
-          @chains_by_method_name[method_name].each do |chain|
-            chain.expectation_fulfilled!
-          end
+          self[method_name].each {|chain| chain.expectation_fulfilled!}
         end
 
         # @private
         def playback!(instance, method_name)
           raise_if_second_instance_to_receive_message(instance)
-          @chains_by_method_name[method_name].each do |chain|
-            chain.playback!(instance)
-          end
+          self[method_name].each {|chain| chain.playback!(instance)}
         end
 
         private
