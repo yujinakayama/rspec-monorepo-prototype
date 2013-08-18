@@ -346,6 +346,45 @@ describe RSpec::Core::Example, :parent_metadata => 'sample' do
         expect(message).to be_nil
       end
     end
+
+    context "with --dry-run" do
+      before { RSpec.configuration.dry_run = true }
+
+      it "does not execute any examples or hooks" do
+        executed = []
+
+        RSpec.configure do |c|
+          c.before(:each) { executed << :before_each_config }
+          c.before(:all)  { executed << :before_all_config }
+          c.after(:each)  { executed << :after_each_config }
+          c.after(:all)   { executed << :after_all_config }
+          c.around(:each) { |ex| executed << :around_each_config; ex.run }
+        end
+
+        group = RSpec::Core::ExampleGroup.describe do
+          before(:all)  { executed << :before_all }
+          before(:each) { executed << :before_each }
+          after(:all)   { executed << :after_all }
+          after(:each)  { executed << :after_each }
+          around(:each) { |ex| executed << :around_each; ex.run }
+
+          example { executed << :example }
+
+          context "nested" do
+            before(:all)  { executed << :nested_before_all }
+            before(:each) { executed << :nested_before_each }
+            after(:all)   { executed << :nested_after_all }
+            after(:each)  { executed << :nested_after_each }
+            around(:each) { |ex| executed << :nested_around_each; ex.run }
+
+            example { executed << :nested_example }
+          end
+        end
+
+        group.run
+        expect(executed).to eq([])
+      end
+    end
   end
 
   describe "#pending" do

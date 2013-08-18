@@ -11,6 +11,8 @@ end
 require 'set'
 require 'time'
 require 'rbconfig'
+require_rspec['caller_filter']
+require_rspec['core/flat_map']
 require_rspec['core/filter_manager']
 require_rspec['core/dsl']
 require_rspec['core/extensions/ordered']
@@ -88,7 +90,7 @@ DEPRECATION WARNING
 * RSpec.configuration with a block is deprecated and has no effect.
 * please use RSpec.configure with a block instead.
 
-Called from #{caller(0)[1]}
+Called from #{CallerFilter.first_non_rspec_line}
 *****************************************************************
 
 WARNING
@@ -171,7 +173,6 @@ WARNING
     def self.path_to_executable
       @path_to_executable ||= File.expand_path('../../../exe/rspec', __FILE__)
     end
-
   end
 
   MODULES_TO_AUTOLOAD = {

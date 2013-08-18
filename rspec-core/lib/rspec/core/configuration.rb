@@ -101,6 +101,10 @@ module RSpec
       # Clean up and exit after the first failure (default: `false`).
       add_setting :fail_fast
 
+      # Prints the formatter output of your suite without running any
+      # examples or hooks.
+      add_setting :dry_run
+
       # The exit code to return if there are any failures (default: 1).
       add_setting :failure_exit_code
 
@@ -123,7 +127,7 @@ module RSpec
 
       def pattern= value
         if @spec_files_loaded
-          Kernel.warn "WARNING: Configuring `pattern` to #{value} has no effect since RSpec has already loaded the spec files. Called from #{caller.first}"
+          Kernel.warn "WARNING: Configuring `pattern` to #{value} has no effect since RSpec has already loaded the spec files. Called from #{CallerFilter.first_non_rspec_line}"
         end
         @pattern = value
       end
@@ -971,10 +975,10 @@ module RSpec
     private
 
       def get_files_to_run(paths)
-        paths.map do |path|
+        FlatMap.flat_map(paths) do |path|
           path = path.gsub(File::ALT_SEPARATOR, File::SEPARATOR) if File::ALT_SEPARATOR
           File.directory?(path) ? gather_directories(path) : extract_location(path)
-        end.flatten.sort
+        end.sort
       end
 
       def gather_directories(path)
