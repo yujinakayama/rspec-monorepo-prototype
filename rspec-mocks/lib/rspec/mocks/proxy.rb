@@ -16,6 +16,9 @@ module RSpec
       end
 
       # @private
+      attr_reader :object
+
+      # @private
       def null_object?
         @null_object
       end
@@ -102,6 +105,7 @@ module RSpec
         method_double[method_name].add_stub @error_generator, @expectation_ordering, location, opts, &implementation
       end
 
+      # @private
       def add_simple_stub(method_name, response)
         method_double[method_name].add_simple_stub method_name, response
       end
@@ -109,6 +113,11 @@ module RSpec
       # @private
       def remove_stub(method_name)
         method_double[method_name].remove_stub
+      end
+
+      # @private
+      def remove_single_stub(method_name, stub)
+        method_double[method_name].remove_single_stub(stub)
       end
 
       # @private
@@ -159,7 +168,7 @@ module RSpec
         elsif stub = find_almost_matching_stub(message, *args)
           stub.advise(*args)
           raise_missing_default_stub_error(stub, *args)
-        elsif Class === @object
+        elsif @object.is_a?(Class)
           @object.superclass.__send__(message, *args, &block)
         else
           @object.__send__(:method_missing, message, *args, &block)
