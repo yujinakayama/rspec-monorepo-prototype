@@ -1,7 +1,7 @@
 $LOAD_PATH.unshift(File.expand_path("../../lib", __FILE__))
 
 require 'benchmark'
-require 'rspec/mocks'
+require 'rspec/caller_filter'
 
 n = 10000
 
@@ -12,7 +12,7 @@ puts "* Using a chunked fetch is quicker than the old method of array-access."
 Benchmark.bm(20) do |bm|
   bm.report("CallerFilter") do
     n.times do
-      RSpec::Mocks::CallerFilter.first_non_rspec_line
+      RSpec::CallerFilter.first_non_rspec_line
     end
   end
 
