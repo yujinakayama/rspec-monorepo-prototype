@@ -63,7 +63,7 @@ module RSpec
       private
 
       def uses_generic_implementation_of?(op)
-        Object.instance_method(:method).bind(@actual).call(op).owner == ::Kernel
+        @actual.method(op).owner == ::Kernel
       end
 
       def eval_match(actual, operator, expected)
