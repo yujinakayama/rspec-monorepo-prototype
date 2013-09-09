@@ -5,13 +5,33 @@ module RSpec
     # for a message. While this same effect can be achieved using a standard
     # MessageExpecation, this version is much faster and so can be used as an
     # optimization.
-    SimpleMessageExpectation = Struct.new(:message, :response) do
+    class SimpleMessageExpectation
+
+      def initialize(message, response, error_generator, backtrace_line = nil)
+        @message, @response, @error_generator, @backtrace_line = message, response, error_generator, backtrace_line
+        @received = false
+      end
+
       def invoke(*_)
-        response
+        @received = true
+        @response
       end
 
       def matches?(message, *_)
-        self.message == message
+        @message == message
+      end
+
+      def called_max_times?
+        false
+      end
+
+      def verify_messages_received
+        unless @received
+          @error_generator.raise_expectation_error(@message, 1, ArgumentListMatcher::MATCH_ALL, 0, nil)
+        end
+      rescue RSpec::Mocks::MockExpectationError => error
+        error.backtrace.insert(0, @backtrace_line)
+        Kernel::raise error
       end
     end
 

@@ -60,6 +60,11 @@ module RSpec
       end
 
       # @private
+      def add_simple_expectation(method_name, response, location)
+        method_double[method_name].add_simple_expectation method_name, response, @error_generator, location
+      end
+
+      # @private
       def build_expectation(method_name)
         meth_double = method_double[method_name]
 
