@@ -171,13 +171,7 @@ module RSpec
       end
 
       def arg_list(*args)
-        args.collect {|arg| arg_has_valid_description(arg) ? arg.description : arg.inspect }.join(", ")
-      end
-
-      def arg_has_valid_description(arg)
-        return false unless arg.respond_to?(:description)
-
-        !arg.description.nil? && !arg.description.empty?
+        args.collect {|arg| arg.respond_to?(:description) ? arg.description : arg.inspect}.join(", ")
       end
 
       def format_received_args(*args)
