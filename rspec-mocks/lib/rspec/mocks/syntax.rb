@@ -13,7 +13,7 @@ module RSpec
       def self.warn_unless_should_configured(method_name)
         if @warn_about_should
           RSpec.deprecate(
-            "Using `#{method_name}` from the old `:should` syntax without explicitly enabling the syntax",
+            "Using #{method_name} from the old `:should` syntax without explicitly enabling the syntax.",
             :replacement => "the new `:expect` syntax or explicitly enable `:should`"
           )
 
@@ -118,12 +118,6 @@ module RSpec
             Matchers::Receive.new(method_name, block)
           end
 
-          def receive_messages(message_return_value_hash)
-            matcher = Matchers::ReceiveMessages.new(message_return_value_hash)
-            matcher.warn_about_block if block_given?
-            matcher
-          end
-
           def allow(target)
             AllowanceTarget.new(target)
           end
@@ -151,7 +145,6 @@ module RSpec
 
         syntax_host.class_exec do
           undef receive
-          undef receive_messages
           undef allow
           undef expect_any_instance_of
           undef allow_any_instance_of
@@ -352,20 +345,6 @@ module RSpec
       # @example
       #
       #   expect(obj).to receive(:hello).with("world").exactly(3).times
-      #
-      # @note This is only available when you have enabled the `expect` syntax.
-      #
-      # @method receive_messages
-      # Shorthand syntax used to setup message(s), and their return value(s),
-      # that you expect or allow an object to receive. The method takes a hash
-      # of messages and their respective return values. Unlike with `receive`,
-      # you cannot apply further customizations using a block or the fluent
-      # interface.
-      #
-      # @example
-      #
-      #   allow(obj).to receive_messages(:speak => "Hello World")
-      #   allow(obj).to receive_messages(:speak => "Hello", :meow => "Meow")
       #
       # @note This is only available when you have enabled the `expect` syntax.
     end
