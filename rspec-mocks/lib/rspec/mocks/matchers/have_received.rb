@@ -13,10 +13,6 @@ module RSpec
           @subject = nil
         end
 
-        def name
-          "have_received"
-        end
-
         def matches?(subject, &block)
           @block ||= block
           @subject = subject
