@@ -183,4 +183,3 @@ See [detailed information on the `should` syntax and its usage.](https://github.
 * [http://github.com/rspec/rspec](http://github.com/rspec/rspec)
 * [http://github.com/rspec/rspec-core](http://github.com/rspec/rspec-core)
 * [http://github.com/rspec/rspec-mocks](http://github.com/rspec/rspec-mocks)
-* [http://github.com/rspec/rspec-collection_matchers](https://github.com/rspec/rspec-collection_matchers)
