@@ -40,7 +40,7 @@ fi
 
 # For now, use this instead, due to a bug in bundler:
 # https://github.com/carlhuda/bundler/issues/2382
-#bundle exec bin/cucumber --strict
+bundle exec bin/cucumber --strict
 
 #Test against other RSpec gems.
 rm -rf /tmp/rspec-ci
@@ -57,9 +57,9 @@ git clone --depth 1 https://github.com/rspec/rspec-expectations
 cd rspec-mocks
 pwd
 bundle install
-bundle exec rspec
+bundle exec rspec -fp -b
 
 cd ../rspec-expectations
 pwd
 bundle install
-bundle exec rspec
+bundle exec rspec -fp -b

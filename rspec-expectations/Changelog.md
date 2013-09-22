@@ -22,10 +22,12 @@ Bug fixes
 * Fix operator matchers (`should` syntax) when `method` is redefined on target.
   (Brandon Turner)
 * Fix diffing of hashes with object based keys. (Jon Rowe)
+* Fix operator matchers (`should` syntax) when operator is defined via
+  `method_missing` (Jon Rowe)
 
 Deprecations:
 
- * Using the old :should syntax without explicitly configuring it is disabled.
+ * Using the old `:should` syntax without explicitly configuring it is deprecated.
    It will continue to work but will emit a deprecation warning in RSpec 3 if
    you do not explicitly enable it. (Sam Phippen)
 
