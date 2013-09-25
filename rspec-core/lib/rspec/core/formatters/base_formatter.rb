@@ -187,7 +187,7 @@ module RSpec
         # Formats the given backtrace based on configuration and
         # the metadata of the given example.
         def format_backtrace(backtrace, example)
-          configuration.backtrace_formatter.format_backtrace(backtrace, example.metadata)
+          super(backtrace, example.metadata)
         end
 
       protected
