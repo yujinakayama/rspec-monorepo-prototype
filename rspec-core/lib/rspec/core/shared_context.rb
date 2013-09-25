@@ -38,9 +38,11 @@ module RSpec
       # @api private
       def self.record(methods)
         methods.each do |meth|
-          define_method(meth) do |*args, &block|
-            __shared_context_recordings << Recording.new(meth, args, block)
-          end
+          class_eval <<-EOS, __FILE__, __LINE__ + 1
+            def #{meth}(*args, &block)
+              __shared_context_recordings << Recording.new(:#{meth}, args, block)
+            end
+          EOS
         end
       end
 
