@@ -119,7 +119,7 @@ module RSpec
         #
         def extra_failure_content(exception)
           require 'rspec/core/formatters/snippet_extractor'
-          backtrace = exception.backtrace.map {|line| backtrace_line(line)}
+          backtrace = exception.backtrace.map {|line| configuration.backtrace_formatter.backtrace_line(line)}
           backtrace.compact!
           @snippet_extractor ||= SnippetExtractor.new
           "    <pre class=\"ruby\"><code>#{@snippet_extractor.snippet(backtrace)}</code></pre>"
@@ -128,7 +128,7 @@ module RSpec
         def percent_done
           result = 100.0
           if @example_count > 0
-            result = ((example_number).to_f / @example_count.to_f * 1000).to_i / 10.0
+            result = (((example_number).to_f / @example_count.to_f * 1000).to_i / 10.0).to_f
           end
           result
         end
