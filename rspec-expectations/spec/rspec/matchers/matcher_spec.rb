@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'spec_helper'
 
 class UnexpectedError < StandardError; end
@@ -22,7 +23,10 @@ end
 module RSpec::Matchers::DSL
   describe Matcher do
     def new_matcher(name, *expected, &block)
-      RSpec::Matchers::DSL::Matcher.new(name, &block).for_expected(*expected)
+      RSpec::Matchers::DSL::Matcher.
+        subclass(name, &block).
+        new(*expected).
+        tap { |m| m.matcher_execution_context = self }
     end
 
     it "can be stored aside and used later" do
@@ -39,6 +43,56 @@ module RSpec::Matchers::DSL
 
       expect(m1.matches?(1)).to be_truthy
       expect(m2.matches?(2)).to be_truthy
+    end
+
+    describe "constant assignment" do
+      RSpec::Matchers.define :have_class_const do |name|
+        match do |matcher|
+          matcher.class.name.split('::').last == name.to_s &&
+            RSpec::Matchers::Custom.const_get(name)
+        end
+      end
+
+      it 'gets assigned to a human readable constant' do
+        matcher = new_matcher(:be_a_something) { }
+        expect(matcher).to have_class_const(:BeASomething)
+      end
+
+      it 'assigns a constant even when there are extra leading underscores' do
+        matcher = new_matcher(:__foo__bar__) { }
+        expect(matcher).to have_class_const(:FooBar__)
+      end
+
+      it 'differentiates redefinitions by appending a number' do
+        m1 = new_matcher(:foo_redef) { }
+        m2 = new_matcher(:foo_redef) { }
+        m3 = new_matcher(:foo_redef) { }
+
+        expect(m1).to have_class_const(:FooRedef)
+        expect(m2).to have_class_const(:FooRedef2)
+        expect(m3).to have_class_const(:FooRedef3)
+      end
+
+      it 'supports non-ascii characters', :if => (RUBY_VERSION.to_f > 1.8) do
+        # We have to eval this because 1.8.7 can't parse it at file load time
+        # if we don't eval it. eval delays when it is parsed until the example
+        # is run, which does not happen on 1.8.7
+        eval <<-EOS
+          RSpec::Matchers.define(:们) { }
+          expect(们).to have_class_const(:A)
+
+          RSpec::Matchers.define(:be_们) { }
+          expect(be_们.class.name).to include("Be")
+        EOS
+      end
+
+      it 'handles the case where the matcher name starts with a capitol letter' do
+        matcher = new_matcher(:Capitol_letter) { }
+        expect(matcher).to have_class_const(:CapitolLetter)
+
+        matcher = new_matcher(:__Capitol_prefixed_by_underscores) { }
+        expect(matcher).to have_class_const(:CapitolPrefixedByUnderscores)
+      end
     end
 
     context "with an included module" do
@@ -121,6 +175,20 @@ module RSpec::Matchers::DSL
         matcher.does_not_match?(77)
         expect(matcher.failure_message_for_should_not).to eq "expected 77 not to to be composed of 7 and 11"
       end
+
+      it 'can access helper methods from `match_for_should_not`' do
+        matcher = new_matcher(:be_foo) do
+          def foo
+            :foo
+          end
+
+          match_for_should_not do |actual|
+            actual != foo
+          end
+        end
+
+        expect(matcher.does_not_match?(:bar)).to be true
+      end
     end
 
     it "allows helper methods to be defined with #define_method to have access to matcher parameters" do
@@ -170,6 +238,24 @@ module RSpec::Matchers::DSL
       expect(matcher.actual).to eq 'actual string'
     end
 
+    it "provides actual when the `match` block accepts splat args" do
+      matcher = new_matcher(:actual) do
+        match { |*actual| actual == [5] }
+      end
+
+      expect(matcher.matches?(5)).to be true
+      expect(matcher.matches?(4)).to be false
+    end
+
+    it 'allows an early `return` to be used from a `match` block' do
+      matcher = new_matcher(:with_return, 5) do |expected|
+        match { |actual| return true if expected == actual }
+      end
+
+      expect(matcher.matches?(5)).to be true
+      expect(matcher.matches?(4)).to be_falsey
+    end
+
     it 'provides actual when `match_unless_raises` is used' do
       matcher = new_matcher(:name, 'expected string') do
         match_unless_raises(SyntaxError) {|actual|}
@@ -180,6 +266,20 @@ module RSpec::Matchers::DSL
       expect(matcher.actual).to eq 'actual string'
     end
 
+    it 'allows an early `return` to be used from a `match_unless_raises` block' do
+      matcher = new_matcher(:with_return) do |expected|
+        match_unless_raises(ArgumentError) do |actual|
+          return actual if [true, false].include?(actual)
+          raise ArgumentError
+        end
+      end
+
+      expect(matcher.matches?(true)).to be true
+      # It should match even if it returns false, because no error was raised.
+      expect(matcher.matches?(false)).to be true
+      expect(matcher.matches?(4)).to be_falsey
+    end
+
     it 'provides actual when `match_for_should_not` is used' do
       matcher = new_matcher(:name, 'expected string') do
         match_for_should_not {|actual|}
@@ -188,6 +288,15 @@ module RSpec::Matchers::DSL
       matcher.does_not_match?('actual string')
 
       expect(matcher.actual).to eq 'actual string'
+    end
+
+    it 'allows an early `return` to be used from a `match_for_should_not` block' do
+      matcher = new_matcher(:with_return, 5) do |expected|
+        match_for_should_not { |actual| return true if expected != actual }
+      end
+
+      expect(matcher.does_not_match?(5)).to be_falsey
+      expect(matcher.does_not_match?(4)).to be true
     end
 
     context "wrapping another expectation (expect(...).to eq ...)" do
@@ -208,45 +317,41 @@ module RSpec::Matchers::DSL
       end
 
       it "can use the `include` matcher from a `match` block" do
-        pending "Needs matcher refactoring to work" do
-          RSpec::Matchers.define(:descend_from) do |mod|
-            match do |klass|
-              expect(klass.ancestors).to include(mod)
-            end
+        RSpec::Matchers.define(:descend_from) do |mod|
+          match do |klass|
+            expect(klass.ancestors).to include(mod)
           end
-
-          expect(Fixnum).to descend_from(Object)
-          expect(Fixnum).not_to descend_from(Array)
-
-          expect {
-            expect(Fixnum).to descend_from(Array)
-          }.to fail_with(/expected Fixnum to descend from Array/)
-
-          expect {
-            expect(Fixnum).not_to descend_from(Object)
-          }.to fail_with(/expected Fixnum not to descend from Object/)
         end
+
+        expect(Fixnum).to descend_from(Object)
+        expect(Fixnum).not_to descend_from(Array)
+
+        expect {
+          expect(Fixnum).to descend_from(Array)
+        }.to fail_with(/expected Fixnum to descend from Array/)
+
+        expect {
+          expect(Fixnum).not_to descend_from(Object)
+        }.to fail_with(/expected Fixnum not to descend from Object/)
       end
 
       it "can use the `match` matcher from a `match` block" do
-        pending "Needs matcher refactoring to work" do
-          RSpec::Matchers.define(:be_a_phone_number_string) do
-            match do |string|
-              expect(string).to match(/\A\d{3}\-\d{3}\-\d{4}\z/)
-            end
+        RSpec::Matchers.define(:be_a_phone_number_string) do
+          match do |string|
+            expect(string).to match(/\A\d{3}\-\d{3}\-\d{4}\z/)
           end
-
-          expect("206-123-1234").to be_a_phone_number_string
-          expect("foo").not_to be_a_phone_number_string
-
-          expect {
-            expect("foo").to be_a_phone_number_string
-          }.to fail_with(/expected "foo" to be a phone number string/)
-
-          expect {
-            expect("206-123-1234").not_to be_a_phone_number_string
-          }.to fail_with(/expected "206-123-1234" not to be a phone number string/)
         end
+
+        expect("206-123-1234").to be_a_phone_number_string
+        expect("foo").not_to be_a_phone_number_string
+
+        expect {
+          expect("foo").to be_a_phone_number_string
+        }.to fail_with(/expected "foo" to be a phone number string/)
+
+        expect {
+          expect("206-123-1234").not_to be_a_phone_number_string
+        }.to fail_with(/expected "206-123-1234" not to be a phone number string/)
       end
     end
 
@@ -289,6 +394,57 @@ module RSpec::Matchers::DSL
       it "overrides the failure message for #should_not" do
         matcher.matches?(true)
         expect(matcher.failure_message_for_should_not).to eq "expected true not to be the boolean true"
+      end
+
+      it 'can access helper methods from `description`' do
+        matcher = new_matcher(:desc) do
+          def subdesc() "sub description" end
+          description { "Desc (#{subdesc})" }
+        end
+
+        expect(matcher.description).to eq("Desc (sub description)")
+      end
+
+      it 'can access helper methods from `failure_message_for_should`' do
+        matcher = new_matcher(:positive_failure_message) do
+          def helper() "helper" end
+          failure_message_for_should { helper }
+        end
+
+        expect(matcher.failure_message_for_should).to eq("helper")
+      end
+
+      it 'can access helper methods from `failure_message_for_should_not`' do
+        matcher = new_matcher(:negative_failure_message) do
+          def helper() "helper" end
+          failure_message_for_should_not { helper }
+        end
+
+        expect(matcher.failure_message_for_should_not).to eq("helper")
+      end
+
+      it 'can exit early with a `return` from `description` just like in a method' do
+        matcher = new_matcher(:desc) do
+          description { return "Desc" }
+        end
+
+        expect(matcher.description).to eq("Desc")
+      end
+
+      it 'can exit early with a `return` from `failure_message_for_should` just like in a method' do
+        matcher = new_matcher(:positive_failure_message) do
+          failure_message_for_should { return "msg" }
+        end
+
+        expect(matcher.failure_message_for_should).to eq("msg")
+      end
+
+      it 'can exit early with a `return` from `failure_message_for_should_not` just like in a method' do
+        matcher = new_matcher(:negative_failure_message) do
+          failure_message_for_should_not { return "msg" }
+        end
+
+        expect(matcher.failure_message_for_should_not).to eq("msg")
       end
     end
 
@@ -527,6 +683,29 @@ module RSpec::Matchers::DSL
       expect(matcher.expecting('value').matches?('other value')).to be_falsey
     end
 
+    it 'can use an early return from a `chain` block' do
+      matcher = new_matcher(:name) do
+        chain(:expecting) do |expected_value|
+          @expected_value = expected_value
+          return
+        end
+        match { |actual| actual == @expected_value }
+      end
+
+      expect(matcher.expecting('value').matches?('value')).to be_truthy
+      expect(matcher.expecting('value').matches?('other value')).to be_falsey
+    end
+
+    it 'allows chainable methods to accept blocks' do
+      matcher = new_matcher(:name) do
+        chain(:for_block) { |&b| @block = b }
+        match { |value| @block.call == value }
+      end
+
+      expect(matcher.for_block { 5 }.matches?(5)).to be true
+      expect(matcher.for_block { 3 }.matches?(4)).to be false
+    end
+
     it "prevents name collisions on chainable methods from different matchers" do
       m1 = new_matcher(:m1) { chain(:foo) { raise "foo in m1" } }
       m2 = new_matcher(:m2) { chain(:foo) { raise "foo in m2" } }
@@ -549,16 +728,28 @@ module RSpec::Matchers::DSL
         expect(example).to __access_running_example
       end
 
+      it 'can get a method object for methods in the running example', :if => (RUBY_VERSION.to_f > 1.8) do
+        matcher = new_matcher(:get_method_object) { }
+        method  = matcher.method(:a_method_in_the_example)
+        expect(method.call).to eq("method defined in the example")
+      end
+
+      it 'indicates that it responds to a method from the running example' do
+        matcher = new_matcher(:respond_to) { }
+        expect(matcher).to respond_to(:a_method_in_the_example)
+        expect(matcher).not_to respond_to(:a_method_not_in_the_example)
+      end
+
       it "raises NoMethodError for methods not in the running_example" do |example|
         RSpec::Matchers.define(:__raise_no_method_error) do
           match do |actual|
-            a_method_not_in_the_example == "method defined in the example"
+            self.a_method_not_in_the_example == "method defined in the example"
           end
         end
 
-        expect do
+        expect {
           expect(example).to __raise_no_method_error
-        end.to raise_error(/RSpec::Matchers::DSL::Matcher/)
+        }.to raise_error(NoMethodError, /RSpec::Matchers::Custom::RaiseNoMethodError/)
       end
     end
 
