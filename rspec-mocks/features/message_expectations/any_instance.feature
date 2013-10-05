@@ -35,7 +35,7 @@ Feature: expect a message on any instance of a class
           Object.any_instance.should_receive(:foo).and_return(:return_value)
 
           o = Object.new
-          expect(o.foo).to eq(:return_value)
+          o.foo.should eq(:return_value)
         end
       end
       """
