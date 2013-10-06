@@ -18,6 +18,7 @@ Breaking Changes for 3.0.0:
 * Make `at_least(0)` raise an error. (Sam Phippen)
 * Remove support for `require 'spec/mocks'` which had been kept
   in place for backwards compatibility with rspec 1 (Myron Marston).
+* Blocks provided to `with` are always used as implementation (Xavier Shay).
 
 Enhancements:
 
@@ -26,6 +27,8 @@ Enhancements:
 * Yield the receiver to `any_instance` implementation blocks (Sam Phippen).
 * Provide `instance_double` and `class_double` to create verifying doubles,
   ported from `rspec-fire` (Xavier Shay).
+* `as_null_object` on a verifying double only responds to defined methods
+  (Xavier Shay).
 * Improved performance of double creation, particularly those with many
   attributes. (Xavier Shay)
 * Default value of `transfer_nested_constants` option for constant stubbing can
@@ -45,6 +48,10 @@ Bug Fixes:
   singleton class ancestors. (Marc-André Lafortune, Myron Marston)
 * Fix issue where unstubing methods on "any instances" would not
   remove stubs on existing instances (Jon Rowe)
+* When generating an error message for unexpected arguments,
+  use `#inspect` rather than `#description` if `#description`
+  returns `nil` or `''` so that you still get a useful message.
+  (Nick DeLuca)
 
 ### 2.14.3 / 2013-08-08
 [full changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.2...v2.14.3)
