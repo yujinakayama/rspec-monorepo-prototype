@@ -17,8 +17,8 @@ Feature: stub with argument constraints
             "string"
           end
 
-          expect(object.foo("bar")).to eq("string")
-          expect(object.foo(:that)).to eq("symbol")
+          object.foo("bar").should eq("string")
+          object.foo(:that).should eq("symbol")
         end
       end
       """

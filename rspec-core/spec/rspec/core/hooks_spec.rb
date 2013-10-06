@@ -26,7 +26,6 @@ module RSpec::Core
         end
       end
 
-
       describe "##{type}(no scope)" do
         let(:instance) { HooksHost.new }
 
@@ -107,25 +106,6 @@ module RSpec::Core
           group.run
           expect(examples.count).to eq(1)
         end
-
-        it "exposes example metadata to each around hook" do
-          foos = {}
-          group = ExampleGroup.describe do
-            around do |ex|
-              foos[:first] = ex.metadata[:foo]
-              ex.run
-            end
-            around do |ex|
-              foos[:second] = ex.metadata[:foo]
-              ex.run
-            end
-            it "does something", :foo => :bar do
-            end
-          end
-
-          group.run
-          expect(foos).to eq({:first => :bar, :second => :bar})
-        end
       end
 
       context "when running the example within a block passed to a method" do
@@ -139,7 +119,6 @@ module RSpec::Core
             around do |example|
               yielder { example.run }
             end
-
             it "foo" do
               examples << self
             end

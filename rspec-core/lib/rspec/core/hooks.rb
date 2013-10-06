@@ -59,23 +59,18 @@ EOS
         end
       end
 
-      class HookCollection
-        attr_reader :hooks
-        protected   :hooks
-
-        Array.public_instance_methods(false).each do |name|
-          define_method(name) { |*a, &b| hooks.__send__(name, *a, &b) }
+      module HookCollectionAliases
+        def self.included(host)
+          host.send :alias_method, :prepend, :unshift
+          host.send :alias_method, :append,  :push
         end
-        alias append push
-        alias prepend unshift
+      end
 
-        def initialize(hooks=[])
-          @hooks = hooks
-        end
+      class HookCollection < Array
+        include HookCollectionAliases
 
         def for(example_or_group)
-          self.class.
-            new(hooks.select {|hook| hook.options_apply?(example_or_group)}).
+          self.class.new(select {|hook| hook.options_apply?(example_or_group)}).
             with(example_or_group)
         end
 
@@ -85,13 +80,15 @@ EOS
         end
 
         def run
-          hooks.each {|h| h.run(@example)}
+          each {|h| h.run(@example) } unless empty?
         end
       end
 
-      class AroundHookCollection < HookCollection
+      class AroundHookCollection < Array
+        include HookCollectionAliases
+
         def for(example, initial_procsy=nil)
-          self.class.new(hooks.select {|hook| hook.options_apply?(example)}).
+          self.class.new(select {|hook| hook.options_apply?(example)}).
             with(example, initial_procsy)
         end
 
@@ -102,61 +99,51 @@ EOS
         end
 
         def run
-          hooks.reduce(@initial_procsy) do |procsy, around_hook|
-            procsy.wrap do
+          inject(@initial_procsy) do |procsy, around_hook|
+            Example.procsy(procsy.metadata) do
               @example.instance_exec(procsy, &around_hook.block)
             end
           end.call
         end
       end
 
-      class GroupHookCollection < HookCollection
+      class GroupHookCollection < Array
         def for(group)
           @group = group
           self
         end
 
         def run
-          hooks.shift.run(@group) until hooks.empty?
+          shift.run(@group) until empty?
         end
       end
 
-      class HookCollections
-        def initialize(data)
-          @data = data
-        end
-
-        def [](key)
-          @data[key]
-        end
-
-        def register_globals(host, globals)
-          process(host, globals, :before, :each)
-          process(host, globals, :after,  :each)
-          process(host, globals, :around, :each)
-
-          process(host, globals, :before, :all)
-          process(host, globals, :after,  :all)
+      module RegistersGlobals
+        def register_globals host, globals
+          [:before, :after, :around].each do |position|
+            process host, globals, position, :each
+            next if position == :around # no around(:all) hooks
+            process host, globals, position, :all
+          end
         end
 
         private
-
-        def process(host, globals, position, scope)
+        def process host, globals, position, scope
           globals[position][scope].each do |hook|
-            next unless scope == :each || hook.options_apply?(host)
-            next if host.parent_groups.any? {|a| a.hooks[position][scope].include?(hook)}
-            self[position][scope] << hook
+            unless host.parent_groups.any? { |a| a.hooks[position][scope].include? hook }
+              self[position][scope] << hook if scope == :each || hook.options_apply?(host)
+            end
           end
         end
       end
 
       # @private
       def hooks
-        @hooks ||= HookCollections.new(
+        @hooks ||= {
           :around => { :each => AroundHookCollection.new },
           :before => { :each => HookCollection.new, :all => HookCollection.new, :suite => HookCollection.new },
           :after =>  { :each => HookCollection.new, :all => HookCollection.new, :suite => HookCollection.new }
-        )
+        }.extend(RegistersGlobals)
       end
 
       # @api public
