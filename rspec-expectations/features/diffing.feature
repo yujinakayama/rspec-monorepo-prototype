@@ -17,7 +17,7 @@ Feature: diffing
         actual
           string
       ACTUAL
-          expect(actual).to eq(expected)
+          actual.should eq(expected)
         end
       end
       """
@@ -65,7 +65,7 @@ Feature: diffing
         it "is like another string" do
           expected = "this string"
           actual   = "that string"
-          expect(actual).to eq(expected)
+          actual.should eq(expected)
         end
       end
       """
@@ -77,7 +77,7 @@ Feature: diffing
       """ruby
       describe "a number" do
         it "is like another number" do
-          expect(1).to eq(2)
+          1.should eq(2)
         end
       end
       """

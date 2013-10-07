@@ -23,11 +23,11 @@ Feature: define matcher outside rspec
       class TestMultiples < Test::Unit::TestCase
 
         def test_9_should_be_a_multiple_of_3
-          expect(9).to be_a_multiple_of(3)
+          9.should be_a_multiple_of(3)
         end
 
         def test_9_should_be_a_multiple_of_4
-          expect(9).to be_a_multiple_of(4)
+          9.should be_a_multiple_of(4)
         end
 
       end
