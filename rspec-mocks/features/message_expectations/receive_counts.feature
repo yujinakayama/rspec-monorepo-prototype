@@ -18,7 +18,7 @@ Feature: receive counts
             account = Account.new
             account.logger = logger
 
-            expect(logger).to receive(:account_opened).once
+            logger.should_receive(:account_opened).once
 
             account.open
           end
@@ -46,7 +46,7 @@ Feature: receive counts
             account = Account.new
             account.logger = logger
 
-            expect(logger).to receive(:account_opened).twice
+            logger.should_receive(:account_opened).twice
 
             account.open
             account.open
@@ -75,7 +75,7 @@ Feature: receive counts
             account = Account.new
             account.logger = logger
 
-            expect(logger).to receive(:account_opened).exactly(3).times
+            logger.should_receive(:account_opened).exactly(3).times
 
             account.open
             account.open
@@ -105,7 +105,7 @@ Feature: receive counts
             account = Account.new
             account.logger = logger
 
-            expect(logger).to receive(:account_opened).at_least(:once)
+            logger.should_receive(:account_opened).at_least(:once)
 
             account.open
           end
@@ -134,7 +134,7 @@ Feature: receive counts
             account = Account.new
             account.logger = logger
 
-            expect(logger).to receive(:account_opened).at_least(3).times
+            logger.should_receive(:account_opened).at_least(3).times
 
             # Note that I am calling method under test 4 times
             # and I specified it to be called at least 3 times
@@ -167,7 +167,7 @@ Feature: receive counts
             account = Account.new
             account.logger = logger
 
-            expect(logger).to receive(:account_opened).at_most(:once)
+            logger.should_receive(:account_opened).at_most(:once)
 
             account.open
             account.open
@@ -197,7 +197,7 @@ Feature: receive counts
             account = Account.new
             account.logger = logger
 
-            expect(logger).to receive(:account_opened).at_most(2).times
+            logger.should_receive(:account_opened).at_most(2).times
 
             account.open
             account.open
