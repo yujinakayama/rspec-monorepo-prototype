@@ -228,11 +228,14 @@ module RSpec
         # Provides default implementations for the matcher protocol methods.
         include DefaultImplementations
 
-        # So that expectation expressions can be used in the match block...
+        # Allows expectation expressions to be used in the match block.
         include RSpec::Matchers
 
-        # Converts matcher name and expected args to an English expresion
+        # Converts matcher name and expected args to an English expresion.
         include RSpec::Matchers::Pretty
+
+        # Makes the macro methods available to an `RSpec::Matchers.define` block.
+        extend Macros
 
         attr_reader   :expected, :actual, :rescued_exception
         attr_accessor :matcher_execution_context
@@ -243,8 +246,8 @@ module RSpec
           @expected = expected
 
           class << self
+            # See `Macros#define_user_override` above, for an explanation.
             include const_set(:UserMethodDefs, Module.new)
-            extend  Macros
             self
           end.class_exec(*expected, &self.class.instance_variable_get(:@declarations))
         end
@@ -296,7 +299,7 @@ module RSpec
             define_method(:name) { name }
             @declarations = declarations
           end.tap do |klass|
-            const_name = ('_' + name.to_s).gsub(/_+([[:alpha:]])/) { $1.upcase }
+            const_name = ('_' + name.to_s).gsub(/_+(\w)/) { $1.upcase }
 
             const_name.gsub!(/\A_+/, '')             # Remove any leading underscores
             const_name.gsub!(/\W/, '')               # JRuby, RBX and others don't like non-ascii in const names
