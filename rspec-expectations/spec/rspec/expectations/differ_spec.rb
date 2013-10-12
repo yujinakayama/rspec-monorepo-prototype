@@ -54,12 +54,7 @@ EOD
             @actual="Tu avec carte {count} item has".encode('UTF-16LE')
             expect(subject).to eql 'Could not produce a diff because of the encoding of the string (UTF-16LE)'
           end
-          it 'handles differently encoded strings that are compatible' do
-            @expected = "강인철".encode('UTF-8')
-            @actual   = "abc".encode('us-ascii')
-            expect(subject).to eql "\n@@ -1,2 +1,2 @@\n-abc\n+강인철\n"
-          end
-          it 'outputs a message when encountering differently encoded strings' do
+          it 'ouputs a message when encountering differently encoded strings' do
             @expected="Tu avec carté {count} itém has".encode('UTF-16LE')
             @actual="Tu avec carte {count} item has"
             expect(subject).to eql 'Could not produce a diff because the encoding of the actual string (UTF-8) differs from the encoding of the expected string (UTF-16LE)'
@@ -216,3 +211,4 @@ EOD
     end
   end
 end
+
