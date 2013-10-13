@@ -7,9 +7,8 @@ describe RSpec::Core::ConfigurationOptions, :isolated_directory => true, :isolat
 
   it "warns when HOME env var is not set", :unless => (RUBY_PLATFORM == 'java') do
     without_env_vars 'HOME' do
-      coo = RSpec::Core::ConfigurationOptions.new([])
-      coo.should_receive(:warn)
-      coo.parse_options
+      expect_warning_with_call_site(__FILE__, __LINE__ + 1)
+      RSpec::Core::ConfigurationOptions.new([]).parse_options
     end
   end
 
@@ -238,6 +237,16 @@ describe RSpec::Core::ConfigurationOptions, :isolated_directory => true, :isolat
 
     it "overrides previous :failure_exit_code" do
       expect(parse_options('--failure-exit-code', '2', '--failure-exit-code', '3')).to include(:failure_exit_code => 3)
+    end
+  end
+
+  describe "--dry-run" do
+    it "defaults to false" do
+      expect(parse_options[:dry_run]).to be_falsey
+    end
+
+    it "sets dry_run on config" do
+      expect(parse_options("--dry-run")[:dry_run]).to be_truthy
     end
   end
 

@@ -2,7 +2,7 @@ require_rspec = if defined?(require_relative)
   lambda do |path|
     require_relative path
   end
-else
+else # for 1.8.7
   lambda do |path|
     require "rspec/#{path}"
   end
@@ -11,10 +11,11 @@ end
 require 'set'
 require 'time'
 require 'rbconfig'
+require_rspec['core/caller_filter']
+require_rspec['core/flat_map']
 require_rspec['core/filter_manager']
 require_rspec['core/dsl']
-require_rspec['core/extensions/ordered']
-require_rspec['core/deprecation']
+require_rspec['core/warnings']
 require_rspec['core/reporter']
 
 require_rspec['core/hooks']
@@ -22,6 +23,7 @@ require_rspec['core/memoized_helpers']
 require_rspec['core/metadata']
 require_rspec['core/pending']
 require_rspec['core/formatters']
+require_rspec['core/ordering']
 
 require_rspec['core/world']
 require_rspec['core/configuration']
@@ -88,7 +90,7 @@ DEPRECATION WARNING
 * RSpec.configuration with a block is deprecated and has no effect.
 * please use RSpec.configure with a block instead.
 
-Called from #{caller(0)[1]}
+Called from #{CallerFilter.first_non_rspec_line}
 *****************************************************************
 
 WARNING
@@ -171,7 +173,6 @@ WARNING
     def self.path_to_executable
       @path_to_executable ||= File.expand_path('../../../exe/rspec', __FILE__)
     end
-
   end
 
   MODULES_TO_AUTOLOAD = {

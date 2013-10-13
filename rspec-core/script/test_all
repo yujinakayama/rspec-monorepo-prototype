@@ -10,18 +10,12 @@ function is_jruby() {
   fi
 }
 
-# Needed by Bundler 1.3: https://github.com/carlhuda/bundler/issues/2382
-export RUBYOPT='-rrbconfig'
-
 # idea taken from: http://blog.headius.com/2010/03/jruby-startup-time-tips.html
 export JRUBY_OPTS='-X-C' # disable JIT since these processes are so short lived
 
 # force jRuby to use client mode JVM or a compilation mode thats as close as possible,
 # idea taken from https://github.com/jruby/jruby/wiki/Improving-startup-time
 export JAVA_OPTS='-client -XX:+TieredCompilation -XX:TieredStopAtLevel=1'
-
-echo "Bundling Standalone so we can run the specs w/o bundler loaded"
-bundle install --standalone --binstubs
 
 echo "Running all..."
 bin/rspec spec -b --format progress --profile
@@ -47,3 +41,38 @@ fi
 # For now, use this instead, due to a bug in bundler:
 # https://github.com/carlhuda/bundler/issues/2382
 bundle exec bin/cucumber --strict
+
+# Test against other RSpec gems.
+
+# Delete the directory for idempotency when running locally
+export TMPDIR="/tmp"
+rm -rf $TMPDIR/rspec-ci
+mkdir $TMPDIR/rspec-ci
+
+# Get the branch to test against
+MAINTENENCE_BRANCH=`cat maintenence-branch`
+
+cp -r "./" "$TMPDIR/rspec-ci/rspec-core"
+
+#Change to the CI directory
+cd $TMPDIR/rspec-ci
+
+# The steps to test the gems are the same, this function does them.
+function test_gem {
+    git clone git://github.com/rspec/rspec-$1
+    cd rspec-$1
+    pwd
+    git fetch origin
+    git checkout $MAINTENENCE_BRANCH
+    git branch
+    bundle_flags=`cat .travis.yml  | grep bundler_args | tr -d '"' | grep -o " .*"`
+
+    bundle install $bundle_flags
+    bundle exec rspec -b
+    cd ../
+    rm -rf rspec-$1
+}
+
+# Test rspec-mocks and rspec-expectations.
+test_gem "mocks"
+test_gem "expectations"

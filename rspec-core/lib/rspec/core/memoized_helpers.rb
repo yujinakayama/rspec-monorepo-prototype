@@ -93,59 +93,64 @@ module RSpec
       # memoized hash when used in a `before(:all)` hook.
       #
       # @private
-      class BeforeAllMemoizedHash
-        def initialize(example_group_instance)
-          @example_group_instance = example_group_instance
-          @hash = {}
-        end
+      class AllHookMemoizedHash
+        def self.isolate_for_all_hook(example_group_instance)
+          hash = self
 
-        def self.isolate_for_before_all(example_group_instance)
           example_group_instance.instance_eval do
-            @__memoized = BeforeAllMemoizedHash.new(self)
+            @__memoized = hash
 
             begin
               yield
             ensure
-              @__memoized.preserve_accessed_lets
               @__memoized = nil
             end
           end
         end
 
-        def fetch(key, &block)
+        def self.fetch(key, &block)
           description = if key == :subject
             "subject"
           else
             "let declaration `#{key}`"
           end
 
-          ::RSpec.warn_deprecation <<-EOS
-WARNING: #{description} accessed in a `before(:all)` hook at:
-  #{caller[1]}
-
-This is deprecated behavior that will not be supported in RSpec 3.
+          raise <<-EOS
+#{description} accessed in #{article} #{hook_expression} hook at:
+  #{CallerFilter.first_non_rspec_line}
 
 `let` and `subject` declarations are not intended to be called
-in a `before(:all)` hook, as they exist to define state that
-is reset between each example, while `before(:all)` exists to
-define state that is shared across examples in an example group.
+in #{article} #{hook_expression} hook, as they exist to define state that
+is reset between each example, while #{hook_expression} exists to
+#{hook_intention}.
 EOS
-
-          @hash.fetch(key, &block)
         end
 
-        def []=(key, value)
-          @hash[key] = value
+        class Before < self
+          def self.hook_expression
+            "`before(:all)`"
+          end
+
+          def self.article
+            "a"
+          end
+
+          def self.hook_intention
+            "define state that is shared across examples in an example group"
+          end
         end
 
-        def preserve_accessed_lets
-          hash = @hash
+        class After < self
+          def self.hook_expression
+            "`after(:all)`"
+          end
 
-          @example_group_instance.class.class_eval do
-            hash.each do |key, value|
-              undef_method(key) if method_defined?(key)
-              define_method(key) { value }
-            end
+          def self.article
+            "an"
+          end
+
+          def self.hook_intention
+            "cleanup state that is shared across examples in an example group"
           end
         end
       end
@@ -358,96 +363,6 @@ EOS
         def subject!(name=nil, &block)
           subject(name, &block)
           before { subject }
-        end
-
-        # Creates a nested example group named by the submitted `attribute`,
-        # and then generates an example using the submitted block.
-        #
-        # @example
-        #
-        #   # This ...
-        #   describe Array do
-        #     its(:size) { should eq(0) }
-        #   end
-        #
-        #   # ... generates the same runtime structure as this:
-        #   describe Array do
-        #     describe "size" do
-        #       it "should eq(0)" do
-        #         subject.size.should eq(0)
-        #       end
-        #     end
-        #   end
-        #
-        # The attribute can be a `Symbol` or a `String`. Given a `String`
-        # with dots, the result is as though you concatenated that `String`
-        # onto the subject in an expression.
-        #
-        # @example
-        #
-        #   describe Person do
-        #     subject do
-        #       Person.new.tap do |person|
-        #         person.phone_numbers << "555-1212"
-        #       end
-        #     end
-        #
-        #     its("phone_numbers.first") { should eq("555-1212") }
-        #   end
-        #
-        # When the subject is a `Hash`, you can refer to the Hash keys by
-        # specifying a `Symbol` or `String` in an array.
-        #
-        # @example
-        #
-        #   describe "a configuration Hash" do
-        #     subject do
-        #       { :max_users => 3,
-        #         'admin' => :all_permissions }
-        #     end
-        #
-        #     its([:max_users]) { should eq(3) }
-        #     its(['admin']) { should eq(:all_permissions) }
-        #
-        #     # You can still access to its regular methods this way:
-        #     its(:keys) { should include(:max_users) }
-        #     its(:count) { should eq(2) }
-        #   end
-        #
-        # Note that this method does not modify `subject` in any way, so if you
-        # refer to `subject` in `let` or `before` blocks, you're still
-        # referring to the outer subject.
-        #
-        # @example
-        #
-        #   describe Person do
-        #     subject { Person.new }
-        #     before { subject.age = 25 }
-        #     its(:age) { should eq(25) }
-        #   end
-        def its(attribute, &block)
-          describe(attribute) do
-            if Array === attribute
-              let(:__its_subject) { subject[*attribute] }
-            else
-              let(:__its_subject) do
-                attribute_chain = attribute.to_s.split('.')
-                attribute_chain.inject(subject) do |inner_subject, attr|
-                  inner_subject.send(attr)
-                end
-              end
-            end
-
-            def should(matcher=nil, message=nil)
-              RSpec::Expectations::PositiveExpectationHandler.handle_matcher(__its_subject, matcher, message)
-            end
-
-            def should_not(matcher=nil, message=nil)
-              RSpec::Expectations::NegativeExpectationHandler.handle_matcher(__its_subject, matcher, message)
-            end
-
-            example(&block)
-          end
         end
       end
 

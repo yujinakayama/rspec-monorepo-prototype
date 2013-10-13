@@ -17,7 +17,6 @@ module RSpec
 
       include MemoizedHelpers
       include Pending
-      include SharedExampleGroup
       extend SharedExampleGroup
 
       # @private
@@ -176,10 +175,44 @@ module RSpec
         find_and_eval_shared("examples", name, *args, &block)
       end
 
+      if RUBY_VERSION.to_f >= 1.9
+        # Warn when submitting the name of more than one example group to
+        # include_examples, it_behaves_like, etc.
+        #
+        # Helpful when upgrading from rspec-1 (which supported multiple shared
+        # groups in one call) to rspec-2 (which does not).
+        #
+        # See https://github.com/rspec/rspec-core/issues/1066 for background.
+        def self.warn_unexpected_args(label, name, args, shared_block)
+          if !args.empty? && shared_block.arity == 0
+            if shared_example_groups[args.first]
+              warn <<-WARNING
+shared #{label} support#{'s' if /context/ =~ label.to_s} the name of only one example group, received #{[name, *args].inspect}
+called from #{CallerFilter.first_non_rspec_line}"
+WARNING
+            else
+                warn <<-WARNING
+shared #{label} #{name.inspect} expected #{shared_block.arity} args, got #{args.inspect}
+called from #{CallerFilter.first_non_rspec_line}"
+WARNING
+            end
+          end
+        end
+      else
+        # no-op for Ruby < 1.9
+        #
+        # Ruby 1.8 reports lambda {}.arity == -1, so can't support this warning
+        # reliably
+        def self.warn_unexpected_args(*)
+        end
+      end
+
       # @private
       def self.find_and_eval_shared(label, name, *args, &customization_block)
         raise ArgumentError, "Could not find shared #{label} #{name.inspect}" unless
-        shared_block = shared_example_groups[name]
+          shared_block = shared_example_groups[name]
+
+        warn_unexpected_args(label, name, args, shared_block)
 
         module_exec(*args, &shared_block)
         module_eval(&customization_block) if customization_block
@@ -269,7 +302,7 @@ module RSpec
 
       # @private
       def self.children
-        @children ||= [].extend(Extensions::Ordered::ExampleGroups)
+        @children ||= []
       end
 
       # @private
@@ -311,6 +344,7 @@ module RSpec
         args << Metadata.build_hash_from(args)
         args.unshift(symbol_description) if symbol_description
         @metadata = RSpec::Core::Metadata.new(superclass_metadata).process(*args)
+        @order = nil
         hooks.register_globals(self, RSpec.configuration.hooks)
         world.configure_group(self)
       end
@@ -340,7 +374,7 @@ module RSpec
         begin
           assign_before_all_ivars(superclass.before_all_ivars, example_group_instance)
 
-          BeforeAllMemoizedHash.isolate_for_before_all(example_group_instance) do
+          AllHookMemoizedHash::Before.isolate_for_all_hook(example_group_instance) do
             run_hook(:before, :all, example_group_instance)
           end
         ensure
@@ -368,7 +402,9 @@ module RSpec
         return if descendant_filtered_examples.empty?
         assign_before_all_ivars(before_all_ivars, example_group_instance)
 
-        run_hook(:after, :all, example_group_instance)
+        AllHookMemoizedHash::After.isolate_for_all_hook(example_group_instance) do
+          run_hook(:after, :all, example_group_instance)
+        end
       end
 
       # Runs all the examples in this group
@@ -382,7 +418,7 @@ module RSpec
         begin
           run_before_all_hooks(new)
           result_for_this_group = run_examples(reporter)
-          results_for_descendants = children.ordered.map { |child| child.run(reporter) }.all?
+          results_for_descendants = ordering_strategy.order(children).map { |child| child.run(reporter) }.all?
           result_for_this_group && results_for_descendants
         rescue Exception => ex
           RSpec.wants_to_quit = true if fail_fast?
@@ -395,8 +431,24 @@ module RSpec
       end
 
       # @private
+      def self.ordering_strategy
+        order = metadata.fetch(:order, :global)
+        registry = RSpec.configuration.ordering_registry
+
+        registry.fetch(order) do
+          warn <<-WARNING.gsub(/^ +\|/, '')
+            |WARNING: Ignoring unknown ordering specified using `:order => #{order.inspect}` metadata.
+            |         Falling back to configured global ordering.
+            |         Unrecognized ordering specified at: #{metadata[:example_group][:location]}
+          WARNING
+
+          registry.fetch(:global)
+        end
+      end
+
+      # @private
       def self.run_examples(reporter)
-        filtered_examples.ordered.map do |example|
+        ordering_strategy.order(filtered_examples).map do |example|
           next if RSpec.wants_to_quit
           instance = new
           set_ivars(instance, before_all_ivars)

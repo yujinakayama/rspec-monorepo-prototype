@@ -23,17 +23,13 @@ module RSpec
         end
 
         let(:generated_html) do
-          options = RSpec::Core::ConfigurationOptions.new(
-            %w[spec/rspec/core/resources/formatter_specs.rb --format html --order default]
-          )
-          options.parse_options
+          options = %w[spec/rspec/core/resources/formatter_specs.rb --format html --order defined]
 
-          err, out = StringIO.new, StringIO.new
+          err, out = StringIO.new, RSpec.configuration.output
           err.set_encoding("utf-8") if err.respond_to?(:set_encoding)
-          out.set_encoding("utf-8") if out.respond_to?(:set_encoding)
 
           command_line = RSpec::Core::CommandLine.new(options)
-          command_line.instance_variable_get("@configuration").backtrace_cleaner.inclusion_patterns = []
+          command_line.instance_variable_get("@configuration").backtrace_formatter.inclusion_patterns = []
           command_line.run(err, out)
           out.string.gsub(/\d+\.\d+(s| seconds)/, "n.nnnn\\1")
         end
@@ -46,7 +42,7 @@ module RSpec
         end
 
         before do
-          RSpec.configuration.stub(:load_spec_files) do
+          allow(RSpec.configuration).to receive(:load_spec_files) do
             RSpec.configuration.files_to_run.map {|f| load File.expand_path(f) }
           end
         end
@@ -68,24 +64,39 @@ module RSpec
             select  {|e| e =~ /formatter_specs\.rb/}
         end
 
-        it "produces HTML identical to the one we designed manually" do
-          Dir.chdir(root) do
-            actual_doc = Nokogiri::HTML(generated_html)
-            actual_backtraces = extract_backtrace_from(actual_doc)
-            actual_doc.css("div.backtrace").remove
+        describe 'produced HTML' do
+          def build_and_verify_formatter_output
+            Dir.chdir(root) do
+              actual_doc = Nokogiri::HTML(generated_html)
+              actual_backtraces = extract_backtrace_from(actual_doc)
+              actual_doc.css("div.backtrace").remove
 
-            expected_doc = Nokogiri::HTML(expected_html)
-            expected_backtraces = extract_backtrace_from(expected_doc)
-            expected_doc.search("div.backtrace").remove
+              expected_doc = Nokogiri::HTML(expected_html)
+              expected_backtraces = extract_backtrace_from(expected_doc)
+              expected_doc.search("div.backtrace").remove
 
-            expect(actual_doc.inner_html).to eq(expected_doc.inner_html)
+              expect(actual_doc.inner_html).to eq(expected_doc.inner_html)
 
-            expected_backtraces.each_with_index do |expected_line, i|
-              expected_path, expected_line_number, expected_suffix = expected_line.split(':')
-              actual_path, actual_line_number, actual_suffix = actual_backtraces[i].split(':')
-              expect(File.expand_path(actual_path)).to eq(File.expand_path(expected_path))
-              expect(actual_line_number).to eq(expected_line_number)
-              expect(actual_suffix).to eq(expected_suffix)
+              expected_backtraces.each_with_index do |expected_line, i|
+                expected_path, expected_line_number, expected_suffix = expected_line.split(':')
+                actual_path, actual_line_number, actual_suffix = actual_backtraces[i].split(':')
+
+                expect(File.expand_path(actual_path)).to eq(File.expand_path(expected_path))
+                expect(actual_line_number).to eq(expected_line_number)
+                expect(actual_suffix).to eq(expected_suffix)
+              end
+            end
+          end
+
+          it "produces HTML identical to the one we designed manually" do
+            build_and_verify_formatter_output
+          end
+
+          context 'with mathn loaded' do
+            include MathnIntegrationSupport
+
+            it "produces HTML identical to the one we designed manually" do
+              with_mathn_loaded{ build_and_verify_formatter_output }
             end
           end
         end

@@ -67,7 +67,7 @@ module RSpec
       # objects.
       class Registry
         def add_group(source, *args, &block)
-          ensure_block_has_source_location(block, caller[1])
+          ensure_block_has_source_location(block, CallerFilter.first_non_rspec_line)
 
           if key? args.first
             key = args.shift
@@ -109,7 +109,7 @@ module RSpec
         def warn_if_key_taken(source, key, new_block)
           return unless existing_block = example_block_for(source, key)
 
-          Kernel.warn <<-WARNING.gsub(/^ +\|/, '')
+          RSpec.warn_with <<-WARNING.gsub(/^ +\|/, ''), :call_site => nil
             |WARNING: Shared example group '#{key}' has been previously defined at:
             |  #{formatted_location existing_block}
             |...and you are now defining it at:
@@ -126,14 +126,16 @@ module RSpec
           shared_example_groups[source][key]
         end
 
-        def ensure_block_has_source_location(block, caller_line)
-          return if block.respond_to?(:source_location)
-
-          block.extend Module.new {
-            define_method :source_location do
-              caller_line.split(':')
-            end
-          }
+        if Proc.method_defined?(:source_location)
+          def ensure_block_has_source_location(block, caller_line); end
+        else # for 1.8.7
+          def ensure_block_has_source_location(block, caller_line)
+            block.extend Module.new {
+              define_method :source_location do
+                caller_line.split(':')
+              end
+            }
+          end
         end
       end
     end

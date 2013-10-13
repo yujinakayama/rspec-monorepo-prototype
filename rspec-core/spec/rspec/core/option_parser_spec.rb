@@ -157,6 +157,21 @@ module RSpec::Core
             options = Parser.parse!([option, 'foo:any_string'])
             expect(options[:inclusion_filter]).to eq(:foo => 'any_string')
           end
+
+          it "treats ':any_sym' as :any_sym" do
+            options = Parser.parse!([option, 'foo::any_sym'])
+            expect(options[:inclusion_filter]).to eq(:foo => :any_sym)
+          end
+
+          it "treats '42' as 42" do
+            options = Parser.parse!([option, 'foo:42'])
+            expect(options[:inclusion_filter]).to eq(:foo => 42)
+          end
+
+          it "treats '3.146' as 3.146" do
+            options = Parser.parse!([option, 'foo:3.146'])
+            expect(options[:inclusion_filter]).to eq(:foo => 3.146)
+          end
         end
 
         context "with ~" do
@@ -217,15 +232,13 @@ module RSpec::Core
       end
 
       it 'sets profile_examples to true when accidentally combined with path' do
-        allow(Kernel).to receive(:warn)
+        allow_warning
         options = Parser.parse!(%w[--profile some/path])
         expect(options[:profile_examples]).to eq true
       end
 
       it 'warns when accidentally combined with path' do
-        expect(Kernel).to receive(:warn) do |msg|
-          expect(msg).to match "Non integer specified as profile count"
-        end
+        expect_warning_without_call_site "Non integer specified as profile count"
         options = Parser.parse!(%w[--profile some/path])
         expect(options[:profile_examples]).to eq true
       end

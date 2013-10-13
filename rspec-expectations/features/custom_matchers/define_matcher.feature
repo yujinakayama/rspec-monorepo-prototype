@@ -183,7 +183,7 @@ Feature: define matcher
 
       describe "these two arrays" do
         specify "should be similar" do
-          [1,2,3].should have_same_elements_as([2,3,1])
+          expect([1,2,3]).to have_same_elements_as([2,3,1])
         end
       end
       """
@@ -207,14 +207,14 @@ Feature: define matcher
       describe "group with MyHelpers" do
         include MyHelpers
         it "has access to the defined matcher" do
-          5.should be_just_like(5)
+          expect(5).to be_just_like(5)
         end
       end
 
       describe "group without MyHelpers" do
         it "does not have access to the defined matcher" do
           expect do
-            5.should be_just_like(5)
+            expect(5).to be_just_like(5)
           end.to raise_exception
         end
       end
@@ -234,12 +234,12 @@ Feature: define matcher
         end
 
         it "has access to the defined matcher" do
-          5.should be_just_like(5)
+          expect(5).to be_just_like(5)
         end
 
         describe "nested group" do
           it "has access to the defined matcher" do
-            5.should be_just_like(5)
+            expect(5).to be_just_like(5)
           end
         end
 
@@ -248,7 +248,7 @@ Feature: define matcher
       describe "group without matcher" do
         it "does not have access to the defined matcher" do
           expect do
-            5.should be_just_like(5)
+            expect(5).to be_just_like(5)
           end.to raise_exception
         end
       end
@@ -338,31 +338,3 @@ Feature: define matcher
       | 4 examples, 2 failures               |
       | expected 9 to be a multiple of 2     |
       | expected 9 not to be a multiple of 3 |
-
-  Scenario: matching against a regular expression
-    Given a file named "regular_expression_matcher_spec.rb" with:
-      """ruby
-      # Due to Ruby's method dispatch mechanism, use the `#match_regex` alias
-      # rather than the `#match` matcher when defining custom matchers via the
-      # DSL.
-
-      RSpec::Matchers.define :be_valid_us_zipcode do
-        match do |actual|
-          expect(actual).to match_regex(/\A\d{5}(-\d{4})?\z/)
-        end
-      end
-
-      describe "30316" do
-        it { should be_valid_us_zipcode }
-      end
-
-      describe "30316-0001" do
-        it { should be_valid_us_zipcode }
-      end
-
-      describe "1000-61303" do
-        it { should_not be_valid_us_zipcode }
-      end
-      """
-    When I run `rspec regular_expression_matcher_spec.rb`
-    Then the stdout should contain "3 examples, 0 failures"

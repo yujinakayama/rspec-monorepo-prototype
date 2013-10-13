@@ -1,5 +1,5 @@
 require 'fileutils'
-require 'rspec/core/backtrace_cleaner'
+require 'rspec/core/backtrace_formatter'
 require 'rspec/core/ruby_project'
 require 'rspec/core/formatters/deprecation_formatter.rb'
 
@@ -79,85 +79,111 @@ module RSpec
 
       # @macro [attach] add_setting
       #   @attribute $1
+      #
+      # @macro [attach] define_reader
+      #   @attribute $1
 
+      # @macro add_setting
       # Path to use if no path is provided to the `rspec` command (default:
       # `"spec"`). Allows you to just type `rspec` instead of `rspec spec` to
       # run all the examples in the `spec` directory.
       add_setting :default_path
 
+      # @macro add_setting
       # Run examples over DRb (default: `false`). RSpec doesn't supply the DRb
       # server, but you can use tools like spork.
       add_setting :drb
 
+      # @macro add_setting
       # The drb_port (default: nil).
       add_setting :drb_port
 
+      # @macro add_setting
       # Default: `$stderr`.
       add_setting :error_stream
 
+      # @macro add_setting
       # Default: `$stderr`.
       add_setting :deprecation_stream
 
+      # @macro add_setting
       # Clean up and exit after the first failure (default: `false`).
       add_setting :fail_fast
 
+      # @macro add_setting
+      # Prints the formatter output of your suite without running any
+      # examples or hooks.
+      add_setting :dry_run
+
+      # @macro add_setting
       # The exit code to return if there are any failures (default: 1).
       add_setting :failure_exit_code
 
-      # Determines the order in which examples are run (default: OS standard
-      # load order for files, declaration order for groups and examples).
-      define_reader :order
-
+      # @macro define_reader
       # Indicates files configured to be required
       define_reader :requires
 
+      # @macro define_reader
       # Returns dirs that have been prepended to the load path by #lib=
       define_reader :libs
 
+      # @macro add_setting
       # Default: `$stdout`.
       # Also known as `output` and `out`
       add_setting :output_stream, :alias_with => [:output, :out]
 
+      # @macro add_setting
       # Load files matching this pattern (default: `'**/*_spec.rb'`)
       add_setting :pattern, :alias_with => :filename_pattern
 
       def pattern= value
         if @spec_files_loaded
-          Kernel.warn "WARNING: Configuring `pattern` to #{value} has no effect since RSpec has already loaded the spec files. Called from #{caller.first}"
+          RSpec.warning "Configuring `pattern` to #{value} has no effect since RSpec has already loaded the spec files."
         end
         @pattern = value
       end
       alias :filename_pattern= :pattern=
 
+      # @macro add_setting
       # Report the times for the slowest examples (default: `false`).
       # Use this to specify the number of examples to include in the profile.
       add_setting :profile_examples
 
+      # @macro add_setting
       # Run all examples if none match the configured filters (default: `false`).
       add_setting :run_all_when_everything_filtered
 
-      # Allow user to configure their own success/pending/failure colors
-      # @param [Symbol] should be one of the following: [:black, :white, :red, :green, :yellow, :blue, :magenta, :cyan]
+      # @macro add_setting
+      # Color to use to indicate success.
+      # @param [Symbol] color one of the following: [:black, :white, :red, :green, :yellow, :blue, :magenta, :cyan]
       add_setting :success_color
+
+      # @macro add_setting
+      # Color to use to print pending examples.
+      # @param [Symbol] color one of the following: [:black, :white, :red, :green, :yellow, :blue, :magenta, :cyan]
       add_setting :pending_color
+
+      # @macro add_setting
+      # Color to use to indicate failure.
+      # @param [Symbol] color one of the following: [:black, :white, :red, :green, :yellow, :blue, :magenta, :cyan]
       add_setting :failure_color
+
+      # @macro add_setting
+      # The default output color.
+      # @param [Symbol] color one of the following: [:black, :white, :red, :green, :yellow, :blue, :magenta, :cyan]
       add_setting :default_color
+
+      # @macro add_setting
+      # Color used when a pending example is fixed.
+      # @param [Symbol] color one of the following: [:black, :white, :red, :green, :yellow, :blue, :magenta, :cyan]
       add_setting :fixed_color
+
+      # @macro add_setting
+      # Color used to print details.
+      # @param [Symbol] color one of the following: [:black, :white, :red, :green, :yellow, :blue, :magenta, :cyan]
       add_setting :detail_color
 
-      # Seed for random ordering (default: generated randomly each run).
-      #
-      # When you run specs with `--order random`, RSpec generates a random seed
-      # for the randomization and prints it to the `output_stream` (assuming
-      # you're using RSpec's built-in formatters). If you discover an ordering
-      # dependency (i.e. examples fail intermittently depending on order), set
-      # this (on Configuration or on the command line with `--seed`) to run
-      # using the same seed while you debug the issue.
-      #
-      # We recommend, actually, that you use the command line approach so you
-      # don't accidentally leave the seed encoded.
-      define_reader :seed
-
+      # @macro add_setting
       # When a block passed to pending fails (as expected), display the failure
       # without reporting it as a failure (default: false).
       add_setting :show_failures_in_pending_blocks
@@ -179,8 +205,13 @@ module RSpec
       add_setting :expecting_with_rspec
       # @private
       attr_accessor :filter_manager
+      # @private
+      attr_reader :backtrace_formatter, :ordering_manager
 
-      attr_reader :backtrace_cleaner
+      # Alias for rspec-2.x's backtrace_cleaner (now backtrace_formatter)
+      #
+      # TODO: consider deprecating and removing this rather than aliasing in rspec-3?
+      alias backtrace_cleaner backtrace_formatter
 
       def initialize
         @expectation_frameworks = []
@@ -193,13 +224,13 @@ module RSpec
         @failure_exit_code = 1
         @spec_files_loaded = false
 
-        @backtrace_cleaner = BacktraceCleaner.new
+        @backtrace_formatter = BacktraceFormatter.new
 
         @default_path = 'spec'
         @deprecation_stream = $stderr
         @filter_manager = FilterManager.new
+        @ordering_manager = Ordering::ConfigurationManager.new
         @preferred_options = {}
-        @seed = srand % 0xFFFF
         @failure_color = :red
         @success_color = :green
         @pending_color = :yellow
@@ -215,11 +246,7 @@ module RSpec
       #
       # Used to set higher priority option values from the command line.
       def force(hash)
-        if hash.has_key?(:seed)
-          hash[:order], hash[:seed] = order_and_seed_from_seed(hash[:seed])
-        elsif hash.has_key?(:order)
-          set_order_and_seed(hash)
-        end
+        ordering_manager.force(hash)
         @preferred_options.merge!(hash)
         self.warnings = value_for :warnings, nil
       end
@@ -285,37 +312,39 @@ module RSpec
         mock_with framework
       end
 
-      # The patterns to always include to backtraces.
+      # Regexps used to exclude lines from backtraces.
       #
-      # Defaults to [Regexp.new Dir.getwd] if the current working directory
-      # matches any of the exclusion patterns. Otherwise it defaults to empty.
+      # Excludes lines from ruby (and jruby) source, installed gems, anything
+      # in any "bin" directory, and any of the rspec libs (outside gem
+      # installs) by default.
       #
-      # One can replace the list by using the setter or modify it through the
-      # getter
-      def backtrace_inclusion_patterns
-        @backtrace_cleaner.inclusion_patterns
-      end
-
-      def backtrace_inclusion_patterns=(patterns)
-        @backtrace_cleaner.inclusion_patterns = patterns
-      end
-
-      # The patterns to discard from backtraces.
-      #
-      # Defaults to RSpec::Core::BacktraceCleaner::DEFAULT_EXCLUSION_PATTERNS
-      #
-      # One can replace the list by using the setter or modify it through the
-      # getter
+      # You can modify the list via the getter, or replace it with the setter.
       #
       # To override this behaviour and display a full backtrace, use
       # `--backtrace`on the command line, in a `.rspec` file, or in the
       # `rspec_options` attribute of RSpec's rake task.
       def backtrace_exclusion_patterns
-        @backtrace_cleaner.exclusion_patterns
+        @backtrace_formatter.exclusion_patterns
       end
 
       def backtrace_exclusion_patterns=(patterns)
-        @backtrace_cleaner.exclusion_patterns = patterns
+        @backtrace_formatter.exclusion_patterns = patterns
+      end
+
+      # Regexps used to include lines in backtraces.
+      #
+      # Defaults to [Regexp.new Dir.getwd].
+      #
+      # Lines that match an exclusion _and_ an inclusion pattern
+      # will be included.
+      #
+      # You can modify the list via the getter, or replace it with the setter.
+      def backtrace_inclusion_patterns
+        @backtrace_formatter.inclusion_patterns
+      end
+
+      def backtrace_inclusion_patterns=(patterns)
+        @backtrace_formatter.inclusion_patterns = patterns
       end
 
       # Sets the mock framework adapter module.
@@ -447,11 +476,11 @@ module RSpec
       end
 
       def full_backtrace?
-        @backtrace_cleaner.full_backtrace?
+        @backtrace_formatter.full_backtrace?
       end
 
       def full_backtrace=(true_or_false)
-        @backtrace_cleaner.full_backtrace = true_or_false
+        @backtrace_formatter.full_backtrace = true_or_false
       end
 
       def color(output=output_stream)
@@ -465,7 +494,7 @@ module RSpec
       def color=(bool)
         if bool
           if RSpec.windows_os? and not ENV['ANSICON']
-            warn "You must use ANSICON 1.31 or later (http://adoxa.3eeweb.com/ansicon/) to use colour on Windows"
+            RSpec.warning "You must use ANSICON 1.31 or later (http://adoxa.3eeweb.com/ansicon/) to use colour on Windows"
             @color = false
           else
             @color = true
@@ -541,7 +570,7 @@ module RSpec
         @reporter ||= begin
                         add_formatter('progress') if formatters.empty?
                         add_formatter(RSpec::Core::Formatters::DeprecationFormatter, deprecation_stream, output_stream)
-                        Reporter.new(*formatters)
+                        Reporter.new(self, *formatters)
                       end
       end
 
@@ -844,7 +873,6 @@ module RSpec
       def load_spec_files
         files_to_run.uniq.each {|f| load File.expand_path(f) }
         @spec_files_loaded = true
-        raise_if_rspec_1_is_loaded
       end
 
       # @private
@@ -866,98 +894,67 @@ module RSpec
         @format_docstrings_block ||= DEFAULT_FORMATTER
       end
 
-      # @api
-      #
-      # Sets the seed value and sets `order='rand'`
-      def seed=(seed)
-        order_and_seed_from_seed(seed)
-      end
-
-      # @api
-      #
-      # Sets the order and, if order is `'rand:<seed>'`, also sets the seed.
-      def order=(type)
-        order_and_seed_from_order(type)
-      end
-
-      def randomize?
-        order.to_s.match(/rand/)
-      end
-
       # @private
-      DEFAULT_ORDERING = lambda { |list| list }
-
-      # @private
-      RANDOM_ORDERING = lambda do |list|
-        Kernel.srand RSpec.configuration.seed
-        ordering = list.sort_by { Kernel.rand(list.size) }
-        Kernel.srand # reset random generation
-        ordering
+      def self.delegate_to_ordering_manager(*methods)
+        methods.each do |method|
+          define_method method do |*args, &block|
+            ordering_manager.__send__(method, *args, &block)
+          end
+        end
       end
 
-      # Sets a strategy by which to order examples.
+      # @macro delegate_to_ordering_manager
+      #
+      # Sets the seed value and sets the default global ordering to random.
+      delegate_to_ordering_manager :seed=
+
+      # @macro delegate_to_ordering_manager
+      # Seed for random ordering (default: generated randomly each run).
+      #
+      # When you run specs with `--order random`, RSpec generates a random seed
+      # for the randomization and prints it to the `output_stream` (assuming
+      # you're using RSpec's built-in formatters). If you discover an ordering
+      # dependency (i.e. examples fail intermittently depending on order), set
+      # this (on Configuration or on the command line with `--seed`) to run
+      # using the same seed while you debug the issue.
+      #
+      # We recommend, actually, that you use the command line approach so you
+      # don't accidentally leave the seed encoded.
+      delegate_to_ordering_manager :seed
+
+      # @macro delegate_to_ordering_manager
+      #
+      # Sets the default global order and, if order is `'rand:<seed>'`, also sets the seed.
+      delegate_to_ordering_manager :order=
+
+      # @macro delegate_to_ordering_manager
+      # Registers a named ordering strategy that can later be
+      # used to order an example group's subgroups by adding
+      # `:order => <name>` metadata to the example group.
+      #
+      # @param name [Symbol] The name of the ordering.
+      # @yield Block that will order the given examples or example groups
+      # @yieldparam list [Array<RSpec::Core::Example>, Array<RSpec::Core::ExampleGropu>] The examples or groups to order
+      # @yieldreturn [Array<RSpec::Core::Example>, Array<RSpec::Core::ExampleGroup>] The re-ordered examples or groups
       #
       # @example
-      #   RSpec.configure do |config|
-      #     config.order_examples do |examples|
-      #       examples.reverse
+      #   RSpec.configure do |rspec|
+      #     rspec.register_ordering :reverse do |list|
+      #       list.reverse
       #     end
       #   end
       #
-      # @see #order_groups
-      # @see #order_groups_and_examples
-      # @see #order=
-      # @see #seed=
-      def order_examples(&block)
-        @example_ordering_block = block
-        @order = "custom" unless built_in_orderer?(block)
-      end
-
-      # @private
-      def example_ordering_block
-        @example_ordering_block ||= DEFAULT_ORDERING
-      end
-
-      # Sets a strategy by which to order groups.
-      #
-      # @example
-      #   RSpec.configure do |config|
-      #     config.order_groups do |groups|
-      #       groups.reverse
-      #     end
+      #   describe MyClass, :order => :reverse do
+      #     # ...
       #   end
       #
-      # @see #order_examples
-      # @see #order_groups_and_examples
-      # @see #order=
-      # @see #seed=
-      def order_groups(&block)
-        @group_ordering_block = block
-        @order = "custom" unless built_in_orderer?(block)
-      end
+      # @note Pass the symbol `:global` to set the ordering strategy that
+      #   will be used to order the top-level example groups and any example
+      #   groups that do not have declared `:order` metadata.
+      delegate_to_ordering_manager :register_ordering
 
       # @private
-      def group_ordering_block
-        @group_ordering_block ||= DEFAULT_ORDERING
-      end
-
-      # Sets a strategy by which to order groups and examples.
-      #
-      # @example
-      #   RSpec.configure do |config|
-      #     config.order_groups_and_examples do |groups_or_examples|
-      #       groups_or_examples.reverse
-      #     end
-      #   end
-      #
-      # @see #order_groups
-      # @see #order_examples
-      # @see #order=
-      # @see #seed=
-      def order_groups_and_examples(&block)
-        order_groups(&block)
-        order_examples(&block)
-      end
+      delegate_to_ordering_manager :seed_used?, :ordering_registry
 
       # Set Ruby warnings on or off
       def warnings= value
@@ -971,10 +968,10 @@ module RSpec
     private
 
       def get_files_to_run(paths)
-        paths.map do |path|
+        FlatMap.flat_map(paths) do |path|
           path = path.gsub(File::ALT_SEPARATOR, File::SEPARATOR) if File::ALT_SEPARATOR
           File.directory?(path) ? gather_directories(path) : extract_location(path)
-        end.flatten.sort
+        end.sort
       end
 
       def gather_directories(path)
@@ -1008,22 +1005,6 @@ module RSpec
         end
       end
 
-      def raise_if_rspec_1_is_loaded
-        if defined?(Spec) && defined?(Spec::VERSION::MAJOR) && Spec::VERSION::MAJOR == 1
-          raise <<-MESSAGE
-
-#{'*'*80}
-  You are running rspec-2, but it seems as though rspec-1 has been loaded as
-  well.  This is likely due to a statement like this somewhere in the specs:
-
-      require 'spec'
-
-  Please locate that statement, remove it, and try again.
-#{'*'*80}
-MESSAGE
-        end
-      end
-
       def output_to_tty?(output=output_stream)
         tty? || (output.respond_to?(:tty?) && output.tty?)
       end
@@ -1050,10 +1031,9 @@ MESSAGE
           formatter_ref
         elsif string_const?(formatter_ref)
           begin
-            eval(formatter_ref)
+            formatter_ref.gsub(/^::/,'').split('::').inject(Object) { |const,string| const.const_get string }
           rescue NameError
-            require path_for(formatter_ref)
-            eval(formatter_ref)
+            require( path_for(formatter_ref) ) ? retry : raise
           end
         end
       end
@@ -1085,37 +1065,6 @@ MESSAGE
         FileUtils.mkdir_p(File.dirname(path))
         File.new(path, 'w')
       end
-
-      def order_and_seed_from_seed(value)
-        order_groups_and_examples(&RANDOM_ORDERING)
-        @order, @seed = 'rand', value.to_i
-        [@order, @seed]
-      end
-
-      def set_order_and_seed(hash)
-        hash[:order], seed = order_and_seed_from_order(hash[:order])
-        hash[:seed] = seed if seed
-      end
-
-      def order_and_seed_from_order(type)
-        order, seed = type.to_s.split(':')
-        @order = order
-        @seed  = seed = seed.to_i if seed
-
-        if randomize?
-          order_groups_and_examples(&RANDOM_ORDERING)
-        elsif order == 'default'
-          @order, @seed = nil, nil
-          order_groups_and_examples(&DEFAULT_ORDERING)
-        end
-
-        return order, seed
-      end
-
-      def built_in_orderer?(block)
-        [DEFAULT_ORDERING, RANDOM_ORDERING].include?(block)
-      end
-
     end
   end
 end

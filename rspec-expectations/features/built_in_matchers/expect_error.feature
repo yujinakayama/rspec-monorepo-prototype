@@ -110,26 +110,13 @@ Feature: raise_error matcher
       describe "#foo" do
         it "raises NameError" do
           expect { Object.new.foo }.to raise_error { |error|
-            error.should be_a(NameError)
+            expect(error).to be_a(NameError)
           }
         end
       end
       """
       When I run `rspec example_spec`
       Then the example should pass
-
-  Scenario: expect no occurence of a specific error
-    Given a file named "example_spec" with:
-      """
-      describe Object, "#public_instance_methods" do
-        it "does not raise" do
-          expect { Object.public_instance_methods }.
-            not_to raise_error(NameError)
-        end
-      end
-      """
-    When I run `rspec example_spec`
-    Then the example should pass
 
   Scenario: expect no error at all
     Given a file named "example_spec" with:

@@ -80,16 +80,6 @@ module RSpec::Core
         config.should_receive(:load).once
         config.load_spec_files
       end
-
-      context "with rspec-1 loaded" do
-        before { stub_const("Spec::VERSION::MAJOR", 1) }
-
-        it "raises with a helpful message" do
-          expect {
-            config.load_spec_files
-          }.to raise_error(/rspec-1 has been loaded/)
-        end
-      end
     end
 
     describe "#mock_framework" do
@@ -487,16 +477,15 @@ module RSpec::Core
 
         context "after files have already been loaded" do
           it 'will warn that it will have no effect' do
-            allow(Kernel).to receive(:warn)
+            expect_warning_with_call_site(__FILE__, __LINE__ + 2, /has no effect/)
             config.load_spec_files
-            config.send(setter, "rspec/**/*.spec"); line = __LINE__
-            expect(Kernel).to have_received(:warn).with(/has no effect.*#{__FILE__}:#{line}/)
+            config.send(setter, "rspec/**/*.spec")
           end
 
           it 'will not warn if reset is called after load_spec_files' do
             config.load_spec_files
             config.reset
-            expect(Kernel).to_not receive(:warn)
+            expect(RSpec).to_not receive(:warning)
             config.send(setter, "rspec/**/*.spec")
           end
         end
@@ -715,7 +704,6 @@ module RSpec::Core
               @original_host  = RbConfig::CONFIG['host_os']
               RbConfig::CONFIG['host_os'] = 'mingw'
               config.stub(:require)
-              config.stub(:warn)
             end
 
             after do
@@ -743,10 +731,13 @@ module RSpec::Core
             end
 
             context "with ANSICON NOT available" do
+              before do
+                allow_warning
+              end
+
               it "warns to install ANSICON" do
                 config.stub(:require) { raise LoadError }
-                config.should_receive(:warn).
-                  with(/You must use ANSICON/)
+                expect_warning_with_call_site(__FILE__, __LINE__ + 1, /You must use ANSICON/)
                 config.send "#{color_option}=", true
               end
 
@@ -969,8 +960,6 @@ module RSpec::Core
     end
 
     describe "line_numbers=" do
-      before { config.filter_manager.stub(:warn) }
-
       it "sets the line numbers" do
         config.line_numbers = ['37']
         expect(config.filter).to eq({:line_numbers => [37]})
@@ -1001,26 +990,12 @@ module RSpec::Core
     end
 
     describe "#full_backtrace=" do
-      context "given true" do
-        it "clears the backtrace exclusion patterns" do
-          config.full_backtrace = true
-          expect(config.backtrace_exclusion_patterns).to eq([])
-        end
-      end
-
-      context "given false" do
-        it "restores backtrace clean patterns" do
-          config.full_backtrace = false
-          expect(config.backtrace_exclusion_patterns).to eq(RSpec::Core::BacktraceCleaner::DEFAULT_EXCLUSION_PATTERNS)
-        end
-      end
-
       it "doesn't impact other instances of config" do
         config_1 = Configuration.new
         config_2 = Configuration.new
 
         config_1.full_backtrace = true
-        expect(config_2.backtrace_exclusion_patterns).not_to be_empty
+        expect(config_2.full_backtrace?).to be_falsey
       end
     end
 
@@ -1028,7 +1003,7 @@ module RSpec::Core
       it "actually receives the new filter values" do
         config = Configuration.new
         config.backtrace_exclusion_patterns = [/.*/]
-        expect(config.backtrace_cleaner.exclude? "this").to be_truthy
+        expect(config.backtrace_formatter.exclude? "this").to be_truthy
       end
     end
 
@@ -1048,33 +1023,7 @@ module RSpec::Core
       it "can be appended to" do
         config = Configuration.new
         config.backtrace_exclusion_patterns << /.*/
-        expect(config.backtrace_cleaner.exclude? "this").to be_truthy
-      end
-    end
-
-    describe ".backtrace_cleaner#exclude? defaults" do
-      it "returns true for rspec files" do
-        expect(config.backtrace_cleaner.exclude?("lib/rspec/core.rb")).to be_truthy
-      end
-
-      it "returns true for spec_helper" do
-        expect(config.backtrace_cleaner.exclude?("spec/spec_helper.rb")).to be_truthy
-      end
-
-      it "returns true for java files (for JRuby)" do
-        expect(config.backtrace_cleaner.exclude?("org/jruby/RubyArray.java:2336")).to be_truthy
-      end
-
-      it "returns true for files within installed gems" do
-        expect(config.backtrace_cleaner.exclude?('ruby-1.8.7-p334/gems/mygem-2.3.0/lib/mygem.rb')).to be_truthy
-      end
-
-      it "returns false for files in projects containing 'gems' in the name" do
-        expect(config.backtrace_cleaner.exclude?('code/my-gems-plugin/lib/plugin.rb')).to be_falsey
-      end
-
-      it "returns false for something in the current working directory" do
-        expect(config.backtrace_cleaner.exclude?("#{Dir.getwd}/arbitrary")).to be_falsey
+        expect(config.backtrace_formatter.exclude? "this").to be_truthy
       end
     end
 
@@ -1312,32 +1261,43 @@ module RSpec::Core
     end
 
     describe "#force" do
-      it "forces order" do
-        config.force :order => "default"
-        config.order = "rand"
-        expect(config.order).to eq("default")
-      end
+      context "for ordering options" do
+        let(:list) { [1, 2, 3, 4] }
+        let(:ordering_strategy) { config.ordering_registry.fetch(:global) }
 
-      it "forces order and seed with :order => 'rand:37'" do
-        config.force :order => "rand:37"
-        config.order = "default"
-        expect(config.order).to eq("rand")
-        expect(config.seed).to eq(37)
-      end
+        let(:shuffled) do
+          Kernel.srand(37)
+          list.shuffle
+        end
 
-      it "forces order and seed with :seed => '37'" do
-        config.force :seed => "37"
-        config.order = "default"
-        expect(config.seed).to eq(37)
-        expect(config.order).to eq("rand")
-      end
+        specify "CLI `--order defined` takes precedence over `config.order = rand`" do
+          config.force :order => "defined"
+          config.order = "rand"
 
-      it 'can set random ordering' do
-        config.force :seed => "rand:37"
-        RSpec.stub(:configuration => config)
-        list = [1, 2, 3, 4].extend(Extensions::Ordered::Examples)
-        Kernel.should_receive(:rand).and_return(3, 1, 4, 2)
-        expect(list.ordered).to eq([2, 4, 1, 3])
+          expect(ordering_strategy.order(list)).to eq([1, 2, 3, 4])
+        end
+
+        specify "CLI `--order rand:37` takes precedence over `config.order = defined`" do
+          config.force :order => "rand:37"
+          config.order = "defined"
+
+          expect(ordering_strategy.order(list)).to eq(shuffled)
+        end
+
+        specify "CLI `--seed 37` forces order and seed" do
+          config.force :seed => 37
+          config.order = "defined"
+          config.seed  = 145
+
+          expect(ordering_strategy.order(list)).to eq(shuffled)
+          expect(config.seed).to eq(37)
+        end
+
+        specify "CLI `--order defined` takes precedence over `config.register_ordering(:global)`" do
+          config.force :order => "defined"
+          config.register_ordering(:global, &:reverse)
+          expect(ordering_strategy.order(list)).to eq([1, 2, 3, 4])
+        end
       end
 
       it "forces 'false' value" do
@@ -1358,31 +1318,41 @@ module RSpec::Core
       end
     end
 
-    describe '#randomize?' do
-      context 'with order set to :random' do
-        before { config.order = :random }
-
-        it 'returns true' do
-          expect(config.randomize?).to be_truthy
-        end
+    describe "#seed_used?" do
+      def use_seed_on(registry)
+        registry.fetch(:random).order([1, 2])
       end
 
-      context 'with order set to nil' do
-        before { config.order = nil }
+      it 'returns false if neither ordering registry used the seed' do
+        expect(config.seed_used?).to be false
+      end
 
-        it 'returns false' do
-          expect(config.randomize?).to be_falsey
-        end
+      it 'returns true if the ordering registry used the seed' do
+        use_seed_on(config.ordering_registry)
+        expect(config.seed_used?).to be true
       end
     end
 
     describe '#order=' do
+      context 'given "random"' do
+        before do
+          config.seed = 7654
+          config.order = 'random'
+        end
+
+        it 'does not change the seed' do
+          expect(config.seed).to eq(7654)
+        end
+
+        it 'sets up random ordering' do
+          RSpec.stub(:configuration => config)
+          global_ordering = config.ordering_registry.fetch(:global)
+          expect(global_ordering).to be_an_instance_of(Ordering::Random)
+        end
+      end
+
       context 'given "random:123"' do
         before { config.order = 'random:123' }
-
-        it 'sets order to "random"' do
-          expect(config.order).to eq('random')
-        end
 
         it 'sets seed to 123' do
           expect(config.seed).to eq(123)
@@ -1390,94 +1360,55 @@ module RSpec::Core
 
         it 'sets up random ordering' do
           RSpec.stub(:configuration => config)
-          list = [1, 2, 3, 4].extend(Extensions::Ordered::Examples)
-          Kernel.should_receive(:rand).and_return(3, 1, 4, 2)
-          expect(list.ordered).to eq([2, 4, 1, 3])
+          global_ordering = config.ordering_registry.fetch(:global)
+          expect(global_ordering).to be_an_instance_of(Ordering::Random)
         end
       end
 
-      context 'given "default"' do
+      context 'given "defined"' do
         before do
           config.order = 'rand:123'
-          config.order = 'default'
+          config.order = 'defined'
         end
 
-        it "sets the order to nil" do
-          expect(config.order).to be_nil
-        end
-
-        it "sets the seed to nil" do
-          expect(config.seed).to be_nil
+        it "does not change the seed" do
+          expect(config.seed).to eq(123)
         end
 
         it 'clears the random ordering' do
           RSpec.stub(:configuration => config)
-          list = [1, 2, 3, 4].extend(Extensions::Ordered::Examples)
-          Kernel.should_not_receive(:rand)
-          expect(list.ordered).to eq([1, 2, 3, 4])
+          list = [1, 2, 3, 4]
+          ordering_strategy = config.ordering_registry.fetch(:global)
+          expect(ordering_strategy.order(list)).to eq([1, 2, 3, 4])
         end
       end
     end
 
-    describe "#order_examples" do
-      before { RSpec.stub(:configuration => config) }
-
-      it 'sets a block that determines the ordering of a collection extended with Extensions::Ordered::Examples' do
-        examples = [1, 2, 3, 4]
-        examples.extend Extensions::Ordered::Examples
-        config.order_examples { |examples_to_order| examples_to_order.reverse }
-        expect(examples.ordered).to eq([4, 3, 2, 1])
+    describe "#register_ordering" do
+      def register_reverse_ordering
+        config.register_ordering(:reverse, &:reverse)
       end
 
-      it 'sets #order to "custom"' do
-        config.order_examples { |examples| examples.reverse }
-        expect(config.order).to eq("custom")
-      end
-    end
+      it 'stores the ordering for later use' do
+        register_reverse_ordering
 
-    describe "#example_ordering_block" do
-      it 'defaults to a block that returns the passed argument' do
-        expect(config.example_ordering_block.call([1, 2, 3])).to eq([1, 2, 3])
-      end
-    end
-
-    describe "#order_groups" do
-      before { RSpec.stub(:configuration => config) }
-
-      it 'sets a block that determines the ordering of a collection extended with Extensions::Ordered::ExampleGroups' do
-        groups = [1, 2, 3, 4]
-        groups.extend Extensions::Ordered::ExampleGroups
-        config.order_groups { |groups_to_order| groups_to_order.reverse }
-        expect(groups.ordered).to eq([4, 3, 2, 1])
+        list = [1, 2, 3]
+        strategy = config.ordering_registry.fetch(:reverse)
+        expect(strategy).to be_a(Ordering::Custom)
+        expect(strategy.order(list)).to eq([3, 2, 1])
       end
 
-      it 'sets #order to "custom"' do
-        config.order_groups { |groups| groups.reverse }
-        expect(config.order).to eq("custom")
-      end
-    end
+      it 'can register an ordering object' do
+        strategy = Object.new
+        def strategy.order(list)
+          list.reverse
+        end
 
-    describe "#group_ordering_block" do
-      it 'defaults to a block that returns the passed argument' do
-        expect(config.group_ordering_block.call([1, 2, 3])).to eq([1, 2, 3])
-      end
-    end
-
-    describe "#order_groups_and_examples" do
-      let(:examples) { [1, 2, 3, 4].extend Extensions::Ordered::Examples }
-      let(:groups)   { [1, 2, 3, 4].extend Extensions::Ordered::ExampleGroups }
-
-      before do
-        RSpec.stub(:configuration => config)
-        config.order_groups_and_examples { |list| list.reverse }
-      end
-
-      it 'sets a block that determines the ordering of a collection extended with Extensions::Ordered::Examples' do
-        expect(examples.ordered).to eq([4, 3, 2, 1])
-      end
-
-      it 'sets a block that determines the ordering of a collection extended with Extensions::Ordered::ExampleGroups' do
-        expect(groups.ordered).to eq([4, 3, 2, 1])
+        config.register_ordering(:reverse, strategy)
+        list = [1, 2, 3]
+        fetched = config.ordering_registry.fetch(:reverse)
+        expect(fetched).to be(strategy)
+        expect(fetched.order(list)).to eq([3, 2, 1])
       end
     end
 

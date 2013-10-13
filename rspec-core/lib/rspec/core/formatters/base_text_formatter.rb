@@ -248,7 +248,7 @@ module RSpec
       private
 
         def format_caller(caller_info)
-          backtrace_line(caller_info.to_s.split(':in `block').first)
+          configuration.backtrace_formatter.backtrace_line(caller_info.to_s.split(':in `block').first)
         end
 
         def dump_backtrace(example)
@@ -263,7 +263,7 @@ module RSpec
         end
 
         def pending_fixed?(example)
-          example.execution_result[:exception].pending_fixed?
+          example.execution_result[:pending_fixed]
         end
 
         def dump_failure(example, index)
@@ -291,7 +291,7 @@ module RSpec
 
         def dump_shared_failure_info(group)
           output.puts "#{long_padding}Shared Example Group: \"#{group.metadata[:shared_group_name]}\" called from " +
-            "#{backtrace_line(group.metadata[:example_group][:location])}"
+            "#{configuration.backtrace_formatter.backtrace_line(group.metadata[:example_group][:location])}"
         end
 
         def find_shared_group(example)

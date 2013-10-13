@@ -44,12 +44,19 @@ Spork.prefork do
     end
   end
 
+  module SandboxHelpers
+    def current_sandboxed_output_stream
+      RSpec.configuration.output_stream ||= StringIO.new
+    end
+  end
+
   module Sandboxing
     def self.sandboxed(&block)
       @orig_config = RSpec.configuration
       @orig_world  = RSpec.world
       @orig_example = RSpec.current_example
       new_config = RSpec::Core::Configuration.new
+      new_config.output = StringIO.new
       new_world  = RSpec::Core::World.new(new_config)
       RSpec.configuration = new_config
       RSpec.world = new_world
@@ -112,10 +119,18 @@ Spork.prefork do
     # structural
     c.alias_it_behaves_like_to 'it_has_behavior'
     c.around {|example| Sandboxing.sandboxed { example.run }}
+    c.include SandboxHelpers
     c.include(RSpecHelpers)
     c.include Aruba::Api, :example_group => {
       :file_path => /spec\/command_line/
     }
+
+    # Use the doc formatter when running individual files.
+    # This is too verbose when running all spec files but
+    # is nice for a single file.
+    if c.files_to_run.one? && c.formatters.none?
+      c.formatter = 'doc'
+    end
 
     c.expect_with :rspec do |expectations|
       expectations.syntax = :expect

@@ -87,6 +87,11 @@ module RSpec::Core
           options[:failure_exit_code] = code
         end
 
+        parser.on('--dry-run', 'Print the formatter output of your suite without',
+                  '  running any examples or hooks') do |o|
+          options[:dry_run] = true
+        end
+
         parser.on('-X', '--[no-]drb', 'Run examples via DRb.') do |o|
           options[:drb] = o
         end
@@ -102,7 +107,7 @@ module RSpec::Core
         end
 
         parser.on('--configure', 'Deprecated. Use --init instead.') do |cmd|
-          warn "--configure is deprecated with no effect. Use --init instead."
+          RSpec.warning "--configure is deprecated with no effect. Use --init instead.", :call_site => nil
           exit
         end
 
@@ -144,9 +149,10 @@ module RSpec::Core
                                          begin
                                            Integer(argument)
                                          rescue ArgumentError
-                                           Kernel.warn "Non integer specified as profile count, seperate " +
+                                           RSpec.warning "Non integer specified as profile count, seperate " +
                                                        "your path from options with -- e.g. " +
-                                                       "`rspec --profile -- #{argument}`"
+                                                       "`rspec --profile -- #{argument}`",
+                                                       :call_site => nil
                                            true
                                          end
                                        end
@@ -189,11 +195,21 @@ FILTERING
                   '  - TAG is always converted to a symbol') do |tag|
           filter_type = tag =~ /^~/ ? :exclusion_filter : :inclusion_filter
 
-          name,value = tag.gsub(/^(~@|~|@)/, '').split(':')
+          name,value = tag.gsub(/^(~@|~|@)/, '').split(':',2)
           name = name.to_sym
 
           options[filter_type] ||= {}
-          options[filter_type][name] = value.nil? ? true : eval(value) rescue value
+          options[filter_type][name] = case value
+                                         when  nil        then true # The default value for tags is true
+                                         when 'true'      then true
+                                         when 'false'     then false
+                                         when 'nil'       then nil
+                                         when /^:/        then value[1..-1].to_sym
+                                         when /^\d+$/     then Integer(value)
+                                         when /^\d+.\d+$/ then Float(value)
+                                       else
+                                         value
+                                       end
         end
 
         parser.on('--default-path PATH', 'Set the default path where RSpec looks for examples (can',

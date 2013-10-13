@@ -7,10 +7,52 @@ Breaking Changes for 3.0.0:
 * Remove the deprecated `be_close` matcher, preferring `be_within` instead.
   (Sam Phippen)
 * Rename `be_true` and `be_false` to `be_truthy` and `be_falsey`. (Sam Phippen)
+* Make `expect { }.to_not raise_error(SomeSpecificClass, message)`,
+       `expect { }.to_not raise_error(SomeSpecificClass)` and
+       `expect { }.to_not raise_error(message)` invalid, since they are prone
+  to hiding failures. Instead, use `expect { }.to_not raise_error` (with no
+  args). (Sam Phippen)
+* Within `RSpec::Matchers.define` blocks, helper methods made available
+  either via `def self.helper` or `extend HelperModule` are no longer
+  available to the `match` block (or any of the others). Instead
+  `include` your helper module and define the helper method as an
+  instance method. (Myron Marston)
 
 Enhancements:
 
 * Support do..end style block with `raise_error` matcher. (Yuji Nakayama)
+* Rewrote custom matcher DSL to simplify it's implementation and solve a
+  few issues. (Myron Marston)
+* Allow early `return` from within custom matcher DSL blocks. (Myron
+  Marston)
+* The custom matcher DSL's `chain` can now accept a block. (Myron
+  Marston)
+
+Bug Fixes:
+
+* Allow `include` and `match` matchers to be used from within a
+  DSL-defined custom matcher's `match` block. (Myron Marston)
+
+Deprecations:
+
+ * Using the old `:should` syntax without explicitly configuring it is deprecated.
+   It will continue to work but will emit a deprecation warning in RSpec 3 if
+   you do not explicitly enable it. (Sam Phippen)
+
+Bug fixes:
+
+* Make the `match` matcher produce a diff output (Jon Rowe, Ben Moss)
+
+### 2.14.3 / 2013-09-22
+[full changelog](http://github.com/rspec/rspec-expectations/compare/v2.14.2...v2.14.3)
+
+Bug fixes
+
+* Fix operator matchers (`should` syntax) when `method` is redefined on target.
+  (Brandon Turner)
+* Fix diffing of hashes with object based keys. (Jon Rowe)
+* Fix operator matchers (`should` syntax) when operator is defined via
+  `method_missing` (Jon Rowe)
 
 ### 2.14.2 / 2013-08-14
 [full changelog](http://github.com/rspec/rspec-expectations/compare/v2.14.1...v2.14.2)

@@ -45,20 +45,6 @@ describe RSpec::Core::Example, :parent_metadata => 'sample' do
       example_group.run
       expect(example.exception).to be_nil
     end
-
-    it "returns false for pending_fixed? if not pending fixed" do
-      example = example_group.example { fail }
-      example_group.run
-      expect(example.exception).not_to be_pending_fixed
-    end
-
-    it "returns true for pending_fixed? if pending fixed" do
-      example = example_group.example do
-        pending("fixed") {}
-      end
-      example_group.run
-      expect(example.exception).to be_pending_fixed
-    end
   end
 
   describe "when there is an explicit description" do
@@ -345,6 +331,61 @@ describe RSpec::Core::Example, :parent_metadata => 'sample' do
         message = run_and_capture_reported_message(group)
         expect(message).to be_nil
       end
+
+      it "leaves a raised exception unmodified (GH-1103)" do
+        # set the backtrace, otherwise MRI will build a whole new object,
+        # and thus mess with our expectations. Rubinius and JRuby are not
+        # affected.
+        exception = StandardError.new
+        exception.set_backtrace([])
+
+        group = RSpec::Core::ExampleGroup.describe do
+          example { raise exception.freeze }
+        end
+        group.run
+
+        actual = group.examples.first.metadata[:execution_result][:exception]
+        expect(actual.__id__).to eq(exception.__id__)
+      end
+    end
+
+    context "with --dry-run" do
+      before { RSpec.configuration.dry_run = true }
+
+      it "does not execute any examples or hooks" do
+        executed = []
+
+        RSpec.configure do |c|
+          c.before(:each) { executed << :before_each_config }
+          c.before(:all)  { executed << :before_all_config }
+          c.after(:each)  { executed << :after_each_config }
+          c.after(:all)   { executed << :after_all_config }
+          c.around(:each) { |ex| executed << :around_each_config; ex.run }
+        end
+
+        group = RSpec::Core::ExampleGroup.describe do
+          before(:all)  { executed << :before_all }
+          before(:each) { executed << :before_each }
+          after(:all)   { executed << :after_all }
+          after(:each)  { executed << :after_each }
+          around(:each) { |ex| executed << :around_each; ex.run }
+
+          example { executed << :example }
+
+          context "nested" do
+            before(:all)  { executed << :nested_before_all }
+            before(:each) { executed << :nested_before_each }
+            after(:all)   { executed << :nested_after_all }
+            after(:each)  { executed << :nested_after_each }
+            around(:each) { |ex| executed << :nested_around_each; ex.run }
+
+            example { executed << :nested_example }
+          end
+        end
+
+        group.run
+        expect(executed).to eq([])
+      end
     end
   end
 
@@ -369,6 +410,30 @@ describe RSpec::Core::Example, :parent_metadata => 'sample' do
         end
         group.run
         expect(blah).to be(:success)
+      end
+
+      context "with a block" do
+        it "sets the example to pending if block fails" do
+          group = RSpec::Core::ExampleGroup.describe do
+            example do
+              pending { expect(1).to eq(2) }
+            end
+          end
+          group.run
+          expect(group.examples.first.metadata[:execution_result][:status]).to eq('pending')
+          expect(group.examples.first.metadata[:execution_result][:pending_fixed]).to eq(false)
+        end
+
+        it "fails if block is fixed, i.e. does not raise" do
+          group = RSpec::Core::ExampleGroup.describe do
+            example do
+              pending {}
+            end
+          end
+          group.run
+          expect(group.examples.first.metadata[:execution_result][:status]).to eq('failed')
+          expect(group.examples.first.metadata[:execution_result][:pending_fixed]).to eq(true)
+        end
       end
     end
 

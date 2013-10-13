@@ -14,7 +14,8 @@ require 'rspec/core/reporter'
 describe RSpec::Core::Formatters::JsonFormatter do
   let(:output) { StringIO.new }
   let(:formatter) { RSpec::Core::Formatters::JsonFormatter.new(output) }
-  let(:reporter) { RSpec::Core::Reporter.new(formatter) }
+  let(:config) { RSpec::Core::Configuration.new }
+  let(:reporter) { RSpec::Core::Reporter.new(config, formatter) }
 
   it "outputs json (brittle high level functional test)" do
     group = RSpec::Core::ExampleGroup.describe("one apiece") do
@@ -97,11 +98,11 @@ describe RSpec::Core::Formatters::JsonFormatter do
 
   describe "#dump_summary" do
     it "adds summary info to the output hash" do
-      duration, example_count, failure_count, pending_count = 1.0, 2, 1, 1
-      formatter.dump_summary(duration, example_count, failure_count, pending_count)
+      values = { :duration => 1.0, :example_count => 2, :failure_count => 1, :pending_count => 1 }
+      formatter.dump_summary(values[:duration], values[:example_count], values[:failure_count], values[:pending_count])
       summary = formatter.output_hash[:summary]
-      %w(duration example_count failure_count pending_count).each do |key|
-        expect(summary[key.to_sym]).to eq eval(key)
+      values.each do |key,value|
+        expect(summary[key]).to eq value
       end
       summary_line = formatter.output_hash[:summary_line]
       expect(summary_line).to eq "2 examples, 1 failure, 1 pending"
@@ -109,14 +110,12 @@ describe RSpec::Core::Formatters::JsonFormatter do
   end
 
   describe "#dump_profile_slowest_examples" do
-    example_line_number = nil
 
     before do
       group = RSpec::Core::ExampleGroup.describe("group") do
         # Use a sleep so there is some measurable time, to ensure
         # the reported percent is 100%, not 0%.
         example("example") { sleep 0.001 }
-        example_line_number = __LINE__ - 1
       end
       group.run(double('reporter').as_null_object)
 

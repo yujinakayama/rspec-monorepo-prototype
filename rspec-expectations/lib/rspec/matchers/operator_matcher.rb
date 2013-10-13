@@ -60,10 +60,12 @@ module RSpec
         "#{@operator} #{@expected.inspect}"
       end
 
-      private
+    private
 
       def uses_generic_implementation_of?(op)
-        @actual.method(op).owner == ::Kernel
+        Expectations.method_handle_for(@actual, op).owner == ::Kernel
+      rescue NameError
+        false
       end
 
       def eval_match(actual, operator, expected)
