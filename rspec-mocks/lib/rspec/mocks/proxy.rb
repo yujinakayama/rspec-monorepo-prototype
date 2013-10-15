@@ -11,6 +11,7 @@ module RSpec
         @expectation_ordering = RSpec::Mocks::space.expectation_ordering
         @messages_received = []
         @options = options
+        @already_proxied_respond_to = false
         @null_object = false
       end
 
@@ -33,6 +34,16 @@ module RSpec
       # @private
       def method_handle_for(message)
         nil
+      end
+
+      # @private
+      def already_proxied_respond_to
+        @already_proxied_respond_to = true
+      end
+
+      # @private
+      def already_proxied_respond_to?
+        @already_proxied_respond_to
       end
 
       # @private
