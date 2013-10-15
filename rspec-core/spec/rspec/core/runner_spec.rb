@@ -47,6 +47,7 @@ module RSpec::Core
 
         expect(RSpec::Core::Runner.running_in_drb?).to be_falsey
       end
+
     end
 
     describe "#run" do
@@ -60,6 +61,7 @@ module RSpec::Core
       end
 
       context "with --drb or -X" do
+
         before(:each) do
           @options = RSpec::Core::ConfigurationOptions.new(%w[--drb --drb-port 8181 --color])
           RSpec::Core::ConfigurationOptions.stub(:new) { @options }
