@@ -2,8 +2,7 @@ require 'spec_helper'
 
 module RSpec
   module Mocks
-    describe 'MockExpectationError' do
-
+    describe 'Calling a method that catches StandardError' do
       class Foo
         def self.foo
           bar
@@ -11,8 +10,8 @@ module RSpec
         end
       end
 
-      it 'is not caught by StandardError rescue blocks' do
-        expect(Foo).not_to receive(:bar)
+      it 'still reports mock failures' do
+        Foo.should_not_receive :bar
         expect {
           Foo.foo
         }.to raise_error(RSpec::Mocks::MockExpectationError)

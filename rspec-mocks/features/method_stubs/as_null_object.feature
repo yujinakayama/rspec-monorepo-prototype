@@ -13,7 +13,7 @@ Feature: as_null_object
         let(:null_object) { double('null object').as_null_object }
 
         it "responds to any method that is not defined" do
-          expect(null_object).to respond_to(:an_undefined_method)
+          null_object.should respond_to(:an_undefined_method)
         end
 
         it "allows explicit stubs using expect syntax" do
@@ -23,16 +23,16 @@ Feature: as_null_object
 
         it "allows explicit stubs using should syntax" do
           null_object.stub(:foo) { "bar" }
-          expect(null_object.foo).to eq("bar")
+          null_object.foo.should eq("bar")
         end
 
         it "allows explicit expectations" do
-          expect(null_object).to receive(:something)
+          null_object.should_receive(:something)
           null_object.something
         end
 
         it "supports Array#flatten" do
-          expect([null_object].flatten).to eq([null_object])
+          [null_object].flatten.should eq([null_object])
         end
       end
       """
