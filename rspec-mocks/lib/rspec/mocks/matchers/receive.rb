@@ -91,6 +91,7 @@ module RSpec
           @recorded_customizations.each do |customization|
             customization.playback_onto(expectation)
           end
+          expectation
         end
 
         class Customization
