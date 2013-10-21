@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.license     = "MIT"
   s.authors     = ["Steven Baker", "David Chelimsky", "Myron Marston"]
-  s.email       = "rspec-users@rubyforge.org"
+  s.email       = "rspec@googlegroups.com"
   s.homepage    = "http://github.com/rspec/rspec-expectations"
   s.summary     = "rspec-expectations-#{RSpec::Expectations::Version::STRING}"
   s.description = "rspec expectations (should[_not] and matchers)"
@@ -23,8 +23,13 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 1.8.7'
 
-  s.add_runtime_dependency "rspec-support"
-
+ if RSpec::Expectations::Version::STRING =~ /[a-zA-Z]+/
+    # pin to exact version for rc's and betas
+    s.add_runtime_dependency "rspec-support", "= #{RSpec::Expectations::Version::STRING}"
+  else
+    # pin to major/minor ignoring patch
+    s.add_runtime_dependency "rspec-support", "~> #{RSpec::Expectations::Version::STRING.split('.')[0..1].concat(['0']).join('.')}"
+  end
   s.add_runtime_dependency     'diff-lcs', '>= 1.1.3', '< 2.0'
 
   s.add_development_dependency 'rake',     '~> 10.0.0'
