@@ -39,6 +39,7 @@ describe 'command line', :ui do
         specify('group 1 example 4')  {}
         specify('group 1 example 5')  {}
         specify('group 1 example 6')  {}
+        specify('group 1 example 5')  {}
         specify('group 1 example 7')  {}
         specify('group 1 example 8')  {}
         specify('group 1 example 9')  {}
@@ -83,10 +84,8 @@ describe 'command line', :ui do
   describe '--order rand' do
     it 'runs the examples and groups in a different order each time' do
       run_command 'spec/order_spec.rb --order rand -f doc'
-      original_seed = srand
-      RSpec.configuration.seed = srand # reset seed in same process
+      RSpec.configuration.seed = srand && srand # reset seed in same process
       run_command 'spec/order_spec.rb --order rand -f doc'
-      srand original_seed
 
       expect(stdout.string).to match(/Randomized with seed \d+/)
 

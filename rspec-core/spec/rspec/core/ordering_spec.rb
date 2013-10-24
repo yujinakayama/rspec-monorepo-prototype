@@ -10,41 +10,38 @@ module RSpec
       end
 
       describe Random do
-        describe '.order' do
-          subject { described_class.new(configuration) }
+        before { allow(Kernel).to receive(:srand).and_call_original }
 
-          let(:configuration)  { RSpec::Core::Configuration.new }
-          let(:items)          { 10.times.map { |n| n } }
-          let(:shuffled_items) { subject.order items }
+        def order_of(input, seed)
+          Kernel.srand(seed)
+          input.shuffle
+        end
 
-          it 'shuffles the items randomly' do
-            expect(shuffled_items).to match_array items
-            expect(shuffled_items).to_not eq items
-          end
+        let(:configuration) { RSpec::Core::Configuration.new }
 
-          context 'given multiple calls' do
-            it 'returns the items in the same order' do
-              expect(subject.order(items)).to eq shuffled_items
-            end
-          end
+        it 'shuffles the items randomly' do
+          configuration.seed = 900
 
-          context 'given randomization has been seeded explicitly' do
-            before { @seed = srand }
-            after  { srand @seed }
+          expected = order_of([1, 2, 3, 4], 900)
 
-            it "does not affect the global random number generator" do
-              srand 123
-              val1, val2 = rand(1_000), rand(1_000)
+          strategy = Random.new(configuration)
+          expect(strategy.order([1, 2, 3, 4])).to eq(expected)
+        end
 
-              subject
+        it 'seeds the random number generator' do
+          expect(Kernel).to receive(:srand).with(1234).once
 
-              srand 123
-              subject.order items
-              expect(rand(1_000)).to eq(val1)
-              subject.order items
-              expect(rand(1_000)).to eq(val2)
-            end
-          end
+          configuration.seed = 1234
+
+          strategy = Random.new(configuration)
+          strategy.order([1, 2, 3, 4])
+        end
+
+        it 'resets random number generation' do
+          expect(Kernel).to receive(:srand).with(no_args)
+
+          strategy = Random.new(configuration)
+          strategy.order([])
         end
       end
 
@@ -100,3 +97,4 @@ module RSpec
     end
   end
 end
+
