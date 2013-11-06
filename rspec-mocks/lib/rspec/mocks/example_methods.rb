@@ -1,4 +1,4 @@
-require 'rspec/mocks/module_reference'
+require 'rspec/mocks/object_reference'
 
 module RSpec
   module Mocks
@@ -42,7 +42,8 @@ module RSpec
       # allowed to be stubbed. In all other ways it behaves like a
       # [double](double).
       def instance_double(doubled_class, *args)
-        declare_verifying_double(InstanceVerifyingDouble, doubled_class, *args)
+        ref = ObjectReference.for(doubled_class)
+        declare_verifying_double(InstanceVerifyingDouble, ref, *args)
       end
 
       # @overload class_double(doubled_class)
@@ -56,7 +57,23 @@ module RSpec
       # allowed to be stubbed. In all other ways it behaves like a
       # [double](double).
       def class_double(doubled_class, *args)
-        declare_verifying_double(ClassVerifyingDouble, doubled_class, *args)
+        ref = ObjectReference.for(doubled_class)
+        declare_verifying_double(ClassVerifyingDouble, ref, *args)
+      end
+
+      # @overload object_double(object_or_name)
+      # @overload object_double(object_or_name, stubs)
+      # @param object_or_name [String, Object]
+      # @param stubs [Hash] (optional) hash of message/return-value pairs
+      # @return ObjectVerifyingDouble
+      #
+      # Constructs a test double against a specific object. Only the methods
+      # the object responds to are allowed to be stubbed. If a String argument
+      # is provided, it is assumed to reference a constant object which is used
+      # for verification. In all other ways it behaves like a [double](double).
+      def object_double(object_or_name, *args)
+        ref = ObjectReference.for(object_or_name, :allow_direct_object_refs)
+        declare_verifying_double(ObjectVerifyingDouble, ref, *args)
       end
 
       # Disables warning messages about expectations being set on nil.
@@ -157,9 +174,7 @@ module RSpec
 
     private
 
-      def declare_verifying_double(type, constant_or_name, *args)
-        ref = ModuleReference.new(constant_or_name)
-
+      def declare_verifying_double(type, ref, *args)
         if RSpec::Mocks.configuration.verify_doubled_constant_names? &&
           !ref.defined?
 

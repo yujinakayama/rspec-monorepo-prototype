@@ -1,14 +1,4 @@
-require 'rubygems'
-
-unless ENV['NO_COVERALLS']
-  require 'simplecov' if RUBY_VERSION.to_f > 1.8
-  require 'coveralls'
-  Coveralls.wear! do
-    add_filter '/bundle/'
-    add_filter '/spec/'
-    add_filter '/tmp/'
-  end
-end
+require 'rubygems' if RUBY_VERSION.to_f < 1.9
 
 begin
   require 'spork'
@@ -25,8 +15,18 @@ rescue LoadError
 end
 
 Spork.prefork do
-  require 'rspec/autorun'
+  old_verbose, $VERBOSE = $VERBOSE, false
+  if ENV['TRAVIS'] && !ENV['NO_COVERALLS']
+    require 'simplecov' if RUBY_VERSION.to_f > 1.8
+    require 'coveralls'
+    Coveralls.wear! do
+      add_filter '/bundle/'
+      add_filter '/spec/'
+      add_filter '/tmp/'
+    end
+  end
   require 'aruba/api'
+  $VERBOSE = old_verbose
 
   if RUBY_PLATFORM == 'java'
     # Works around https://jira.codehaus.org/browse/JRUBY-5678
@@ -35,18 +35,26 @@ Spork.prefork do
     FileUtils.mkdir_p(ENV['TMPDIR'])
   end
 
+  $rspec_core_without_stderr_monkey_patch = RSpec::Core::Configuration.new
+
+  class RSpec::Core::Configuration
+    def self.new(*args, &block)
+      super.tap do |config|
+        # We detect ruby warnings via $stderr,
+        # so direct our deprecations to $stdout instead.
+        config.deprecation_stream = $stdout
+      end
+    end
+  end
+
   Dir['./spec/support/**/*.rb'].map {|f| require f}
+
+  $stderr = RSpec::StdErrSplitter.new
 
   class NullObject
     private
     def method_missing(method, *args, &block)
       # ignore
-    end
-  end
-
-  module SandboxHelpers
-    def current_sandboxed_output_stream
-      RSpec.configuration.output_stream ||= StringIO.new
     end
   end
 
@@ -56,7 +64,6 @@ Spork.prefork do
       @orig_world  = RSpec.world
       @orig_example = RSpec.current_example
       new_config = RSpec::Core::Configuration.new
-      new_config.output = StringIO.new
       new_world  = RSpec::Core::World.new(new_config)
       RSpec.configuration = new_config
       RSpec.world = new_world
@@ -115,11 +122,12 @@ Spork.prefork do
     end
   end
 
+  require 'rspec/support/spec'
+
   RSpec.configure do |c|
     # structural
     c.alias_it_behaves_like_to 'it_has_behavior'
     c.around {|example| Sandboxing.sandboxed { example.run }}
-    c.include SandboxHelpers
     c.include(RSpecHelpers)
     c.include Aruba::Api, :example_group => {
       :file_path => /spec\/command_line/
@@ -151,6 +159,12 @@ Spork.prefork do
         !(RUBY_VERSION.to_s =~ /^#{version.to_s}/)
       end
     }
+
+    c.after(:suite) do
+      if $stderr.has_output?
+        raise "Ruby warnings were emitted:\n\n#{$stderr.output}"
+      end
+    end
   end
 end
 

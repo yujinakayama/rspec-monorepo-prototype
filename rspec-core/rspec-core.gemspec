@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.license     = "MIT"
   s.authors     = ["Steven Baker", "David Chelimsky", "Chad Humphries", "Myron Marston"]
-  s.email       = "rspec-users@rubyforge.org"
+  s.email       = "rspec@googlegroups.com"
   s.homepage    = "http://github.com/rspec/rspec-core"
   s.summary     = "rspec-core-#{RSpec::Core::Version::STRING}"
   s.description = "BDD for Ruby. RSpec runner and example groups."
@@ -24,6 +24,14 @@ Gem::Specification.new do |s|
   s.require_path     = "lib"
 
   s.required_ruby_version = '>= 1.8.7'
+
+  if RSpec::Core::Version::STRING =~ /[a-zA-Z]+/
+    # rspec-support is locked to our version when running pre,rc etc
+    s.add_runtime_dependency "rspec-support", "= #{RSpec::Core::Version::STRING}"
+  else
+    # rspec-support must otherwise match our major/minor version
+    s.add_runtime_dependency "rspec-support", "~> #{RSpec::Core::Version::STRING.split('.')[0..1].concat(['0']).join('.')}"
+  end
 
   s.add_development_dependency "rake",     "~> 10.0.0"
   s.add_development_dependency "cucumber", "~> 1.1.9"

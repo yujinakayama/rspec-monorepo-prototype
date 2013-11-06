@@ -6,10 +6,10 @@ Breaking Changes for 3.0.0:
 * Removed `double`-aliases `stub` and `mock`. (Michi Huber)
 * Raise an explicit error if `should_not_receive(...).and_return` is used. (Sam
   Phippen)
-* Remove 1.8.6 workarounds (Jon Rowe)
+* Remove 1.8.6 workarounds. (Jon Rowe)
 * Remove `stub!` and `unstub!`. (Sam Phippen)
 * Remove `mock(name, methods)` and `stub(name, methods)`,
-  leaving `double(name, methods)` for creating test doubles.  (Sam Phippen)
+  leaving `double(name, methods)` for creating test doubles. (Sam Phippen)
 * Remove `any_number_of_times` since `should_receive(:msg).any_number_of_times`
   is really a stub in a mock's clothing. (Sam Phippen)
 * Remove support for re-using the same null-object test double in multiple
@@ -17,24 +17,35 @@ Breaking Changes for 3.0.0:
   (Myron Marston)
 * Make `at_least(0)` raise an error. (Sam Phippen)
 * Remove support for `require 'spec/mocks'` which had been kept
-  in place for backwards compatibility with rspec 1 (Myron Marston).
-* Blocks provided to `with` are always used as implementation (Xavier Shay).
+  in place for backwards compatibility with RSpec 1. (Myron Marston)
+* Blocks provided to `with` are always used as implementation. (Xavier Shay)
 
 Enhancements:
 
 * Allow the `have_received` matcher to use a block to set further expectations
   on arguments. (Tim Cowlishaw)
-* Yield the receiver to `any_instance` implementation blocks (Sam Phippen).
+* Yield the receiver to `any_instance` implementation blocks. (Sam Phippen)
 * Provide `instance_double` and `class_double` to create verifying doubles,
-  ported from `rspec-fire` (Xavier Shay).
-* `as_null_object` on a verifying double only responds to defined methods
-  (Xavier Shay).
+  ported from `rspec-fire`. (Xavier Shay)
+* `as_null_object` on a verifying double only responds to defined methods.
+  (Xavier Shay)
+* Provide `object_double` to create verified doubles of specific object
+  instances. (Xavier Shay)
+* Provide 'verify_partial_doubles` configuration that provides `object_double`
+  like verification behaviour on partial mocks. (Xavier Shay)
 * Improved performance of double creation, particularly those with many
   attributes. (Xavier Shay)
 * Default value of `transfer_nested_constants` option for constant stubbing can
   be configured. (Xavier Shay)
 * Messages can be allowed or expected on in bulk via
-  `receive_messages(:message => :value)` (Jon Rowe)
+  `receive_messages(:message => :value)`. (Jon Rowe)
+* `allow(Klass.any_instance)` and `expect(Klass.any_instance)` now print a
+  warning. This is usually a mistake, and users usually want
+  `allow_any_instance_of` or `expect_any_instance_of` instead. (Sam Phippen)
+* `instance_double` and `class_double` raise `ArgumentError` if the underlying
+  module is loaded and the arity of the method being invoked does not match the
+  arity of the method as it is actually implemented. (Andy Lindeman)
+* Spies can now check their invocation ordering is correct. (Jon Rowe)
 
 Deprecations:
 
@@ -46,12 +57,18 @@ Bug Fixes:
 
 * Fix `and_call_original` to handle a complex edge case involving
   singleton class ancestors. (Marc-André Lafortune, Myron Marston)
-* Fix issue where unstubing methods on "any instances" would not
-  remove stubs on existing instances (Jon Rowe)
 * When generating an error message for unexpected arguments,
   use `#inspect` rather than `#description` if `#description`
   returns `nil` or `''` so that you still get a useful message.
   (Nick DeLuca)
+
+### 2.14.4 / 2013-10-15
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.3...v2.14.4)
+
+Bug Fixes:
+
+* Fix issue where unstubing methods on "any instances" would not
+  remove stubs on existing instances (Jon Rowe)
 * Fix issue with receive(:message) do ... end precedence preventing
   the usage of modifications (`and_return` etc) (Jon Rowe)
 

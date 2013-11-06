@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'spec_helper'
 
 class SelfObserver
@@ -35,6 +36,74 @@ module RSpec::Core
     it 'treats the first argument as part of the description when it is a symbol' do
       group = ExampleGroup.describe(:symbol)
       expect(group.description).to eq("symbol")
+    end
+
+    describe "constant naming" do
+      RSpec::Matchers.define :have_class_const do |class_name|
+        match do |group|
+          group.name == "RSpec::ExampleGroups::#{class_name}" &&
+          group == class_name.split('::').inject(RSpec::ExampleGroups) do |mod, name|
+            mod.const_get(name)
+          end
+        end
+      end
+
+      it 'gives groups friendly human readable class names' do
+        stub_const("MyGem::Klass", Class.new)
+        parent = ExampleGroup.describe(MyGem::Klass)
+        expect(parent).to have_class_const("MyGemKlass")
+      end
+
+      it 'nests constants to match the group nesting' do
+        grandparent = ExampleGroup.describe("The grandparent")
+        parent      = grandparent.describe("the parent")
+        child       = parent.describe("the child")
+
+        expect(parent).to have_class_const("TheGrandparent::TheParent")
+        expect(child).to have_class_const("TheGrandparent::TheParent::TheChild")
+      end
+
+      it 'removes non-ascii characters from the const name since some rubies barf on that' do
+        group = ExampleGroup.describe("A chinese character: 们")
+        expect(group).to have_class_const("AChineseCharacter")
+      end
+
+      it 'prefixes the const name with "Nested" if needed to make a valid const' do
+        expect {
+          ExampleGroup.const_set("1B", Object.new)
+        }.to raise_error(NameError)
+
+        group = ExampleGroup.describe("1B")
+        expect(group).to have_class_const("Nested1B")
+      end
+
+      it 'disambiguates name collisions by appending a number' do
+        groups = 10.times.map { ExampleGroup.describe("Collision") }
+        expect(groups[0]).to have_class_const("Collision")
+        expect(groups[1]).to have_class_const("Collision_2")
+        expect(groups[8]).to have_class_const("Collision_9")
+
+        if RUBY_VERSION.to_f > 1.8
+          # on 1.8.7, "Collision_9".next => "Collisioo_0"
+          expect(groups[9]).to have_class_const("Collision_10")
+        end
+      end
+
+      it 'identifies unnamed groups as "Anonymous"' do
+        # Wrap the anonymous group is a uniquely named one,
+        # so the presence of another anonymous group in our
+        # test suite doesn't cause an unexpected number
+        # to be appended.
+        group    = ExampleGroup.describe("name of unnamed group")
+        subgroup = group.describe
+        expect(subgroup).to have_class_const("NameOfUnnamedGroup::Anonymous")
+      end
+
+      it 'assigns the const before evaling the group so error messages include the name' do
+        expect {
+          ExampleGroup.describe("Calling an undefined method") { foo }
+        }.to raise_error(/ExampleGroups::CallingAnUndefinedMethod/)
+      end
     end
 
     describe "ordering" do
@@ -1134,29 +1203,6 @@ module RSpec::Core
             end
           end
           expect(group.run).to be_truthy
-        end
-
-        it "warns when num args submitted doesn't match arity of shared block", :if => RUBY_VERSION.to_f >= 1.9 do
-          group = ExampleGroup.describe
-          group.shared_examples("named this") {}
-
-          expect(group).to receive(:warn) {|message|
-            expect(message).to match(/expected 0 args/)
-            expect(message).to match(/called from #{__FILE__}:#{__LINE__ + 2}/)
-          }
-          group.send(name, "named this", "extra arg")
-        end
-
-        it "warns with usage message when 2nd arg is the name of another shared group", :if => RUBY_VERSION.to_f >= 1.9 do
-          group = ExampleGroup.describe
-          group.shared_examples("named this") {}
-          group.shared_examples("named that") {}
-
-          expect(group).to receive(:warn) {|message|
-            expect(message).to match(/shared (context|examples) supports? the name of only one example group, received \["named this", "named that"\]/)
-            expect(message).to match(/called from #{__FILE__}:#{__LINE__ + 2}/)
-          }
-          group.send(name, "named this", "named that")
         end
       end
     end

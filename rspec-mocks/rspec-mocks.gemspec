@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.license     = "MIT"
   s.authors     = ["Steven Baker", "David Chelimsky", "Myron Marston"]
-  s.email       = "rspec-users@rubyforge.org"
+  s.email       = "rspec@googlegroups.com"
   s.homepage    = "http://github.com/rspec/rspec-mocks"
   s.summary     = "rspec-mocks-#{RSpec::Mocks::Version::STRING}"
   s.description = "RSpec's 'test double' framework, with support for stubbing and mocking"
@@ -22,6 +22,14 @@ Gem::Specification.new do |s|
   s.require_path     = "lib"
 
   s.required_ruby_version = '>= 1.8.7'
+
+  if RSpec::Mocks::Version::STRING =~ /[a-zA-Z]+/
+    # pin to exact version for rc's and betas
+    s.add_runtime_dependency "rspec-support", "= #{RSpec::Mocks::Version::STRING}"
+  else
+    # pin to major/minor ignoring patch
+    s.add_runtime_dependency "rspec-support", "~> #{RSpec::Mocks::Version::STRING.split('.')[0..1].concat(['0']).join('.')}"
+  end
 
   s.add_development_dependency 'rake',     '~> 10.0.0'
   s.add_development_dependency 'cucumber', '~> 1.1.9'

@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'rspec/support/caller_filter'
 
 module RSpec
   describe CallerFilter do
@@ -8,7 +9,7 @@ module RSpec
 
       Dir["#{path}/**/*.rb"].sort.tap do |files|
         # Just a sanity check...
-        expect(files.count).to be > 10
+        expect(files.count).to be > 5
       end
     end
 
@@ -17,7 +18,7 @@ module RSpec
         files.reject { |file| file.match(CallerFilter::LIB_REGEX) }
       end
 
-      %w[ core mocks expectations ].each do |lib|
+      %w[ core mocks expectations support ].each do |lib|
         it "matches all ruby files in rspec-#{lib}" do
           files     = ruby_files_in_lib(lib)
 

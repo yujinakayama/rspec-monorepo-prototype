@@ -2,9 +2,9 @@ source "https://rubygems.org"
 
 gemspec
 
-%w[rspec rspec-core rspec-expectations].each do |lib|
+%w[rspec rspec-core rspec-expectations rspec-support].each do |lib|
   library_path = File.expand_path("../../#{lib}", __FILE__)
-  if File.exist?(library_path)
+  if File.exist?(library_path) && !ENV['USE_GIT_REPOS']
     gem lib, :path => library_path
   else
     gem lib, :git => "git://github.com/rspec/#{lib}.git"
@@ -18,8 +18,10 @@ group :documentation do
   gem 'github-markup', '0.7.2'
 end
 
-### dep for ci/coverage
-gem 'coveralls', :require => false
+if RUBY_VERSION >= '1.9.3'
+  gem 'simplecov'
+  gem 'cane'
+end
 
 platforms :jruby do
   gem "jruby-openssl"

@@ -47,21 +47,19 @@ module RSpec::Core
 
         expect(RSpec::Core::Runner.running_in_drb?).to be_falsey
       end
-
     end
 
     describe "#run" do
       let(:err) { StringIO.new }
-      let(:out) { current_sandboxed_output_stream }
+      let(:out) { StringIO.new }
 
       it "tells RSpec to reset" do
-        RSpec.configuration.stub(:files_to_run => [])
+        RSpec.configuration.stub(:files_to_run => [], :warn => nil)
         RSpec.should_receive(:reset)
         RSpec::Core::Runner.run([], err, out)
       end
 
       context "with --drb or -X" do
-
         before(:each) do
           @options = RSpec::Core::ConfigurationOptions.new(%w[--drb --drb-port 8181 --color])
           RSpec::Core::ConfigurationOptions.stub(:new) { @options }

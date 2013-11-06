@@ -11,11 +11,16 @@ end
 require 'set'
 require 'time'
 require 'rbconfig'
-require_rspec['core/caller_filter']
+
+require_rspec['core/version']
+
+require 'rspec/support/caller_filter'
+require 'rspec/core/warnings'
+require 'rspec/support/warnings'
+
 require_rspec['core/flat_map']
 require_rspec['core/filter_manager']
 require_rspec['core/dsl']
-require_rspec['core/warnings']
 require_rspec['core/reporter']
 
 require_rspec['core/hooks']
@@ -35,7 +40,6 @@ require_rspec['core/example']
 require_rspec['core/shared_example_group/collection']
 require_rspec['core/shared_example_group']
 require_rspec['core/example_group']
-require_rspec['core/version']
 
 module RSpec
   autoload :SharedContext, 'rspec/core/shared_context'

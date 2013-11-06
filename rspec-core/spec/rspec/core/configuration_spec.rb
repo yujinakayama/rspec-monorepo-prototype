@@ -18,13 +18,47 @@ module RSpec::Core
 
     describe '#deprecation_stream' do
       it 'defaults to standard error' do
-        expect(config.deprecation_stream).to eq $stderr
+        expect($rspec_core_without_stderr_monkey_patch.deprecation_stream).to eq STDERR
       end
 
       it 'is configurable' do
         io = double 'deprecation io'
         config.deprecation_stream = io
         expect(config.deprecation_stream).to eq io
+      end
+    end
+
+    describe "#output_stream" do
+      it 'defaults to standard output' do
+        expect(config.output_stream).to eq $stdout
+      end
+
+      it 'is configurable' do
+        io = double 'output io'
+        config.output_stream = io
+        expect(config.output_stream).to eq io
+      end
+
+      context 'when the reporter has already been initialized' do
+        before do
+          config.reporter
+          allow(config).to receive(:warn)
+        end
+
+        it 'prints a notice indicating the reconfigured output_stream will be ignored' do
+          config.output_stream = StringIO.new
+          expect(config).to have_received(:warn).with(/output_stream.*#{__FILE__}:#{__LINE__ - 1}/)
+        end
+
+        it 'does not change the value of `output_stream`' do
+          config.output_stream = StringIO.new
+          expect(config.output_stream).to eq($stdout)
+        end
+
+        it 'does not print a warning if set to the value it already has' do
+          config.output_stream = config.output_stream
+          expect(config).not_to have_received(:warn)
+        end
       end
     end
 
@@ -1027,14 +1061,6 @@ module RSpec::Core
       end
     end
 
-    describe "#output=" do
-      it "sets the output" do
-        output = double("output")
-        config.output = output
-        expect(config.output).to equal(output)
-      end
-    end
-
     describe "#libs=" do
       include_context "isolate load path mutation"
 
@@ -1264,11 +1290,8 @@ module RSpec::Core
       context "for ordering options" do
         let(:list) { [1, 2, 3, 4] }
         let(:ordering_strategy) { config.ordering_registry.fetch(:global) }
-
-        let(:shuffled) do
-          Kernel.srand(37)
-          list.shuffle
-        end
+        let(:rng) { RSpec::Core::RandomNumberGenerator.new config.seed }
+        let(:shuffled) { Ordering::Random.new(config).shuffle list, rng }
 
         specify "CLI `--order defined` takes precedence over `config.order = rand`" do
           config.force :order => "defined"
@@ -1436,6 +1459,28 @@ module RSpec::Core
       it 'is loaded from config by #force' do
         config.force :warnings => true
         expect($VERBOSE).to eq true
+      end
+    end
+
+    describe "#expose_current_running_example_as" do
+      before { stub_const(Configuration::ExposeCurrentExample.name, Module.new) }
+
+      it 'exposes the current example via the named method' do
+        RSpec.configuration.expose_current_running_example_as :the_example
+        RSpec.configuration.expose_current_running_example_as :another_example_helper
+
+        value_1 = value_2 = nil
+
+        ExampleGroup.describe "Group" do
+          it "works" do
+            value_1 = the_example
+            value_2 = another_example_helper
+          end
+        end.run
+
+        expect(value_1).to be_an(RSpec::Core::Example)
+        expect(value_1.description).to eq("works")
+        expect(value_2).to be(value_1)
       end
     end
 

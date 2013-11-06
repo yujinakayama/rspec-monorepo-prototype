@@ -130,7 +130,17 @@ module RSpec
       # @macro add_setting
       # Default: `$stdout`.
       # Also known as `output` and `out`
-      add_setting :output_stream, :alias_with => [:output, :out]
+      define_reader :output_stream
+      def output_stream=(value)
+        if @reporter && !value.equal?(@output_stream)
+          warn "RSpec's reporter has already been initialized with " +
+            "#{output_stream.inspect} as the output stream, so your change to "+
+            "`output_stream` will be ignored. You should configure it earlier for " +
+            "it to take effect. (Called from #{CallerFilter.first_non_rspec_line})"
+        else
+          @output_stream = value
+        end
+      end
 
       # @macro add_setting
       # Load files matching this pattern (default: `'**/*_spec.rb'`)
@@ -228,6 +238,8 @@ module RSpec
 
         @default_path = 'spec'
         @deprecation_stream = $stderr
+        @output_stream = $stdout
+        @reporter = nil
         @filter_manager = FilterManager.new
         @ordering_manager = Ordering::ConfigurationManager.new
         @preferred_options = {}
@@ -556,7 +568,7 @@ module RSpec
           custom_formatter(formatter_to_use) ||
           (raise ArgumentError, "Formatter '#{formatter_to_use}' unknown - maybe you meant 'documentation' or 'progress'?.")
 
-        paths << output if paths.empty?
+        paths << output_stream if paths.empty?
         formatters << formatter_class.new(*paths.map {|p| String === p ? file_at(p) : p})
       end
 
@@ -934,7 +946,7 @@ module RSpec
       #
       # @param name [Symbol] The name of the ordering.
       # @yield Block that will order the given examples or example groups
-      # @yieldparam list [Array<RSpec::Core::Example>, Array<RSpec::Core::ExampleGropu>] The examples or groups to order
+      # @yieldparam list [Array<RSpec::Core::Example>, Array<RSpec::Core::ExampleGroup>] The examples or groups to order
       # @yieldreturn [Array<RSpec::Core::Example>, Array<RSpec::Core::ExampleGroup>] The re-ordered examples or groups
       #
       # @example
@@ -964,6 +976,39 @@ module RSpec
       def warnings
         $VERBOSE
       end
+
+      # Exposes the current running example via the named
+      # helper method. RSpec 2.x exposed this via `example`,
+      # but in RSpec 3.0, the example is instead exposed via
+      # an arg yielded to `it`, `before`, `let`, etc. However,
+      # some extension gems (such as Capybara) depend on the
+      # RSpec 2.x's `example` method, so this config option
+      # can be used to maintain compatibility.
+      #
+      # @param method_name [Symbol] the name of the helper method
+      #
+      # @example
+      #
+      #   RSpec.configure do |rspec|
+      #     rspec.expose_current_running_example_as :example
+      #   end
+      #
+      #   describe MyClass do
+      #     before do
+      #       # `example` can be used here because of the above config.
+      #       do_something if example.metadata[:type] == "foo"
+      #     end
+      #   end
+      def expose_current_running_example_as(method_name)
+        ExposeCurrentExample.module_eval do
+          extend RSpec::SharedContext
+          let(method_name) { |ex| ex }
+        end
+
+        include ExposeCurrentExample
+      end
+
+      module ExposeCurrentExample; end
 
     private
 
