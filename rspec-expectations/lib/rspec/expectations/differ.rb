@@ -1,55 +1,61 @@
 require 'diff/lcs'
+require "rspec/expectations/encoded_string"
 require 'diff/lcs/hunk'
 require 'pp'
 
 module RSpec
   module Expectations
     class Differ
-      # This is snagged from diff/lcs/ldiff.rb (which is a commandline tool)
-      def diff_as_string(input_data_new, input_data_old)
-        output = matching_encoding("", input_data_old)
-        data_old = input_data_old.split(matching_encoding("\n", input_data_old)).map! { |e| e.chomp }
-        data_new = input_data_new.split(matching_encoding("\n", input_data_new)).map! { |e| e.chomp }
-        diffs = Diff::LCS.diff(data_old, data_new)
-        return output if diffs.empty?
-        oldhunk = hunk = nil
+      def diff_as_string(actual, expected)
+        @encoding = pick_encoding actual, expected
+        @actual   = EncodedString.new(actual, encoding)
+        @expected = EncodedString.new(expected, encoding)
+
+        output = EncodedString.new("", encoding)
         file_length_difference = 0
+
+        return output if diffs.empty?
+
+        oldhunk = hunk = nil
+
         diffs.each do |piece|
           begin
-            hunk = Diff::LCS::Hunk.new(
-              data_old, data_new, piece, context_lines, file_length_difference
-            )
+            hunk = build_hunk(piece, file_length_difference)
             file_length_difference = hunk.file_length_difference
+
             next unless oldhunk
-            # Hunks may overlap, which is why we need to be careful when our
-            # diff includes lines of context. Otherwise, we might print
-            # redundant lines.
-            if (context_lines > 0) and hunk.overlaps?(oldhunk)
-              if hunk.respond_to?(:merge)
-                # diff-lcs 1.2.x
-                hunk.merge(oldhunk)
-              else
-                # diff-lcs 1.1.3
-                hunk.unshift(oldhunk)
-              end
+
+            if hunk.overlaps?(oldhunk)
+              add_old_hunk_to_hunk(hunk, oldhunk)
             else
-              output << matching_encoding(oldhunk.diff(format).to_s, output)
+              add_to_output(output, oldhunk.diff(format).to_s)
             end
           ensure
             oldhunk = hunk
-            output << matching_encoding("\n", output)
+            add_to_output(output, "\n")
+          end
+        end
+
+        finalize_output(output, oldhunk.diff(format).to_s)
+=======
+              output << matching_encoding(oldhunk.diff(format).to_s, encoding)
+            end
+          ensure
+            oldhunk = hunk
+            output << matching_encoding("\n", encoding)
           end
         end
         #Handle the last remaining hunk
-        output << matching_encoding(oldhunk.diff(format).to_s,output)
-        output << matching_encoding("\n",output)
+        output << matching_encoding(oldhunk.diff(format).to_s, encoding)
+        output << matching_encoding("\n", encoding)
+>>>>>>> 311b60baad804fc19c12b07903138c04cc60d570
         color_diff output
       rescue Encoding::CompatibilityError
-        if input_data_new.encoding != input_data_old.encoding
-          "Could not produce a diff because the encoding of the actual string (#{input_data_old.encoding}) "+
-          "differs from the encoding of the expected string (#{input_data_new.encoding})"
+        if actual.encoding != expected.encoding
+          "Could not produce a diff because the encoding of the actual string (#{expected.encoding}) "+
+          "differs from the encoding of the expected string (#{actual.encoding})"
         else
-          "Could not produce a diff because of the encoding of the string (#{input_data_old.encoding})"
+          "Could not produce a diff because of the encoding of the string (#{expected.encoding})"
         end
       end
 
@@ -61,7 +67,50 @@ module RSpec
         end
       end
 
-    protected
+    private
+
+      attr_reader :expected, :actual
+
+      def finalize_output(output, final_line)
+        add_to_output(output, final_line)
+        add_to_output(output, "\n")
+      end
+
+      def hunk_diff_string(hunk)
+        hunk.diff(format).to_s
+      end
+
+      def add_to_output(output, string)
+        output << string
+      end
+
+      def add_old_hunk_to_hunk(hunk, oldhunk)
+        if hunk.respond_to?(:merge)
+          # diff-lcs 1.2.x
+          hunk.merge(oldhunk)
+        else
+          # diff-lcs 1.1.3
+          hunk.unshift(oldhunk)
+        end
+      end
+
+      def build_hunk(piece, file_length_difference)
+        Diff::LCS::Hunk.new(
+          expected_lines, actual_lines, piece, context_lines, file_length_difference
+        )
+      end
+
+      def diffs
+        Diff::LCS.diff(expected_lines, actual_lines)
+      end
+
+      def expected_lines
+        expected.split("\n").map! { |e| e.chomp }
+      end
+
+      def actual_lines
+        actual.split("\n").map! { |e| e.chomp }
+      end
 
       def format
         :unified
@@ -111,11 +160,16 @@ module RSpec
             pp_key   = PP.singleline_pp(key, "")
             pp_value = PP.singleline_pp(object[key], "")
 
+<<<<<<< HEAD
+            "#{pp_key} => #{pp_value}"
+=======
             # on 1.9.3 PP seems to minimise to US-ASCII, ensure we're matching source encoding
             #
             # note, PP is used to ensure the ordering of the internal values of key/value e.g.
             # <# a: b: c:> not <# c: a: b:>
-            matching_encoding("#{pp_key} => #{pp_value}", key.to_s)
+            encoding = pick_encoding pp_key, pp_value
+            matching_encoding("#{pp_key} => #{pp_value}", encoding)
+>>>>>>> 311b60baad804fc19c12b07903138c04cc60d570
           end.join(",\n")
         when String
           object =~ /\n/ ? object : object.inspect
@@ -123,18 +177,31 @@ module RSpec
           PP.pp(object,"")
         end
       end
+<<<<<<< HEAD
+=======
+
+    private
 
       if String.method_defined?(:encoding)
-        def matching_encoding(string, source)
-          string.encode(source.encoding)
+        def pick_encoding(source_a, source_b)
+          Encoding.compatible?(source_a, source_b) || Encoding.default_external
+        end
+
+        def matching_encoding(string, encoding)
+          string.encode encoding
+        rescue Encoding::UndefinedConversionError
+          string.encode(encoding, :undef => :replace)
         end
       else
-        def matching_encoding(string, source)
+        def pick_encoding(source_a, source_b)
+        end
+
+        def matching_encoding(string, encoding)
           string
         end
       end
+>>>>>>> 311b60baad804fc19c12b07903138c04cc60d570
     end
-
   end
 end
 
