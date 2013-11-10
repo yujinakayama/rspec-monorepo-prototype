@@ -15,12 +15,9 @@ module RSpec
         end
 
         def printer
-          @printer ||= case deprecation_stream
-                       when File, RaiseErrorStream
-                         ImmediatePrinter.new(deprecation_stream, summary_stream, self)
-                       else
-                         DelayedPrinter.new(deprecation_stream, summary_stream, self)
-                       end
+          @printer ||= File === deprecation_stream ?
+            FilePrinter.new(deprecation_stream, summary_stream, self) :
+            IOPrinter.new(deprecation_stream, summary_stream, self)
         end
 
         def deprecation(data)
@@ -42,14 +39,6 @@ module RSpec
             GeneratedDeprecationMessage.new(data)
           end
         end
-
-        RAISE_ERROR_CONFIG_NOTICE = <<-EOS.gsub(/^\s+\|/, '')
-          |
-          |If you need more of the backtrace for any of these deprecations to
-          |identify where to make the necessary changes, you can configure
-          |`config.raise_errors_for_deprecations!`, and it will turn the
-          |deprecation warnings into errors, giving you the full backtrace.
-        EOS
 
         SpecifiedDeprecationMessage = Struct.new(:type) do
           def initialize(data)
@@ -94,7 +83,7 @@ module RSpec
           end
         end
 
-        class ImmediatePrinter
+        class FilePrinter
           include ::RSpec::Core::Formatters::Helpers
 
           attr_reader :deprecation_stream, :summary_stream, :deprecation_formatter
@@ -120,12 +109,11 @@ module RSpec
           def deprecation_summary
             if deprecation_formatter.count > 0
               summary_stream.puts "\n#{pluralize(deprecation_formatter.count, 'deprecation')} logged to #{deprecation_stream.path}"
-              deprecation_stream.puts RAISE_ERROR_CONFIG_NOTICE
             end
           end
         end
 
-        class DelayedPrinter
+        class IOPrinter
           TOO_MANY_USES_LIMIT = 4
 
           include ::RSpec::Core::Formatters::Helpers
@@ -159,7 +147,6 @@ module RSpec
             return unless @deprecation_messages.any?
 
             print_deferred_deprecation_warnings
-            deprecation_stream.puts RAISE_ERROR_CONFIG_NOTICE
 
             summary_stream.puts "\n#{pluralize(deprecation_formatter.count, 'deprecation warning')} total"
           end
@@ -174,20 +161,7 @@ module RSpec
           end
         end
 
-        # Not really a stream, but is usable in place of one.
-        class RaiseErrorStream
-          def puts(message)
-            raise DeprecationError, message
-          end
-
-          def sync=(value)
-            # no-op
-          end
-        end
-
       end
     end
-
-    DeprecationError = Class.new(StandardError)
   end
 end
