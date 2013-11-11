@@ -1,1 +1,0 @@
-# grep -v -f <this file> doesn't work properly when empty, so this line is here.
