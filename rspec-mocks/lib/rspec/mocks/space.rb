@@ -58,9 +58,9 @@ module RSpec
                         when TestDouble then object.__build_mock_proxy(expectation_ordering)
                         else
                           if RSpec::Mocks.configuration.verify_partial_doubles?
-                            VerifyingPartialDoubleProxy.new(object, expectation_ordering)
+                            VerifyingPartialMockProxy.new(object, expectation_ordering)
                           else
-                            PartialDoubleProxy.new(object, expectation_ordering)
+                            PartialMockProxy.new(object, expectation_ordering)
                           end
                         end
         end

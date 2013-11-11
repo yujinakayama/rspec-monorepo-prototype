@@ -19,7 +19,7 @@ module RSpec
             chain.shift
             matching_stub.invoke(nil).stub_chain(*chain, &block)
           else
-            next_in_chain = Double.new
+            next_in_chain = Mock.new
             object.stub(chain.shift) { next_in_chain }
             StubChain.stub_chain_on(next_in_chain, *chain, &block)
           end
