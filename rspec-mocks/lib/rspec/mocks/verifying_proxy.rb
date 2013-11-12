@@ -4,7 +4,6 @@ require 'rspec/mocks/method_reference'
 module RSpec
   module Mocks
 
-    # @api private
     module VerifyingProxyMethods
       def add_stub(location, method_name, opts={}, &implementation)
         ensure_implemented(method_name)
@@ -71,8 +70,7 @@ module RSpec
       end
     end
 
-    # @api private
-    class VerifyingPartialDoubleProxy < PartialDoubleProxy
+    class VerifyingPartialMockProxy < PartialMockProxy
       include VerifyingProxyMethods
 
       def initialize(object, expectation_ordering)
@@ -123,13 +121,13 @@ module RSpec
       end
     end
 
+    # @api private
+    #
     # A VerifyingMethodDouble fetches the method to verify against from the
     # original object, using a MethodReference. This works for pure doubles,
     # but when the original object is itself the one being modified we need to
     # collapse the reference and the method double into a single object so that
     # we can access the original pristine method definition.
-    #
-    # @api private
     class VerifyingExistingMethodDouble < VerifyingMethodDouble
       def initialize(object, method_name, proxy)
         super(object, method_name, proxy, self)
