@@ -4,9 +4,9 @@ module RSpec
   module Expectations
     class EncodedString < SimpleDelegator
       def initialize(string, encoding=nil)
-        super(string)
-        @string = string
         @encoding = encoding
+        @string = matching_encoding(string)
+        super(@string)
       end
 
       def <<(string)
@@ -24,6 +24,18 @@ module RSpec
       if String.method_defined?(:encoding)
         def matching_encoding(string)
           string.encode(encoding)
+        rescue Encoding::UndefinedConversionError
+          normalize_missing(string.encode(encoding, :invalid => :replace, :undef => :replace))
+        rescue Encoding::ConverterNotFoundError
+          normalize_missing(string.force_encoding(encoding).encode(:invalid => :replace))
+        end
+
+        def normalize_missing(string)
+          if encoding.to_s == "UTF-8"
+            string.gsub("\xEF\xBF\xBD".force_encoding(encoding), "?")
+          else
+            string
+          end
         end
       else
         def matching_encoding(string)
