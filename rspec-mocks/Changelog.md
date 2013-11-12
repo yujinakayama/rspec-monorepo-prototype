@@ -1,3 +1,15 @@
+### 3.0.0.beta2 Development
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v3.0.0.beta1...master)
+
+Breaking Changes for 3.0.0:
+
+* Rename `RSpec::Mocks::Mock` to `RSpec::Mocks::Double`. (Myron Marston)
+
+Bug Fixes:
+
+* Fix regression in 3.0.0.beta1 that caused `double("string_name" => :value)`
+  to stop working. (Xavier Shay)
+
 ### 3.0.0.beta1 / 2013-11-07
 [full changelog](http://github.com/rspec/rspec-mocks/compare/v2.99.0.beta1...v3.0.0.beta1)
 
