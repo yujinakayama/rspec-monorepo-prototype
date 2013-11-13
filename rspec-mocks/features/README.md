@@ -15,21 +15,13 @@ invokes a _method_ with the same name as the message.
 ## Test Doubles
 
 A test double is an object that stands in for another object in your system
-during a code example. Use the `double` method, passing in an optional identifier, to create one:
+during a code example. Use the `double` method to create one:
 
-    book = double("book")
+    double_account = double("Account")
 
-Most of the time you will want some confidence that your doubles resemble an
-existing object in your system. Verifying doubles are provided for this
-purpose. If the existing object is available, they will prevent you from adding
-stubs and expectations for methods that do not exist or that have an invalid
-number of parameters.
-
-    book = instance_double("Book", :pages => 250)
-
-Verifying doubles have some clever tricks to enable you to both test in
-isolation without your dependencies loaded while still being able to validate
-them against real objects.
+You can also use the `mock` and `stub` methods to create test doubles, however
+these methods are there for backward compatibility only and will likely be
+deprecated and then removed from future versions.
 
 ## Method Stubs
 
