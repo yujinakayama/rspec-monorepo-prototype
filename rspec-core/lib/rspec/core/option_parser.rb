@@ -2,13 +2,16 @@
 require 'optparse'
 
 module RSpec::Core
-  # @api private
   class Parser
-    def self.parse(args)
-      new.parse(args)
+    def self.parse!(args)
+      new.parse!(args)
     end
 
-    def parse(args)
+    class << self
+      alias_method :parse, :parse!
+    end
+
+    def parse!(args)
       return {} if args.empty?
 
       convert_deprecated_args(args)
@@ -38,6 +41,8 @@ module RSpec::Core
         end
       }
     end
+
+    alias_method :parse, :parse!
 
     def parser(options)
       OptionParser.new do |parser|

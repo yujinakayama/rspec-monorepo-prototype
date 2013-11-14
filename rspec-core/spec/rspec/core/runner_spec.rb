@@ -3,20 +3,38 @@ require 'rspec/core/drb_command_line'
 
 module RSpec::Core
   describe Runner do
+    describe 'invocation' do
+      before do
+        # Simulate invoking the suite like exe/rspec does.
+        RSpec::Core::Runner.stub(:run)
+        RSpec::Core::Runner.invoke
+      end
+
+      it 'does not autorun after having been invoked' do
+        RSpec::Core::Runner.should_not_receive(:at_exit)
+        RSpec::Core::Runner.autorun
+      end
+
+      it 'prints a warning when autorun is attempted' do
+        RSpec.should_receive(:deprecate).with("Requiring `rspec/autorun` when running RSpec via the `rspec` command")
+        RSpec::Core::Runner.autorun
+      end
+    end
+
     describe 'at_exit' do
       it 'sets an at_exit hook if none is already set' do
+        RSpec::Core::Runner.stub(:autorun_disabled?).and_return(false)
         RSpec::Core::Runner.stub(:installed_at_exit?).and_return(false)
         RSpec::Core::Runner.stub(:running_in_drb?).and_return(false)
-        RSpec::Core::Runner.stub(:at_exit_hook_disabled?).and_return(false)
-        RSpec::Core::Runner.stub(:run).and_return(-1)
+        RSpec::Core::Runner.stub(:invoke)
         RSpec::Core::Runner.should_receive(:at_exit)
         RSpec::Core::Runner.autorun
       end
 
       it 'does not set the at_exit hook if it is already set' do
+        RSpec::Core::Runner.stub(:autorun_disabled?).and_return(false)
         RSpec::Core::Runner.stub(:installed_at_exit?).and_return(true)
         RSpec::Core::Runner.stub(:running_in_drb?).and_return(false)
-        RSpec::Core::Runner.stub(:at_exit_hook_disabled?).and_return(false)
         RSpec::Core::Runner.should_receive(:at_exit).never
         RSpec::Core::Runner.autorun
       end
@@ -49,12 +67,33 @@ module RSpec::Core
       end
     end
 
+    describe "#invoke" do
+      let(:runner) { RSpec::Core::Runner }
+
+      it "runs the specs via #run" do
+        allow(runner).to receive(:exit)
+        expect(runner).to receive(:run)
+        runner.invoke
+      end
+
+      it "doesn't exit on success" do
+        allow(runner).to receive(:run) { 0 }
+        expect(runner).to_not receive(:exit)
+        runner.invoke
+      end
+
+      it "exits with #run's status on failure" do
+        allow(runner).to receive(:run) { 123 }
+        expect(runner).to receive(:exit).with(123)
+        runner.invoke
+      end
+    end
+
     describe "#run" do
       let(:err) { StringIO.new }
       let(:out) { StringIO.new }
 
       it "tells RSpec to reset" do
-        CommandLine.stub(:new => double.as_null_object)
         RSpec.configuration.stub(:files_to_run => [], :warn => nil)
         RSpec.should_receive(:reset)
         RSpec::Core::Runner.run([], err, out)
