@@ -16,7 +16,7 @@ module RSpec::Core
       end
 
       it 'prints a warning when autorun is attempted' do
-        RSpec.should_receive(:deprecate).with("Requiring `rspec/autorun` when running RSpec via the `rspec` command")
+        expect_deprecation_with_call_site(__FILE__, __LINE__ + 1)
         RSpec::Core::Runner.autorun
       end
     end
@@ -94,6 +94,7 @@ module RSpec::Core
       let(:out) { StringIO.new }
 
       it "tells RSpec to reset" do
+        CommandLine.stub(:new => double.as_null_object)
         RSpec.configuration.stub(:files_to_run => [], :warn => nil)
         RSpec.should_receive(:reset)
         RSpec::Core::Runner.run([], err, out)
