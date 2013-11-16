@@ -10,7 +10,7 @@ module RSpec::Core
     let(:config) { RSpec::configuration }
     let(:world)  { RSpec::world         }
 
-    before { config.hooks.stub(:run) }
+    before { config.stub :run_hook }
 
     it "configures streams before command line options" do
       stdout = StringIO.new
@@ -63,20 +63,20 @@ module RSpec::Core
         before { config.stub :load_spec_files }
 
         it "runs before suite hooks" do
-          config.hooks.should_receive(:run).with(:before, :suite)
+          config.should_receive(:run_hook).with(:before, :suite)
           command_line = build_command_line
           command_line.run err, out
         end
 
         it "runs after suite hooks" do
-          config.hooks.should_receive(:run).with(:after, :suite)
+          config.should_receive(:run_hook).with(:after, :suite)
           command_line = build_command_line
           command_line.run err, out
         end
 
         it "runs after suite hooks even after an error" do
-          config.hooks.should_receive(:run).with(:before, :suite).and_raise "this error"
-          config.hooks.should_receive(:run).with(:after , :suite)
+          config.should_receive(:run_hook).with(:before, :suite).and_raise "this error"
+          config.should_receive(:run_hook).with(:after , :suite)
           expect do
             command_line = build_command_line
             command_line.run err, out
