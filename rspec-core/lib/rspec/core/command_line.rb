@@ -24,10 +24,10 @@ module RSpec
 
         @configuration.reporter.report(@world.example_count) do |reporter|
           begin
-            @configuration.hooks.run(:before, :suite)
+            @configuration.run_hook(:before, :suite)
             @world.ordered_example_groups.map {|g| g.run(reporter) }.all? ? 0 : @configuration.failure_exit_code
           ensure
-            @configuration.hooks.run(:after, :suite)
+            @configuration.run_hook(:after, :suite)
           end
         end
       end

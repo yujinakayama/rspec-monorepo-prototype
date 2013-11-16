@@ -336,11 +336,26 @@ module RSpec
           assign_before_all_ivars(superclass.before_all_ivars, example_group_instance)
 
           AllHookMemoizedHash::Before.isolate_for_all_hook(example_group_instance) do
-            hooks.run(:before, :all, example_group_instance)
+            run_hook(:before, :all, example_group_instance)
           end
         ensure
           store_before_all_ivars(example_group_instance)
         end
+      end
+
+      # @private
+      def self.run_around_each_hooks(example, initial_procsy)
+        run_hook(:around, :each, example, initial_procsy)
+      end
+
+      # @private
+      def self.run_before_each_hooks(example)
+        run_hook(:before, :each, example)
+      end
+
+      # @private
+      def self.run_after_each_hooks(example)
+        run_hook(:after, :each, example)
       end
 
       # @private
@@ -349,7 +364,7 @@ module RSpec
         assign_before_all_ivars(before_all_ivars, example_group_instance)
 
         AllHookMemoizedHash::After.isolate_for_all_hook(example_group_instance) do
-          hooks.run(:after, :all, example_group_instance)
+          run_hook(:after, :all, example_group_instance)
         end
       end
 
