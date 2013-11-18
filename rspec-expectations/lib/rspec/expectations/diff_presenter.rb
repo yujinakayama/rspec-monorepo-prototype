@@ -10,10 +10,10 @@ module RSpec
       def diff_as_string(actual, expected)
         @encoding = pick_encoding actual, expected
 
-        @actual   = EncodedString.new(actual, encoding)
-        @expected = EncodedString.new(expected, encoding)
+        @actual   = EncodedString.new(actual, @encoding)
+        @expected = EncodedString.new(expected, @encoding)
 
-        output = EncodedString.new("\n", encoding)
+        output = EncodedString.new("\n", @encoding)
 
         hunks.each_cons(2) do |prev_hunk, current_hunk|
           begin
@@ -44,9 +44,7 @@ module RSpec
         end
       end
 
-      private
-
-      attr_reader :expected, :actual, :encoding
+    private
 
       def hunks
         @hunks ||= Differ.new(@actual, @expected).hunks
@@ -62,13 +60,7 @@ module RSpec
       end
 
       def add_old_hunk_to_hunk(hunk, oldhunk)
-        if hunk.respond_to?(:merge)
-          # diff-lcs 1.2.x
-          hunk.merge(oldhunk)
-        else
-          # diff-lcs 1.1.3
-          hunk.unshift(oldhunk)
-        end
+        hunk.merge(oldhunk)
       end
 
       def format
@@ -134,11 +126,11 @@ module RSpec
       end
 
       def handle_encoding_errors
-        if actual.encoding != expected.encoding
-          "Could not produce a diff because the encoding of the actual string (#{expected.encoding}) "+
-            "differs from the encoding of the expected string (#{actual.encoding})"
+        if @actual.source_encoding != @expected.source_encoding
+          "Could not produce a diff because the encoding of the actual string (#{@actual.source_encoding}) "+
+            "differs from the encoding of the expected string (#{@expected.source_encoding})"
         else
-          "Could not produce a diff because of the encoding of the string (#{expected.encoding})"
+          "Could not produce a diff because of the encoding of the string (#{@expected.source_encoding})"
         end
       end
     end

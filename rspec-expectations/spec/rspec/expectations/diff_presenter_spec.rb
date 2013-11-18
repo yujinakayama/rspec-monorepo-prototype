@@ -11,10 +11,11 @@ module RSpec
       before { RSpec::Matchers.configuration.stub(:color? => false) }
 
       describe '#diff_as_string' do
-        subject { differ.diff_as_string(@expected, @actual) }
+        subject { differ.diff_as_string(@actual, @expected) }
+
         it "outputs unified diff of two strings" do
-          @expected = "foo\nbar\nzap\nthis\nis\nsoo\nvery\nvery\nequal\ninsert\na\nline\n"
-          @actual   = "foo\nzap\nbar\nthis\nis\nsoo\nvery\nvery\nequal\ninsert\na\nanother\nline\n"
+          @expected = "foo\nzap\nbar\nthis\nis\nsoo\nvery\nvery\nequal\ninsert\na\nanother\nline\n"
+          @actual   = "foo\nbar\nzap\nthis\nis\nsoo\nvery\nvery\nequal\ninsert\na\nline\n"
           expect(subject).to eq(<<-'EOD')
 
 
@@ -35,10 +36,11 @@ module RSpec
 EOD
 
         end
-        if RUBY_VERSION.to_f > 1.9
-          it 'copes with encoded strings', :pending => (Diff::LCS::VERSION < '1.2.2') do
-            @expected="Tu avec carté {count} itém has".encode('UTF-16LE')
-            @actual="Tu avec carte {count} item has".encode('UTF-16LE')
+
+        if String.method_defined?(:encoding)
+          it 'copes with encoded strings' do
+            @expected = "Tu avec carte {count} item has".encode('UTF-16LE')
+            @actual   = "Tu avec carté {count} itém has".encode('UTF-16LE')
             expect(subject).to eql(<<-EOD.encode('UTF-16LE'))
 
 @@ -1,2 +1,2 @@
@@ -47,23 +49,26 @@ EOD
 EOD
           end
 
-          it 'copes with encoded strings', :pending => (Diff::LCS::VERSION >= '1.2.2') do
-            @expected="Tu avec carté {count} itém has".encode('UTF-16LE')
-            @actual="Tu avec carte {count} item has".encode('UTF-16LE')
-            expect(subject).to eql 'Could not produce a diff because of the encoding of the string (UTF-16LE)'
-          end
-
           it 'handles differently encoded strings that are compatible' do
-            @expected = "강인철".encode('UTF-8')
-            @actual   = "abc".encode('us-ascii')
+            @expected = "abc".encode('us-ascii')
+            @actual   = "강인철".encode('UTF-8')
             expect(subject).to eql "\n@@ -1,2 +1,2 @@\n-abc\n+강인철\n"
           end
 
           it 'uses the default external encoding when the two strings have incompatible encodings' do
-            @expected = "Tu avec carté {count} itém has".encode('UTF-16LE')
-            @actual   = "Tu avec carte {count} item has"
+            @expected = "Tu avec carte {count} item has"
+            @actual   = "Tu avec carté {count} itém has".encode('UTF-16LE')
             expect(subject).to eq("\n@@ -1,2 +1,2 @@\n-Tu avec carte {count} item has\n+Tu avec carté {count} itém has\n")
             expect(subject.encoding).to eq(Encoding.default_external)
+          end
+
+          it 'handles any encoding error that occurs with a helpful error message' do
+            expect(Differ).to receive(:new).and_raise(Encoding::CompatibilityError)
+            @expected = "Tu avec carte {count} item has".encode('us-ascii')
+            @actual   = "Tu avec carté {count} itém has"
+            expect(subject).to match /Could not produce a diff/
+            expect(subject).to match /actual string \(UTF-8\)/
+            expect(subject).to match /expected string \(US-ASCII\)/
           end
         end
       end
