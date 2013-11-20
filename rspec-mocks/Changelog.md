@@ -4,20 +4,24 @@
 Breaking Changes for 3.0.0:
 
 * Rename `RSpec::Mocks::Mock` to `RSpec::Mocks::Double`. (Myron Marston)
+* Change how to integrate rspec-mocks in other test frameworks. You now
+  need to include `RSpec::Mocks::ExampleMethods` in your test context.
+  (Myron Marston)
 
 Bug Fixes:
 
 * Fix regression in 3.0.0.beta1 that caused `double("string_name" => :value)`
   to stop working. (Xavier Shay)
+* Fix the way rspec-mocks and rspec-core interact so that if users
+  define a `let` with the same name as one of the methods
+  from `RSpec::Mocks::ArgumentMatchers`, the user's `let` takes
+  precedence. (Michi Huber, Myron Marston)
 
 Enhancements:
 
 * Add receive_message_chain which provides the functionality of the old
   stub_chain for the new allow/expect syntax. Use it like so: allow(...).to
   receive_message_chain(:foo, :bar, :bazz). (Sam Phippen).
-* Change argument matchers to use `===` as their primary matching
-  protocol, as their semantics mirror that of a case or rescue statement
-  (which uses `===` for matching). (Myron Marston)
 
 ### 3.0.0.beta1 / 2013-11-07
 [full changelog](http://github.com/rspec/rspec-mocks/compare/v2.99.0.beta1...v3.0.0.beta1)
