@@ -1,6 +1,7 @@
 require 'rspec/support/caller_filter'
 require 'rspec/support/warnings'
 
+require 'rspec/expectations/extensions'
 require 'rspec/matchers'
 require 'rspec/expectations/expectation_target'
 require 'rspec/matchers/configuration'
@@ -8,7 +9,7 @@ require 'rspec/expectations/fail_with'
 require 'rspec/expectations/errors'
 require 'rspec/expectations/handler'
 require 'rspec/expectations/version'
-require 'rspec/expectations/diff_presenter'
+require 'rspec/expectations/differ'
 
 module RSpec
   # RSpec::Expectations adds two instance methods to every object:
