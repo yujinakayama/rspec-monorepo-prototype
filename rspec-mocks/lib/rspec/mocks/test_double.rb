@@ -78,20 +78,21 @@ module RSpec
       end
 
       def method_missing(message, *args, &block)
-        proxy = __mock_proxy
-        proxy.record_message_received(message, *args, &block)
-
-        if proxy.null_object?
+        if __mock_proxy.null_object?
           case message
           when :to_int        then return 0
           when :to_a, :to_ary then return nil
-          else return self
           end
         end
+        __mock_proxy.record_message_received(message, *args, &block)
 
-        # Required wrapping doubles in an Array on Ruby 1.9.2
-        raise NoMethodError if [:to_a, :to_ary].include? message
-        proxy.raise_unexpected_message_error(message, *args)
+        begin
+          __mock_proxy.null_object? ? self : super
+        rescue NameError
+          # Required wrapping doubles in an Array on Ruby 1.9.2
+          raise NoMethodError if [:to_a, :to_ary].include? message
+          __mock_proxy.raise_unexpected_message_error(message, *args)
+        end
       end
 
       def assign_stubs(stubs)
