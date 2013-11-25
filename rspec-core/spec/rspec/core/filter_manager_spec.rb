@@ -43,13 +43,6 @@ module RSpec::Core
                 expect(filter_manager.inclusions).to eq({filter => "value"})
               end
 
-              it "clears previous exclusion" do
-                filter_manager = FilterManager.new
-                filter_manager.include :foo => :bar
-                filter_manager.include filter => "value"
-                expect(filter_manager.exclusions).to be_empty
-              end
-
               it "does nothing when :#{filter} previously set" do
                 filter_manager = FilterManager.new
                 filter_manager.include filter => "a_value"
@@ -112,7 +105,7 @@ module RSpec::Core
     describe "#prune" do
       def filterable_object_with(args = {})
         object = double('a filterable object')
-        object.stub(:any_apply?) { |f| Metadata.new(args).any_apply?(f) }
+        allow(object).to receive(:any_apply?) { |f| Metadata.new(args).any_apply?(f) }
         object
       end
 
