@@ -8,10 +8,10 @@ module RSpec::Core
     let(:config) { Configuration.new }
 
     describe "RSpec.configuration with a block" do
-      before { allow(RSpec).to receive(:warn_deprecation) }
+      before { RSpec.stub(:warn_deprecation) }
 
       it "is deprecated" do
-        expect(RSpec).to receive(:warn_deprecation)
+        RSpec.should_receive(:warn_deprecation)
         RSpec.configuration {}
       end
     end
@@ -88,7 +88,7 @@ module RSpec::Core
       end
 
       it 'stores the required files' do
-        expect(config).to receive(:require).with('a/path')
+        config.should_receive(:require).with('a/path')
         config.setup_load_path_and_require ['a/path']
         expect(config.requires).to eq ['a/path']
       end
@@ -105,27 +105,27 @@ module RSpec::Core
     describe "#load_spec_files" do
       it "loads files using load" do
         config.files_to_run = ["foo.bar", "blah_spec.rb"]
-        expect(config).to receive(:load).twice
+        config.should_receive(:load).twice
         config.load_spec_files
       end
 
       it "loads each file once, even if duplicated in list" do
         config.files_to_run = ["a_spec.rb", "a_spec.rb"]
-        expect(config).to receive(:load).once
+        config.should_receive(:load).once
         config.load_spec_files
       end
     end
 
     describe "#mock_framework" do
       it "defaults to :rspec" do
-        expect(config).to receive(:require).with('rspec/core/mocking_adapters/rspec')
+        config.should_receive(:require).with('rspec/core/mocking_adapters/rspec')
         config.mock_framework
       end
     end
 
     describe "#mock_framework="do
       it "delegates to mock_with" do
-        expect(config).to receive(:mock_with).with(:rspec)
+        config.should_receive(:mock_with).with(:rspec)
         config.mock_framework = :rspec
       end
     end
@@ -134,7 +134,7 @@ module RSpec::Core
       it "yields a config object if the framework_module supports it" do
         custom_config = Struct.new(:custom_setting).new
         mod = Module.new
-        allow(mod).to receive_messages(:configuration => custom_config)
+        mod.stub(:configuration => custom_config)
 
         config.send m, mod do |mod_config|
           mod_config.custom_setting = true
@@ -154,14 +154,14 @@ module RSpec::Core
     end
 
     describe "#mock_with" do
-      before { allow(config).to receive(:require) }
+      before { config.stub(:require) }
 
       it_behaves_like "a configurable framework adapter", :mock_with
 
       it "allows rspec-mocks to be configured with a provided block" do
         mod = Module.new
 
-        expect(RSpec::Mocks.configuration).to receive(:add_stub_and_should_receive_to).with(mod)
+        RSpec::Mocks.configuration.should_receive(:add_stub_and_should_receive_to).with(mod)
 
         config.mock_with :rspec do |c|
           c.add_stub_and_should_receive_to mod
@@ -177,13 +177,13 @@ module RSpec::Core
       end
 
       it 'uses the named adapter' do
-        expect(config).to receive(:require).with("rspec/core/mocking_adapters/mocha")
+        config.should_receive(:require).with("rspec/core/mocking_adapters/mocha")
         stub_const("RSpec::Core::MockingAdapters::Mocha", Module.new)
         config.mock_with :mocha
       end
 
       it "uses the null adapter when given :nothing" do
-        expect(config).to receive(:require).with('rspec/core/mocking_adapters/null').and_call_original
+        config.should_receive(:require).with('rspec/core/mocking_adapters/null').and_call_original
         config.mock_with :nothing
       end
 
@@ -201,7 +201,7 @@ module RSpec::Core
 
       context 'when there are already some example groups defined' do
         it 'raises an error since this setting must be applied before any groups are defined' do
-          allow(RSpec.world).to receive(:example_groups).and_return([double.as_null_object])
+          RSpec.world.stub(:example_groups).and_return([double.as_null_object])
           stub_const("RSpec::Core::MockingAdapters::Mocha", double(:framework_name => :mocha))
           expect {
             config.mock_with :mocha
@@ -210,14 +210,14 @@ module RSpec::Core
 
         it 'does not raise an error if the default `mock_with :rspec` is re-configured' do
           config.mock_framework # called by RSpec when configuring the first example group
-          allow(RSpec.world).to receive(:example_groups).and_return([double.as_null_object])
+          RSpec.world.stub(:example_groups).and_return([double.as_null_object])
           config.mock_with :rspec
         end
 
         it 'does not raise an error if re-setting the same config' do
           stub_const("RSpec::Core::MockingAdapters::Mocha", double(:framework_name => :mocha))
           groups = []
-          allow(RSpec.world).to receive_messages(:example_groups => groups)
+          RSpec.world.stub(:example_groups => groups)
           config.mock_with :mocha
           groups << double.as_null_object
           config.mock_with :mocha
@@ -227,14 +227,14 @@ module RSpec::Core
 
     describe "#expectation_framework" do
       it "defaults to :rspec" do
-        expect(config).to receive(:require).with('rspec/expectations')
+        config.should_receive(:require).with('rspec/expectations')
         config.expectation_frameworks
       end
     end
 
     describe "#expectation_framework=" do
       it "delegates to expect_with=" do
-        expect(config).to receive(:expect_with).with(:rspec)
+        config.should_receive(:expect_with).with(:rspec)
         config.expectation_framework = :rspec
       end
     end
@@ -242,7 +242,7 @@ module RSpec::Core
     describe "#expect_with" do
       before do
         stub_const("Test::Unit::Assertions", Module.new)
-        allow(config).to receive(:require)
+        config.stub(:require)
       end
 
       it_behaves_like "a configurable framework adapter", :expect_with
@@ -253,7 +253,7 @@ module RSpec::Core
       ].each do |framework, required_file|
         context "with #{framework}" do
           it "requires #{required_file}" do
-            expect(config).to receive(:require).with(required_file)
+            config.should_receive(:require).with(required_file)
             config.expect_with framework
           end
         end
@@ -280,7 +280,7 @@ module RSpec::Core
 
       context 'when there are already some example groups defined' do
         it 'raises an error since this setting must be applied before any groups are defined' do
-          allow(RSpec.world).to receive(:example_groups).and_return([double.as_null_object])
+          RSpec.world.stub(:example_groups).and_return([double.as_null_object])
           expect {
             config.expect_with :rspec
           }.to raise_error(/must be configured before any example groups are defined/)
@@ -288,13 +288,13 @@ module RSpec::Core
 
         it 'does not raise an error if the default `expect_with :rspec` is re-configured' do
           config.expectation_frameworks # called by RSpec when configuring the first example group
-          allow(RSpec.world).to receive(:example_groups).and_return([double.as_null_object])
+          RSpec.world.stub(:example_groups).and_return([double.as_null_object])
           config.expect_with :rspec
         end
 
         it 'does not raise an error if re-setting the same config' do
           groups = []
-          allow(RSpec.world).to receive_messages(:example_groups => groups)
+          RSpec.world.stub(:example_groups => groups)
           config.expect_with :stdlib
           groups << double.as_null_object
           config.expect_with :stdlib
@@ -305,7 +305,7 @@ module RSpec::Core
     describe "#expecting_with_rspec?" do
       before do
         stub_const("Test::Unit::Assertions", Module.new)
-        allow(config).to receive(:require)
+        config.stub(:require)
       end
 
       it "returns false by default" do
@@ -402,34 +402,34 @@ module RSpec::Core
 
       context "with default default_path" do
         it "loads files in the default path when run by rspec" do
-          allow(config).to receive(:command) { 'rspec' }
+          config.stub(:command) { 'rspec' }
           config.files_or_directories_to_run = []
           expect(config.files_to_run).not_to be_empty
         end
 
         it "loads files in the default path when run with DRB (e.g., spork)" do
-          allow(config).to receive(:command) { 'spork' }
-          allow(RSpec::Core::Runner).to receive(:running_in_drb?) { true }
+          config.stub(:command) { 'spork' }
+          RSpec::Core::Runner.stub(:running_in_drb?) { true }
           config.files_or_directories_to_run = []
           expect(config.files_to_run).not_to be_empty
         end
 
         it "does not load files in the default path when run by ruby" do
-          allow(config).to receive(:command) { 'ruby' }
+          config.stub(:command) { 'ruby' }
           config.files_or_directories_to_run = []
           expect(config.files_to_run).to be_empty
         end
       end
 
       def specify_consistent_ordering_of_files_to_run
-        allow(File).to receive(:directory?).with('a') { true }
+        File.stub(:directory?).with('a') { true }
 
         orderings = [
           %w[ a/1.rb a/2.rb a/3.rb ],
           %w[ a/2.rb a/1.rb a/3.rb ],
           %w[ a/3.rb a/2.rb a/1.rb ]
         ].map do |files|
-          expect(Dir).to receive(:[]).with(/^\{?a/) { files }
+          Dir.should_receive(:[]).with(/^\{?a/) { files }
           yield
           config.files_to_run
         end
@@ -457,7 +457,7 @@ module RSpec::Core
 
       context 'when given multiple file paths' do
         it 'orders the files in a consistent ordering, regardless of the given order' do
-          allow(File).to receive(:directory?) { false } # fake it into thinking these a full file paths
+          File.stub(:directory?) { false } # fake it into thinking these a full file paths
 
           files = ['a/b/c_spec.rb', 'c/b/a_spec.rb']
           config.files_or_directories_to_run = *files
@@ -698,7 +698,7 @@ module RSpec::Core
               config.output_stream = output
 
               config.tty = true
-              allow(config.output_stream).to receive_messages :tty? => true
+              config.output_stream.stub :tty? => true
 
               expect(config.send(color_option)).to be_truthy
               expect(config.send(color_option, output)).to be_truthy
@@ -711,7 +711,7 @@ module RSpec::Core
               config.output_stream = output
 
               config.tty = true
-              allow(config.output_stream).to receive_messages :tty? => false
+              config.output_stream.stub :tty? => false
 
               expect(config.send(color_option)).to be_truthy
               expect(config.send(color_option, output)).to be_truthy
@@ -724,7 +724,7 @@ module RSpec::Core
               config.output_stream = output
 
               config.tty = false
-              allow(config.output_stream).to receive_messages :tty? => true
+              config.output_stream.stub :tty? => true
 
               expect(config.send(color_option)).to be_truthy
               expect(config.send(color_option, output)).to be_truthy
@@ -737,7 +737,7 @@ module RSpec::Core
               config.output_stream = output
 
               config.tty = false
-              allow(config.output_stream).to receive_messages :tty? => false
+              config.output_stream.stub :tty? => false
 
               expect(config.send(color_option)).to be_falsey
               expect(config.send(color_option, output)).to be_falsey
@@ -748,7 +748,7 @@ module RSpec::Core
             before do
               @original_host  = RbConfig::CONFIG['host_os']
               RbConfig::CONFIG['host_os'] = 'mingw'
-              allow(config).to receive(:require)
+              config.stub(:require)
             end
 
             after do
@@ -760,14 +760,14 @@ module RSpec::Core
 
               it "enables colors" do
                 config.output_stream = StringIO.new
-                allow(config.output_stream).to receive_messages :tty? => true
+                config.output_stream.stub :tty? => true
                 config.send "#{color_option}=", true
                 expect(config.send(color_option)).to be_truthy
               end
 
               it "leaves output stream intact" do
                 config.output_stream = $stdout
-                allow(config).to receive(:require) do |what|
+                config.stub(:require) do |what|
                   config.output_stream = 'foo' if what =~ /Win32/
                 end
                 config.send "#{color_option}=", true
@@ -781,13 +781,13 @@ module RSpec::Core
               end
 
               it "warns to install ANSICON" do
-                allow(config).to receive(:require) { raise LoadError }
+                config.stub(:require) { raise LoadError }
                 expect_warning_with_call_site(__FILE__, __LINE__ + 1, /You must use ANSICON/)
                 config.send "#{color_option}=", true
               end
 
               it "sets color_enabled to false" do
-                allow(config).to receive(:require) { raise LoadError }
+                config.stub(:require) { raise LoadError }
                 config.send "#{color_option}=", true
                 config.color_enabled = true
                 expect(config.send(color_option)).to be_falsey
@@ -799,7 +799,7 @@ module RSpec::Core
 
       it "prefers incoming cli_args" do
         config.output_stream = StringIO.new
-        allow(config.output_stream).to receive_messages :tty? => true
+        config.output_stream.stub :tty? => true
         config.force :color => true
         config.color = false
         expect(config.color).to be_truthy
@@ -808,7 +808,7 @@ module RSpec::Core
 
     describe '#formatter=' do
       it "delegates to add_formatter (better API for user-facing configuration)" do
-        expect(config).to receive(:add_formatter).with('these','options')
+        config.should_receive(:add_formatter).with('these','options')
         config.add_formatter('these','options')
       end
     end
@@ -849,7 +849,7 @@ module RSpec::Core
       end
 
       it "requires a formatter file based on its fully qualified name" do
-        expect(config).to receive(:require).with('rspec/custom_formatter') do
+        config.should_receive(:require).with('rspec/custom_formatter') do
           stub_const("RSpec::CustomFormatter", Class.new(Formatters::BaseFormatter))
         end
         config.add_formatter "RSpec::CustomFormatter"
@@ -857,7 +857,7 @@ module RSpec::Core
       end
 
       it "raises NameError if class is unresolvable" do
-        expect(config).to receive(:require).with('rspec/custom_formatter3')
+        config.should_receive(:require).with('rspec/custom_formatter3')
         expect(lambda { config.add_formatter "RSpec::CustomFormatter3" }).to raise_error(NameError)
       end
 
@@ -1076,7 +1076,7 @@ module RSpec::Core
       include_context "isolate load path mutation"
 
       it "adds directories to the LOAD_PATH" do
-        expect($LOAD_PATH).to receive(:unshift).with("a/dir")
+        $LOAD_PATH.should_receive(:unshift).with("a/dir")
         config.libs = ["a/dir"]
       end
     end
@@ -1091,16 +1091,16 @@ module RSpec::Core
     end
 
     describe "#requires=" do
-      before { expect(RSpec).to receive :deprecate }
+      before { RSpec.should_receive :deprecate }
 
       it "requires the configured files" do
-        expect(config).to receive(:require).with('foo').ordered
-        expect(config).to receive(:require).with('bar').ordered
+        config.should_receive(:require).with('foo').ordered
+        config.should_receive(:require).with('bar').ordered
         config.requires = ['foo', 'bar']
       end
 
       it "stores require paths" do
-        expect(config).to receive(:require).with("a/path")
+        config.should_receive(:require).with("a/path")
         config.requires = ["a/path"]
         expect(config.requires).to eq ['a/path']
       end
@@ -1159,7 +1159,7 @@ module RSpec::Core
 
       context "with :alias => " do
         it "is deprecated" do
-          expect(RSpec)::to receive(:deprecate).with(/:alias option/, :replacement => ":alias_with")
+          RSpec::should_receive(:deprecate).with(/:alias option/, :replacement => ":alias_with")
           config.add_setting :custom_option
           config.add_setting :another_custom_option, :alias => :custom_option
         end
@@ -1379,7 +1379,7 @@ module RSpec::Core
         end
 
         it 'sets up random ordering' do
-          allow(RSpec).to receive_messages(:configuration => config)
+          RSpec.stub(:configuration => config)
           global_ordering = config.ordering_registry.fetch(:global)
           expect(global_ordering).to be_an_instance_of(Ordering::Random)
         end
@@ -1393,7 +1393,7 @@ module RSpec::Core
         end
 
         it 'sets up random ordering' do
-          allow(RSpec).to receive_messages(:configuration => config)
+          RSpec.stub(:configuration => config)
           global_ordering = config.ordering_registry.fetch(:global)
           expect(global_ordering).to be_an_instance_of(Ordering::Random)
         end
@@ -1410,7 +1410,7 @@ module RSpec::Core
         end
 
         it 'clears the random ordering' do
-          allow(RSpec).to receive_messages(:configuration => config)
+          RSpec.stub(:configuration => config)
           list = [1, 2, 3, 4]
           ordering_strategy = config.ordering_registry.fetch(:global)
           expect(ordering_strategy.order(list)).to eq([1, 2, 3, 4])
