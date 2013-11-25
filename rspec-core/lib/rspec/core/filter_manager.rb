@@ -148,8 +148,8 @@ module RSpec
         #   { "path/to/file.rb" => [37, 42] }
         locations = @inclusions.delete(:locations) || Hash.new {|h,k| h[k] = []}
         locations[File.expand_path(file_path)].push(*line_numbers)
-
-        override_filters :locations => locations
+        @inclusions.replace(:locations => locations)
+        @exclusions.clear
       end
 
       def empty?
@@ -177,32 +177,25 @@ module RSpec
       end
 
       def include(*args)
-        override_when_standalone_or_run(*args) { merge(@inclusions, @exclusions, *args) }
+        unless_standalone(*args) { merge(@inclusions, @exclusions, *args) }
       end
 
       def include!(*args)
-        override_when_standalone_or_run(*args) { replace(@inclusions, @exclusions, *args) }
+        unless_standalone(*args) { replace(@inclusions, @exclusions, *args) }
       end
 
       def include_with_low_priority(*args)
-        override_when_standalone_or_run(*args) { reverse_merge(@inclusions, @exclusions, *args) }
+        unless_standalone(*args) { reverse_merge(@inclusions, @exclusions, *args) }
       end
 
       def include?(example)
         @inclusions.empty? ? true : example.any_apply?(@inclusions)
       end
 
-    private
+      private
 
-      def override_when_standalone_or_run(*args)
-        unless already_set_standalone_filter?
-          is_standalone_filter?(args.last) ? override_filters(args.last) : yield
-        end
-      end
-
-      def override_filters(rule)
-        @inclusions.replace(rule)
-        @exclusions.clear
+      def unless_standalone(*args)
+        is_standalone_filter?(args.last) ? @inclusions.replace(args.last) : yield unless already_set_standalone_filter?
       end
 
       def merge(orig, opposite, *updates)
