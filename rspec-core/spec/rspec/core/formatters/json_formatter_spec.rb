@@ -28,7 +28,7 @@ describe RSpec::Core::Formatters::JsonFormatter do
     pending_line = __LINE__ - 4
 
     now = Time.now
-    allow(Time).to receive(:now).and_return(now)
+    Time.stub(:now).and_return(now)
     reporter.report(2) do |r|
       group.run(r)
     end
@@ -119,8 +119,8 @@ describe RSpec::Core::Formatters::JsonFormatter do
       end
       group.run(double('reporter').as_null_object)
 
-      allow(formatter).to receive(:examples) { group.examples }
-      allow(RSpec.configuration).to receive(:profile_examples) { 10 }
+      formatter.stub(:examples) { group.examples }
+      RSpec.configuration.stub(:profile_examples) { 10 }
     end
 
     it "names the example" do
@@ -150,12 +150,12 @@ describe RSpec::Core::Formatters::JsonFormatter do
     let(:rpt) { double('reporter').as_null_object }
 
     before do
-      allow(RSpec.configuration).to receive(:profile_examples) { 10 }
+      RSpec.configuration.stub(:profile_examples) { 10 }
       group.run(rpt)
     end
 
     context "with one example group" do
-      before { allow(formatter).to receive(:examples) { group.examples } }
+      before { formatter.stub(:examples) { group.examples } }
 
       it "doesn't profile a single example group" do
         formatter.dump_profile_slowest_example_groups
@@ -171,7 +171,7 @@ describe RSpec::Core::Formatters::JsonFormatter do
         end
         group2.run(rpt)
 
-        allow(formatter).to receive(:examples) { group.examples + group2.examples }
+        formatter.stub(:examples) { group.examples + group2.examples }
       end
 
       it "provides the slowest example groups" do

@@ -282,12 +282,12 @@ module RSpec::Core
           before do
             filter_manager = FilterManager.new
             filter_manager.include filter_metadata
-            allow(world).to receive_messages(:filter_manager => filter_manager)
+            world.stub(:filter_manager => filter_manager)
           end
 
           it "includes examples in groups matching filter" do
             group = ExampleGroup.describe("does something", spec_metadata)
-            allow(group).to receive(:world) { world }
+            group.stub(:world) { world }
             all_examples = [ group.example("first"), group.example("second") ]
 
             expect(group.filtered_examples).to eq(all_examples)
@@ -295,7 +295,7 @@ module RSpec::Core
 
           it "includes examples directly matching filter" do
             group = ExampleGroup.describe("does something")
-            allow(group).to receive(:world) { world }
+            group.stub(:world) { world }
             filtered_examples = [
               group.example("first", spec_metadata),
               group.example("second", spec_metadata)
@@ -310,12 +310,12 @@ module RSpec::Core
           before do
             filter_manager = FilterManager.new
             filter_manager.exclude filter_metadata
-            allow(world).to receive_messages(:filter_manager => filter_manager)
+            world.stub(:filter_manager => filter_manager)
           end
 
           it "excludes examples in groups matching filter" do
             group = ExampleGroup.describe("does something", spec_metadata)
-            allow(group).to receive(:world) { world }
+            group.stub(:world) { world }
             [ group.example("first"), group.example("second") ]
 
             expect(group.filtered_examples).to be_empty
@@ -323,7 +323,7 @@ module RSpec::Core
 
           it "excludes examples directly matching filter" do
             group = ExampleGroup.describe("does something")
-            allow(group).to receive(:world) { world }
+            group.stub(:world) { world }
             [
               group.example("first", spec_metadata),
               group.example("second", spec_metadata)
@@ -404,7 +404,7 @@ module RSpec::Core
       context "with no filters" do
         it "returns all" do
           group = ExampleGroup.describe
-          allow(group).to receive(:world) { world }
+          group.stub(:world) { world }
           example = group.example("does something")
           expect(group.filtered_examples).to eq([example])
         end
@@ -414,9 +414,9 @@ module RSpec::Core
         it "returns none" do
           filter_manager = FilterManager.new
           filter_manager.include :awesome => false
-          allow(world).to receive_messages(:filter_manager => filter_manager)
+          world.stub(:filter_manager => filter_manager)
           group = ExampleGroup.describe
-          allow(group).to receive(:world) { world }
+          group.stub(:world) { world }
           group.example("does something")
           expect(group.filtered_examples).to eq([])
         end
@@ -838,7 +838,7 @@ module RSpec::Core
 
         before(:each) do
           hooks_run = []
-          allow(RSpec.configuration.reporter).to receive(:message)
+          RSpec.configuration.reporter.stub(:message)
         end
 
         let(:group) do
@@ -858,8 +858,8 @@ module RSpec::Core
         end
 
         it "rescues any error(s) and prints them out" do
-          expect(RSpec.configuration.reporter).to receive(:message).with(/An error in an after\(:all\) hook/)
-          expect(RSpec.configuration.reporter).to receive(:message).with(/A different hook raising an error/)
+          RSpec.configuration.reporter.should_receive(:message).with(/An error in an after\(:all\) hook/)
+          RSpec.configuration.reporter.should_receive(:message).with(/A different hook raising an error/)
           group.run
         end
 
@@ -971,7 +971,7 @@ module RSpec::Core
           example('ex 1') { expect(1).to eq(1) }
           example('ex 2') { expect(1).to eq(1) }
         end
-        allow(group).to receive(:filtered_examples) { group.examples }
+        group.stub(:filtered_examples) { group.examples }
         expect(group.run(reporter)).to be_truthy
       end
 
@@ -980,7 +980,7 @@ module RSpec::Core
           example('ex 1') { expect(1).to eq(1) }
           example('ex 2') { expect(1).to eq(2) }
         end
-        allow(group).to receive(:filtered_examples) { group.examples }
+        group.stub(:filtered_examples) { group.examples }
         expect(group.run(reporter)).to be_falsey
       end
 
@@ -989,9 +989,9 @@ module RSpec::Core
           example('ex 1') { expect(1).to eq(2) }
           example('ex 2') { expect(1).to eq(1) }
         end
-        allow(group).to receive(:filtered_examples) { group.examples }
+        group.stub(:filtered_examples) { group.examples }
         group.filtered_examples.each do |example|
-          expect(example).to receive(:run)
+          example.should_receive(:run)
         end
         expect(group.run(reporter)).to be_falsey
       end
@@ -1077,7 +1077,7 @@ module RSpec::Core
       context "with fail_fast? => true" do
         let(:group) do
           group = RSpec::Core::ExampleGroup.describe
-          allow(group).to receive(:fail_fast?) { true }
+          group.stub(:fail_fast?) { true }
           group
         end
 
@@ -1104,18 +1104,18 @@ module RSpec::Core
         let(:group) { RSpec::Core::ExampleGroup.describe }
 
         before do
-          allow(RSpec).to receive(:wants_to_quit) { true }
-          allow(RSpec).to receive(:clear_remaining_example_groups)
+          RSpec.stub(:wants_to_quit) { true }
+          RSpec.stub(:clear_remaining_example_groups)
         end
 
         it "returns without starting the group" do
-          expect(reporter).not_to receive(:example_group_started)
+          reporter.should_not_receive(:example_group_started)
           group.run(reporter)
         end
 
         context "at top level" do
           it "purges remaining groups" do
-            expect(RSpec).to receive(:clear_remaining_example_groups)
+            RSpec.should_receive(:clear_remaining_example_groups)
             group.run(reporter)
           end
         end
@@ -1123,7 +1123,7 @@ module RSpec::Core
         context "in a nested group" do
           it "does not purge remaining groups" do
             nested_group = group.describe
-            expect(RSpec).not_to receive(:clear_remaining_example_groups)
+            RSpec.should_not_receive(:clear_remaining_example_groups)
             nested_group.run(reporter)
           end
         end
