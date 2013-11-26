@@ -28,7 +28,7 @@ describe RSpec::Core::Formatters::JsonFormatter do
     pending_line = __LINE__ - 4
 
     now = Time.now
-    Time.stub(:now).and_return(now)
+    allow(Time).to receive(:now).and_return(now)
     reporter.report(2) do |r|
       group.run(r)
     end
@@ -45,7 +45,6 @@ describe RSpec::Core::Formatters::JsonFormatter do
           :status => "passed",
           :file_path => this_file,
           :line_number => succeeding_line,
-          :run_time => formatter.output_hash[:examples][0][:run_time]
         },
         {
           :description => "fails",
@@ -53,7 +52,6 @@ describe RSpec::Core::Formatters::JsonFormatter do
           :status => "failed",
           :file_path => this_file,
           :line_number => failing_line,
-          :run_time => formatter.output_hash[:examples][1][:run_time],
           :exception => {:class => "RuntimeError", :message => "eek", :backtrace => failing_backtrace}
         },
         {
@@ -62,7 +60,6 @@ describe RSpec::Core::Formatters::JsonFormatter do
           :status => "pending",
           :file_path => this_file,
           :line_number => pending_line,
-          :run_time => formatter.output_hash[:examples][2][:run_time]
         },
       ],
       :summary => {
@@ -122,8 +119,8 @@ describe RSpec::Core::Formatters::JsonFormatter do
       end
       group.run(double('reporter').as_null_object)
 
-      formatter.stub(:examples) { group.examples }
-      RSpec.configuration.stub(:profile_examples) { 10 }
+      allow(formatter).to receive(:examples) { group.examples }
+      allow(RSpec.configuration).to receive(:profile_examples) { 10 }
     end
 
     it "names the example" do
@@ -153,12 +150,12 @@ describe RSpec::Core::Formatters::JsonFormatter do
     let(:rpt) { double('reporter').as_null_object }
 
     before do
-      RSpec.configuration.stub(:profile_examples) { 10 }
+      allow(RSpec.configuration).to receive(:profile_examples) { 10 }
       group.run(rpt)
     end
 
     context "with one example group" do
-      before { formatter.stub(:examples) { group.examples } }
+      before { allow(formatter).to receive(:examples) { group.examples } }
 
       it "doesn't profile a single example group" do
         formatter.dump_profile_slowest_example_groups
@@ -174,7 +171,7 @@ describe RSpec::Core::Formatters::JsonFormatter do
         end
         group2.run(rpt)
 
-        formatter.stub(:examples) { group.examples + group2.examples }
+        allow(formatter).to receive(:examples) { group.examples + group2.examples }
       end
 
       it "provides the slowest example groups" do

@@ -90,8 +90,7 @@ module RSpec
             :full_description => example.full_description,
             :status => example.execution_result[:status],
             :file_path => example.metadata[:file_path],
-            :line_number  => example.metadata[:line_number],
-            :run_time => example.execution_result[:run_time]
+            :line_number  => example.metadata[:line_number]
           }
         end
       end
