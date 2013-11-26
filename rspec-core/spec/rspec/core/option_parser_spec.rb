@@ -5,13 +5,13 @@ module RSpec::Core
     let(:output_file){ mock File }
 
     before do
-      allow(RSpec).to receive(:deprecate)
-      allow(File).to receive(:open).with("foo.txt",'w') { (output_file) }
+      RSpec.stub(:deprecate)
+      File.stub(:open).with("foo.txt",'w') { (output_file) }
     end
 
     it "does not parse empty args" do
       parser = Parser.new
-      expect(OptionParser).not_to receive(:new)
+      OptionParser.should_not_receive(:new)
       parser.parse([])
     end
 
@@ -19,7 +19,18 @@ module RSpec::Core
       parser = Parser.new
       option = "--my_wrong_arg"
 
-      expect(parser).to receive(:abort) do |msg|
+      parser.should_receive(:abort) do |msg|
+        expect(msg).to include('use --help', option)
+      end
+
+      parser.parse([option])
+    end
+
+    it "won't parse -i as a shorthand for --init" do
+      parser = Parser.new
+      option = "-i"
+
+      parser.should_receive(:abort) do |msg|
         expect(msg).to include('use --help', option)
       end
 
@@ -28,7 +39,7 @@ module RSpec::Core
 
     describe "--formatter" do
       it "is deprecated" do
-        expect(RSpec).to receive(:deprecate)
+        RSpec.should_receive(:deprecate)
         Parser.parse(%w[--formatter doc])
       end
 
