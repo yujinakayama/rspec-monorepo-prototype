@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module RSpec
   module Core
-    RSpec.describe Metadata do
+    describe Metadata do
 
       describe '.relative_path' do
         let(:here) { File.expand_path(".") }

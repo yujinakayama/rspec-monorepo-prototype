@@ -2,7 +2,7 @@ require 'spec_helper'
 
 module RSpec
   module Core
-    RSpec.describe RubyProject do
+    describe RubyProject do
 
       describe "#determine_root" do
 

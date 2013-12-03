@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-RSpec.describe RSpec do
+describe RSpec do
   describe "::configuration" do
     it "returns the same object every time" do
       expect(RSpec.configuration).to equal(RSpec.configuration)

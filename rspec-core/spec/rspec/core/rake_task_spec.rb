@@ -3,7 +3,7 @@ require "rspec/core/rake_task"
 require 'tempfile'
 
 module RSpec::Core
-  RSpec.describe RakeTask do
+  describe RakeTask do
     let(:task) { RakeTask.new }
 
     def ruby

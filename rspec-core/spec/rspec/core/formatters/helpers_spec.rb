@@ -1,7 +1,7 @@
 require 'spec_helper'
 require 'rspec/core/formatters/helpers'
 
-RSpec.describe RSpec::Core::Formatters::Helpers do
+describe RSpec::Core::Formatters::Helpers do
   let(:helper) { Object.new.extend(RSpec::Core::Formatters::Helpers) }
 
   describe "format duration" do

@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'rspec/core/formatters/documentation_formatter'
 
 module RSpec::Core::Formatters
-  RSpec.describe DocumentationFormatter do
+  describe DocumentationFormatter do
     it "numbers the failures" do
 
       examples = [

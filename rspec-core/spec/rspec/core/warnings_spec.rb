@@ -1,6 +1,6 @@
 require "spec_helper"
 
-RSpec.describe "rspec warnings and deprecations" do
+describe "RSpec deprecations and warnings" do
 
   describe "#deprecate" do
     it "passes the hash to the reporter" do

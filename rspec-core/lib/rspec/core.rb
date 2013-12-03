@@ -99,12 +99,7 @@ Called from #{CallerFilter.first_non_rspec_line}
 
 WARNING
     end
-    @configuration ||= begin
-                         config = RSpec::Core::Configuration.new
-                         config.expose_dsl_globally = true
-                         config
-                       end
-
+    @configuration ||= RSpec::Core::Configuration.new
   end
 
   # @private

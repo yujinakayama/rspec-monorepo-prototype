@@ -1,10 +1,10 @@
 # Deliberately named _specs.rb to avoid being loaded except when specified
 
-RSpec.describe "pending spec with no implementation" do
+describe "pending spec with no implementation" do
   it "is pending"
 end
 
-RSpec.describe "pending command with block format" do
+describe "pending command with block format" do
   context "with content that would fail" do
     it "is pending" do
       pending do
@@ -22,19 +22,19 @@ RSpec.describe "pending command with block format" do
   end
 end
 
-RSpec.describe "passing spec" do
+describe "passing spec" do
   it "passes" do
     expect(1).to eq(1)
   end
 end
 
-RSpec.describe "failing spec" do
+describe "failing spec" do
   it "fails" do
     expect(1).to eq(2)
   end
 end
 
-RSpec.describe "a failing spec with odd backtraces" do
+describe "a failing spec with odd backtraces" do
   it "fails with a backtrace that has no file" do
     require 'erb'
 

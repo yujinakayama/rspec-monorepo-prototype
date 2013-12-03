@@ -4,7 +4,7 @@ require 'rspec/core/formatters/snippet_extractor'
 module RSpec
   module Core
     module Formatters
-      RSpec.describe SnippetExtractor do
+      describe SnippetExtractor do
         it "falls back on a default message when it doesn't understand a line" do
           expect(RSpec::Core::Formatters::SnippetExtractor.new.snippet_for("blech")).to eq(["# Couldn't get snippet for blech", 1])
         end

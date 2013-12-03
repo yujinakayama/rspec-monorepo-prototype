@@ -1,7 +1,7 @@
 require "spec_helper"
 
 module RSpec::Core
-  RSpec.describe Reporter do
+  describe Reporter do
     let(:config) { Configuration.new }
 
     def reporter_for(*formatters)

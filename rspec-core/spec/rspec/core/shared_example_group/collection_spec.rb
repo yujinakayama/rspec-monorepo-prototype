@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module RSpec::Core::SharedExampleGroup
-  RSpec.describe Collection do
+  describe Collection do
 
     # this represents:
     #

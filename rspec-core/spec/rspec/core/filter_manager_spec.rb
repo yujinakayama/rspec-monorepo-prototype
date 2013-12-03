@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 module RSpec::Core
-  RSpec.describe FilterManager do
+  describe FilterManager do
     def opposite(name)
       name =~ /^in/ ? name.sub(/^(in)/,'ex') : name.sub(/^(ex)/,'in')
     end

@@ -41,49 +41,17 @@ module RSpec
       end
 
       module TopLevelDSL
-        def self.definitions
-          proc do
-            def shared_examples(*args, &block)
-              SharedExampleGroup.registry.add_group('main', *args, &block)
-            end
-            alias :shared_context      :shared_examples
-            alias :share_examples_for  :shared_examples
-            alias :shared_examples_for :shared_examples
-            def shared_example_groups
-              SharedExampleGroup.registry.shared_example_groups_for('main')
-            end
-          end
+        def shared_examples(*args, &block)
+          SharedExampleGroup.registry.add_group('main', *args, &block)
         end
 
-        # @private
-        def self.exposed_globally?
-          @exposed_globally ||= false
+        alias_method :shared_context,      :shared_examples
+        alias_method :share_examples_for,  :shared_examples
+        alias_method :shared_examples_for, :shared_examples
+
+        def shared_example_groups
+          SharedExampleGroup.registry.shared_example_groups_for('main')
         end
-
-        def self.expose_globally!
-          return if exposed_globally?
-
-          Core::DSL.top_level.instance_eval(&definitions)
-          Module.class_exec(&definitions)
-          @exposed_globally = true
-        end
-
-        def self.remove_globally!
-          return unless exposed_globally?
-
-          to_undefine = proc do
-            undef shared_examples
-            undef shared_context
-            undef share_examples_for
-            undef shared_examples_for
-            undef shared_example_groups
-          end
-
-          Core::DSL.top_level.instance_eval(&to_undefine)
-          Module.class_exec(&to_undefine)
-          @exposed_globally = false
-        end
-
       end
 
       def self.registry
@@ -172,6 +140,7 @@ module RSpec
       end
     end
   end
-
-  instance_eval &Core::SharedExampleGroup::TopLevelDSL.definitions
 end
+
+extend RSpec::Core::SharedExampleGroup::TopLevelDSL
+Module.send(:include, RSpec::Core::SharedExampleGroup::TopLevelDSL)

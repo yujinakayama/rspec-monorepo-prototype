@@ -3,7 +3,7 @@ require 'tmpdir'
 
 module RSpec::Core
 
-  RSpec.describe Configuration do
+  describe Configuration do
 
     let(:config) { Configuration.new }
 
@@ -814,6 +814,7 @@ module RSpec::Core
     end
 
     describe "#add_formatter" do
+      let(:path) { File.join(Dir.tmpdir, 'output.txt') }
 
       it "adds to the list of formatters" do
         config.add_formatter :documentation
@@ -867,10 +868,27 @@ module RSpec::Core
 
       context "with a 2nd arg defining the output" do
         it "creates a file at that path and sets it as the output" do
-          path = File.join(Dir.tmpdir, 'output.txt')
           config.add_formatter('doc', path)
           expect(config.formatters.first.output).to be_a(File)
           expect(config.formatters.first.output.path).to eq(path)
+        end
+      end
+
+      context "when a duplicate formatter exists for the same output target" do
+        it "does not add the formatter" do
+          config.add_formatter :documentation
+          expect {
+            config.add_formatter :documentation
+          }.not_to change { config.formatters.length }
+        end
+      end
+
+      context "when a duplicate formatter exists for a different output target" do
+        it "does not add the formatter" do
+          config.add_formatter :documentation, path
+          expect {
+            config.add_formatter :documentation
+          }.to change { config.formatters.length }
         end
       end
     end
