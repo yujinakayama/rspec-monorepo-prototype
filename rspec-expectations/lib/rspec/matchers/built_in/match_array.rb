@@ -23,7 +23,7 @@ module RSpec
         end
 
         def failure_message_when_negated
-          "`match_array` does not support negation"
+          "Matcher does not support should_not"
         end
 
         def description
