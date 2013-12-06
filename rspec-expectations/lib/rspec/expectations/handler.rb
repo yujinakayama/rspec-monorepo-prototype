@@ -2,7 +2,7 @@ module RSpec
   module Expectations
 
     # @api private
-    class ExpectationHandler
+    class ExpectationHelper
       def self.check_message(msg)
         unless msg.nil? || msg.respond_to?(:to_str) || msg.respond_to?(:call)
           ::Kernel.warn [
@@ -22,13 +22,13 @@ module RSpec
         LegacyMacherAdapter::RSpec1.wrap(matcher) || matcher
       end
 
-      def self.handle_matcher(matcher, message, failure_message_method)
+      def self.setup(handler, matcher, message)
         check_message(message)
-        matcher = modern_matcher_from(matcher)
-        ::RSpec::Matchers.last_matcher = matcher
+        ::RSpec::Matchers.last_expectation_handler = handler
+        ::RSpec::Matchers.last_matcher = modern_matcher_from(matcher)
+      end
 
-        yield
-
+      def self.handle_failure(matcher, message, failure_message_method)
         message = message.call if message.respond_to?(:call)
         message ||= matcher.__send__(failure_message_method)
 
@@ -41,32 +41,54 @@ module RSpec
     end
 
     # @api private
-    class PositiveExpectationHandler < ExpectationHandler
-      def self.handle_matcher(actual, matcher, message=nil, &block)
-        super(matcher, message, :failure_message) do
-          ::RSpec::Matchers.last_should = :should
-          return ::RSpec::Matchers::BuiltIn::PositiveOperatorMatcher.new(actual) if matcher.nil?
+    class PositiveExpectationHandler
+      def self.handle_matcher(actual, initial_matcher, message=nil, &block)
+        matcher = ExpectationHelper.setup(self, initial_matcher, message)
 
-          match = matcher.matches?(actual, &block)
-          return match if match
-        end
+        return ::RSpec::Matchers::BuiltIn::PositiveOperatorMatcher.new(actual) unless initial_matcher
+        matcher.matches?(actual, &block) or ExpectationHelper.handle_failure(matcher, message, :failure_message)
+      end
+
+      def self.verb
+        "should"
+      end
+
+      def self.should_method
+        :should
+      end
+
+      def self.opposite_should_method
+        :should_not
       end
     end
 
     # @api private
-    class NegativeExpectationHandler < ExpectationHandler
-      def self.handle_matcher(actual, matcher, message=nil, &block)
-        super(matcher, message, :failure_message_when_negated) do
-          ::RSpec::Matchers.last_should = :should_not
-          return ::RSpec::Matchers::BuiltIn::NegativeOperatorMatcher.new(actual) if matcher.nil?
+    class NegativeExpectationHandler
+      def self.handle_matcher(actual, initial_matcher, message=nil, &block)
+        matcher = ExpectationHelper.setup(self, initial_matcher, message)
 
-          match = if matcher.respond_to?(:does_not_match?)
-                    !matcher.does_not_match?(actual, &block)
-                  else
-                    matcher.matches?(actual, &block)
-                  end
-          return match unless match
+        return ::RSpec::Matchers::BuiltIn::NegativeOperatorMatcher.new(actual) unless initial_matcher
+        !(does_not_match?(matcher, actual, &block) or ExpectationHelper.handle_failure(matcher, message, :failure_message_when_negated))
+      end
+
+      def self.does_not_match?(matcher, actual, &block)
+        if matcher.respond_to?(:does_not_match?)
+          matcher.does_not_match?(actual, &block)
+        else
+          !matcher.matches?(actual, &block)
         end
+      end
+
+      def self.verb
+        "should not"
+      end
+
+      def self.should_method
+        :should_not
+      end
+
+      def self.opposite_should_method
+        :should
       end
     end
 
