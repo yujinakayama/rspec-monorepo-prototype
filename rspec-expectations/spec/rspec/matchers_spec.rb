@@ -1,0 +1,60 @@
+require 'spec_helper'
+
+module RSpec
+  module Matchers
+    describe "built in matchers" do
+      let(:matchers) do
+        BuiltIn.constants.map { |n| BuiltIn.const_get(n) }.select do |m|
+          m.method_defined?(:matches?) && m.method_defined?(:failure_message)
+        end
+      end
+
+      specify "they all have defined #=== so they can be composable" do
+        missing_threequals = matchers.select do |m|
+          m.instance_method(:===).owner == ::Kernel
+        end
+
+        # This spec is merely to make sure we don't forget to make
+        # a built-in matcher implement `===`. It doesn't check the
+        # semantics of that. Use the "an RSpec matcher" shared
+        # example group to actually check the semantics.
+        expect(missing_threequals).to eq([])
+      end
+
+      specify "they all have defined #and and #or so they support compound expectations" do
+        noncompound_matchers = matchers.reject do |m|
+          m.method_defined?(:and) || m.method_defined?(:or)
+        end
+
+        expect(noncompound_matchers).to eq([])
+      end
+
+      shared_examples_for "a well-behaved method_missing hook" do
+        include TestUnitIntegrationSupport
+
+        it "raises a NoMethodError (and not SystemStackError) for an undefined method" do
+          with_test_unit_loaded do
+            expect { subject.some_undefined_method }.to raise_error(NoMethodError)
+          end
+        end
+      end
+
+      describe "RSpec::Matchers method_missing hook" do
+        subject { self }
+
+        it_behaves_like "a well-behaved method_missing hook"
+
+        context 'when invoked in a Test::Unit::TestCase' do
+          subject { Test::Unit::TestCase.allocate }
+          it_behaves_like "a well-behaved method_missing hook"
+        end
+
+        context 'when invoked in a MiniTest::Unit::TestCase', :if => defined?(MiniTest) do
+          subject { MiniTest::Unit::TestCase.allocate }
+          it_behaves_like "a well-behaved method_missing hook"
+        end
+      end
+    end
+  end
+end
+
