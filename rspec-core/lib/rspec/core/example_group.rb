@@ -325,10 +325,15 @@ module RSpec
       end
 
       # @private
+      def self.assign_before_all_ivars(ivars, example_group_instance)
+        ivars.each { |ivar, val| example_group_instance.instance_variable_set(ivar, val) }
+      end
+
+      # @private
       def self.run_before_all_hooks(example_group_instance)
         return if descendant_filtered_examples.empty?
         begin
-          set_ivars(example_group_instance, superclass.before_all_ivars)
+          assign_before_all_ivars(superclass.before_all_ivars, example_group_instance)
 
           AllHookMemoizedHash::Before.isolate_for_all_hook(example_group_instance) do
             hooks.run(:before, :all, example_group_instance)
@@ -341,7 +346,7 @@ module RSpec
       # @private
       def self.run_after_all_hooks(example_group_instance)
         return if descendant_filtered_examples.empty?
-        set_ivars(example_group_instance, before_all_ivars)
+        assign_before_all_ivars(before_all_ivars, example_group_instance)
 
         AllHookMemoizedHash::After.isolate_for_all_hook(example_group_instance) do
           hooks.run(:after, :all, example_group_instance)
