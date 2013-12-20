@@ -298,11 +298,9 @@ An error occurred #{context}
 
       def assign_generated_description
         return unless RSpec.configuration.expecting_with_rspec?
-
-        if metadata[:description_args].empty?
+        if metadata[:description_args].empty? and !pending?
           metadata[:description_args] << RSpec::Matchers.generated_description
         end
-
         RSpec::Matchers.clear_generated_description
       end
 
