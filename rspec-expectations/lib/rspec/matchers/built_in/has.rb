@@ -4,37 +4,34 @@ module RSpec
       class Has
         include Composable
 
-        def initialize(method_name, *args)
-          @method_name, @args = method_name, args
+        def initialize(expected, *args)
+          @expected, @args = expected, args
         end
 
         def matches?(actual)
-          actual.__send__(predicate, *@args)
+          actual.__send__(predicate(@expected), *@args)
         end
 
         def failure_message
-          "expected ##{predicate}#{failure_message_args_description} to return true, got false"
+          "expected ##{predicate(@expected)}#{failure_message_args_description} to return true, got false"
         end
 
         def failure_message_when_negated
-          "expected ##{predicate}#{failure_message_args_description} to return false, got true"
+          "expected ##{predicate(@expected)}#{failure_message_args_description} to return false, got true"
         end
 
         def description
-          [method_description, args_description].compact.join(' ')
+          [method_description(@expected), args_description].compact.join(' ')
         end
 
-      private
+        private
 
-        # http://rubular.com/r/eqhaERTsCM
-        REGEX = /^(?:(?:have_)|(?:an?_\w+_having_))(.*)/
-
-        def predicate
-          @predicate ||= :"has_#{@method_name.to_s.match(REGEX).captures.first}?"
+        def predicate(sym)
+          "#{sym.to_s.sub("have_","has_")}?".to_sym
         end
 
-        def method_description
-          @method_name.to_s.gsub('_', ' ')
+        def method_description(method)
+          method.to_s.gsub('_', ' ')
         end
 
         def args_description

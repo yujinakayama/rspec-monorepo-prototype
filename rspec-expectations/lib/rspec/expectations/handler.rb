@@ -96,9 +96,12 @@ module RSpec
     # order to present the current protocol.
     #
     # @api private
-    class LegacyMacherAdapter < Matchers::MatcherDelegator
+    class LegacyMacherAdapter < defined?(::BasicObject) ? ::BasicObject : ::Object
+      attr_reader :matcher
+
       def initialize(matcher)
-        super
+        @matcher = matcher
+
         ::RSpec.warn_deprecation(<<-EOS.gsub(/^\s+\|/, ''))
           |--------------------------------------------------------------------------
           |#{matcher.class.name || matcher.inspect} implements a legacy RSpec matcher
@@ -107,6 +110,14 @@ module RSpec
           |(Used from #{CallerFilter.first_non_rspec_line})
           |--------------------------------------------------------------------------
         EOS
+      end
+
+      def method_missing(name, *args, &block)
+        @matcher.__send__(name, *args, &block)
+      end
+
+      def respond_to?(name, *args)
+        super || @matcher.respond_to?(name, *args)
       end
 
       def self.wrap(matcher)
@@ -120,11 +131,11 @@ module RSpec
       # @api private
       class RSpec2 < self
         def failure_message
-          base_matcher.failure_message_for_should
+          matcher.failure_message_for_should
         end
 
         def failure_message_when_negated
-          base_matcher.failure_message_for_should_not
+          matcher.failure_message_for_should_not
         end
 
         def self.interface_matches?(matcher)
@@ -144,11 +155,11 @@ module RSpec
       # @api private
       class RSpec1 < self
         def failure_message
-          base_matcher.failure_message
+          matcher.failure_message
         end
 
         def failure_message_when_negated
-          base_matcher.negative_failure_message
+          matcher.negative_failure_message
         end
 
         # Note: `failure_message` is part of the RSpec 3 protocol

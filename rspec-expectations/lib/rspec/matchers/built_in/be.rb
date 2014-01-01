@@ -95,12 +95,10 @@ module RSpec
         end
       end
 
-      class BeComparedTo < BaseMatcher
-        include BeHelpers
-
+      class BeComparedTo < Be
         def initialize(operand, operator)
           @expected, @operator = operand, operator
-          @args = []
+            @args = []
         end
 
         def matches?(actual)
@@ -147,6 +145,7 @@ it is a bit confusing.
           begin
             return @result = actual.__send__(predicate, *@args, &@block)
           rescue NameError => predicate_missing_error
+            "this needs to be here or rcov will not count this branch even though it's executed in a code example"
           end
 
           begin
@@ -194,11 +193,9 @@ it is a bit confusing.
           expected
         end
 
-        # http://rubular.com/r/KkwGL6s6yZ
-        REGEX = /^(?:(be_(?:an?_)?)(.*))|(an?_\w+_(?:that|who|which)_is_(?:an?_)?)(.*)/
-
         def prefix_and_expected(symbol)
-          REGEX.match(symbol.to_s).captures.compact
+          symbol.to_s =~ /^(be_(an?_)?)(.*)/
+          return $1, $3
         end
 
         def prefix_to_sentence

@@ -47,7 +47,7 @@ module RSpec
                 if @expected_arg.nil?
                   return @caught_symbol == @expected_symbol
                 else
-                  return (@caught_symbol == @expected_symbol) && values_match?(@expected_arg, @caught_arg)
+                  return (@caught_symbol == @expected_symbol) & (@caught_arg == @expected_arg)
                 end
               end
             end
@@ -80,7 +80,7 @@ module RSpec
           symbol_description = symbol.is_a?(String) ? symbol : symbol.inspect
 
           arg_description = if arg
-                              " with #{description_of arg}"
+                              " with #{arg.inspect}"
                             elsif @expected_arg && @caught_symbol == @expected_symbol
                               " with no argument"
                             else
