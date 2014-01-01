@@ -1,3 +1,5 @@
+require 'rspec/support'
+
 module RSpec
   module Matchers
     module BuiltIn
@@ -26,7 +28,7 @@ module RSpec
           end
         end
 
-        register Enumerable, '=~', BuiltIn::ContainExactly
+        register Enumerable, '=~', BuiltIn::MatchArray
 
         def initialize(actual)
           @actual = actual
@@ -66,7 +68,7 @@ module RSpec
       private
 
         def uses_generic_implementation_of?(op)
-          Expectations.method_handle_for(@actual, op).owner == ::Kernel
+          Support.method_handle_for(@actual, op).owner == ::Kernel
         rescue NameError
           false
         end
