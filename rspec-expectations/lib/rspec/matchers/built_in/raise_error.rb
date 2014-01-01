@@ -36,7 +36,7 @@ module RSpec
           begin
             given_proc.call
           rescue Exception => @actual_error
-            if values_match?(@expected_error, @actual_error)
+            if @actual_error == @expected_error || @expected_error === @actual_error
               @raised_expected_error = true
               @with_expected_message = verify_message
             end
@@ -77,8 +77,14 @@ module RSpec
         end
 
         def verify_message
-          return true if @expected_message.nil?
-          values_match?(@expected_message, @actual_error.message)
+          case @expected_message
+          when nil
+            true
+          when Regexp
+            @expected_message =~ @actual_error.message
+          else
+            @expected_message == @actual_error.message
+          end
         end
 
         def failure_message
@@ -112,11 +118,11 @@ module RSpec
         def expected_error
           case @expected_message
           when nil
-            description_of(@expected_error)
+            @expected_error.inspect
           when Regexp
             "#{@expected_error} with message matching #{@expected_message.inspect}"
           else
-            "#{@expected_error} with #{description_of @expected_message}"
+            "#{@expected_error} with #{@expected_message.inspect}"
           end
         end
 

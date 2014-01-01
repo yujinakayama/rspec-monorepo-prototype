@@ -4,8 +4,6 @@ require 'rspec/matchers/built_in'
 require 'rspec/matchers/generated_descriptions'
 require 'rspec/matchers/dsl'
 require 'rspec/matchers/test_unit_integration'
-require 'rspec/matchers/matcher_delegator'
-require 'rspec/matchers/aliased_matcher'
 
 module RSpec
   # RSpec::Matchers provides a number of useful matchers we use to define
@@ -168,90 +166,23 @@ module RSpec
   #     RSpec::configure do |config|
   #       config.include(CustomGameMatchers)
   #     end
-  #
-  # ### Making custom matchers composable
-  #
-  # RSpec's built-in matchers are designed to be composed, in expressions like:
-  #
-  #     expect(["barn", 2.45]).to contain_exactly(
-  #       a_value_within(0.1).of(2.5),
-  #       a_string_starting_with("bar")
-  #     )
-  #
-  # Custom matchers can easily participate in composed matcher expressions like these.
-  # Include {RSpec::Matchers::Composable} in your custom matcher to make it support
-  # being composed (matchers defined using the DSL have this included automatically).
-  # Within your matcher's `matches?` method (or the `match` block, if using the DSL),
-  # use `values_match?(expected, actual)` rather than `expected == actual` or
-  # `actual == expected`. Under the covers, `values_match?` is able to match arbitrary
-  # nested data structures containing a mix of both matchers and non-matcher objects.
-  # It uses `===` and `==` to perform the matching, considering the values to
-  # match if either returns `true`. The `Composable` mixin also provides some helper
-  # methods for surfacing the matcher descriptions within your matcher's description
-  # or failure messages.
-  #
-  # RSpec's built-in matchers each have a number of aliases that rephrase the matcher
-  # from a verb phrase (such as `be_within`) to a noun phrase (such as `a_value_within`),
-  # which reads better when the matcher is passed as an argument in a composed matcher
-  # expressions, and also uses the noun-phrase wording in the matcher's `description`,
-  # for readable failure messages. You can alias your custom matchers in similar fashion
-  # using {RSpec::Matchers.alias_matcher}.
   module Matchers
-    # Defines a matcher alias. The returned matcher's `description` will be overriden
-    # to reflect the phrasing of the new name, which will be used in failure messages
-    # when passed as an argument to another matcher in a composed matcher expression.
-    #
-    # @param new_name [Symbol] the new name for the matcher
-    # @param old_name [Symbol] the original name for the matcher
-    # @yield [String] optional block that, when given is used to define the overriden
-    #   description. The yielded arg is the original description. If no block is
-    #   provided, a default description override is used based on the old and
-    #   new names.
-    #
-    # @example
-    #
-    #   RSpec::Matchers.alias_matcher :a_list_that_sums_to, :sum_to
-    #   sum_to(3).description # => "sum to 3"
-    #   a_list_that_sums_to(3).description # => "a list that sums to 3"
-    #
-    # @example
-    #
-    #   RSpec::Matchers.alias_matcher :a_list_sorted_by, :be_sorted_by do |description|
-    #     description.sub("be sorted by", "a list sorted by")
-    #   end
-    #
-    #   be_sorted_by(:age).description # => "be sorted by age"
-    #   a_list_sorted_by(:age).description # => "a list sorted by age"
-    def self.alias_matcher(new_name, old_name, &description_override)
-      description_override ||= lambda do |old_desc|
-        old_desc.gsub(Pretty.split_words(old_name), Pretty.split_words(new_name))
-      end
-
-      define_method(new_name) do |*args, &block|
-        matcher = __send__(old_name, *args, &block)
-        AliasedMatcher.new(matcher, description_override)
-      end
-    end
-
     # Passes if actual is truthy (anything but false or nil)
     def be_truthy
       BuiltIn::BeTruthy.new
     end
-    alias_matcher :a_truthy_value, :be_truthy
 
-    # Passes if actual is falsey (false or nil)
+    # Passes if actual is falsy (false or nil)
     def be_falsey
       BuiltIn::BeFalsey.new
     end
-    alias_matcher :be_falsy,       :be_falsey
-    alias_matcher :a_falsey_value, :be_falsey
-    alias_matcher :a_falsy_value,  :be_falsey
+
+    alias_method :be_falsy, :be_falsey
 
     # Passes if actual is nil
     def be_nil
       BuiltIn::BeNil.new
     end
-    alias_matcher :a_nil_value, :be_nil
 
     # @example
     #   expect(actual).to     be_truthy
@@ -277,12 +208,12 @@ module RSpec
       args.empty? ?
         Matchers::BuiltIn::Be.new : equal(*args)
     end
-    alias_matcher :a_value, :be
 
     # passes if target.kind_of?(klass)
     def be_a(klass)
       be_a_kind_of(klass)
     end
+
     alias_method :be_an, :be_a
 
     # Passes if actual.instance_of?(expected)
@@ -295,8 +226,8 @@ module RSpec
     def be_an_instance_of(expected)
       BuiltIn::BeAnInstanceOf.new(expected)
     end
-    alias_method  :be_instance_of, :be_an_instance_of
-    alias_matcher :an_instance_of, :be_an_instance_of
+
+    alias_method :be_instance_of, :be_an_instance_of
 
     # Passes if actual.kind_of?(expected)
     #
@@ -308,8 +239,8 @@ module RSpec
     def be_a_kind_of(expected)
       BuiltIn::BeAKindOf.new(expected)
     end
-    alias_method  :be_kind_of, :be_a_kind_of
-    alias_matcher :a_kind_of,  :be_a_kind_of
+
+    alias_method :be_kind_of, :be_a_kind_of
 
     # Passes if actual == expected +/- delta
     #
@@ -320,7 +251,6 @@ module RSpec
     def be_within(delta)
       BuiltIn::BeWithin.new(delta)
     end
-    alias_matcher :a_value_within, :be_within
 
     # Applied to a proc, specifies that its execution will cause some value to
     # change.
@@ -401,31 +331,6 @@ module RSpec
     def change(receiver=nil, message=nil, &block)
       BuiltIn::Change.new(receiver, message, &block)
     end
-    alias_matcher :a_block_changing,  :change
-    alias_matcher :a_lambda_changing, :change
-    alias_matcher :a_proc_changing,   :change
-
-    # Passes if actual contains all of the expected regardless of order.
-    # This works for collections. Pass in multiple args and it will only
-    # pass if all args are found in collection.
-    #
-    # @note This is also available using the `=~` operator with `should`,
-    #       but `=~` is not supported with `expect`.
-    #
-    # @note This matcher only supports positive expectations.
-    #       `expect(...).not_to contain_exactly(other_array)` is not supported.
-    #
-    # @example
-    #
-    #   expect([1, 2, 3]).to contain_exactly(1, 2, 3)
-    #   expect([1, 2, 3]).to contain_exactly(1, 3, 2)
-    #
-    # @see #match_array
-    def contain_exactly(*items)
-      BuiltIn::ContainExactly.new(items)
-    end
-    alias_matcher :a_collection_containing_exactly, :contain_exactly
-    alias_matcher :an_array_containing_exactly, :contain_exactly
 
     # Passes if actual covers expected. This works for
     # Ranges. You can also pass in multiple args
@@ -441,8 +346,7 @@ module RSpec
     # ### Warning:: Ruby >= 1.9 only
     def cover(*values)
       BuiltIn::Cover.new(*values)
-    end
-    alias_matcher :a_range_covering, :cover
+    end if (1..2).respond_to?(:cover?)
 
     # Matches if the actual value ends with the expected value(s). In the case
     # of a string, matches against the last `expected.length` characters of the
@@ -457,9 +361,6 @@ module RSpec
     def end_with(*expected)
       BuiltIn::EndWith.new(*expected)
     end
-    alias_matcher :a_collection_ending_with, :end_with
-    alias_matcher :a_string_ending_with,     :end_with
-    alias_matcher :an_array_ending_with,     :end_with
 
     # Passes if <tt>actual == expected</tt>.
     #
@@ -473,8 +374,6 @@ module RSpec
     def eq(expected)
       BuiltIn::Eq.new(expected)
     end
-    alias_matcher :a_value_eq_to,   :eq
-    alias_matcher :an_object_eq_to, :eq
 
     # Passes if `actual.eql?(expected)`
     #
@@ -488,8 +387,6 @@ module RSpec
     def eql(expected)
       BuiltIn::Eql.new(expected)
     end
-    alias_matcher :a_value_eql_to,   :eql
-    alias_matcher :an_object_eql_to, :eql
 
     # Passes if <tt>actual.equal?(expected)</tt> (object identity).
     #
@@ -503,8 +400,6 @@ module RSpec
     def equal(expected)
       BuiltIn::Equal.new(expected)
     end
-    alias_matcher :a_value_equal_to,   :equal
-    alias_matcher :an_object_equal_to, :equal
 
     # Passes if `actual.exist?` or `actual.exists?`
     #
@@ -513,7 +408,6 @@ module RSpec
     def exist(*args)
       BuiltIn::Exist.new(*args)
     end
-    alias_matcher :a_value_existing, :exist
 
     # Passes if actual includes expected. This works for
     # collections and Strings. You can also pass in multiple args
@@ -530,9 +424,6 @@ module RSpec
     def include(*expected)
       BuiltIn::Include.new(*expected)
     end
-    alias_matcher :a_collection_including, :include
-    alias_matcher :a_string_including,     :include
-    alias_matcher :an_array_including,     :include
 
     # Given a Regexp or String, passes if actual.match(pattern)
     #
@@ -548,24 +439,7 @@ module RSpec
     def match(expected)
       BuiltIn::Match.new(expected)
     end
-    alias_matcher :match_regex,        :match
-    alias_matcher :an_object_matching, :match
-    alias_matcher :a_string_matching,  :match
-
-    # An alternate form of `contain_exactly` that accepts
-    # the expected contents as a single array arg rather
-    # that splatted out as individual items.
-    #
-    # @example
-    #
-    #   expect(results).to contain_exactly(1, 2)
-    #   # is identical to:
-    #   expect(results).to match_array([1, 2])
-    #
-    # @see #contain_exactly
-    def match_array(items)
-      contain_exactly(*items)
-    end
+    alias_method :match_regex, :match
 
     # With no args, matches if any error is raised.
     # With a named error, matches only if that specific error is raised.
@@ -585,19 +459,8 @@ module RSpec
     def raise_error(error=Exception, message=nil, &block)
       BuiltIn::RaiseError.new(error, message, &block)
     end
-    alias_method  :raise_exception,  :raise_error
 
-    alias_matcher :a_block_raising,  :raise_error do |desc|
-      desc.sub("raise", "a block raising")
-    end
-
-    alias_matcher :a_lambda_raising, :raise_error do |desc|
-      desc.sub("raise", "a lambda raising")
-    end
-
-    alias_matcher :a_proc_raising, :raise_error do |desc|
-      desc.sub("raise", "a proc raising")
-    end
+    alias_method :raise_exception, :raise_error
 
     # Matches if the target object responds to all of the names
     # provided. Names can be Strings or Symbols.
@@ -609,7 +472,6 @@ module RSpec
     def respond_to(*names)
       BuiltIn::RespondTo.new(*names)
     end
-    alias_matcher :an_object_responding_to, :respond_to
 
     # Passes if the submitted block returns true. Yields target to the
     # block.
@@ -627,7 +489,6 @@ module RSpec
     def satisfy(&block)
       BuiltIn::Satisfy.new(&block)
     end
-    alias_matcher :an_object_satisfying, :satisfy
 
     # Matches if the actual value starts with the expected value(s). In the
     # case of a string, matches against the first `expected.length` characters
@@ -642,9 +503,6 @@ module RSpec
     def start_with(*expected)
       BuiltIn::StartWith.new(*expected)
     end
-    alias_matcher :a_collection_starting_with, :start_with
-    alias_matcher :a_string_starting_with,     :start_with
-    alias_matcher :an_array_starting_with,     :start_with
 
     # Given no argument, matches if a proc throws any Symbol.
     #
@@ -666,18 +524,6 @@ module RSpec
       BuiltIn::ThrowSymbol.new(expected_symbol, expected_arg)
     end
 
-    alias_matcher :a_block_throwing, :throw_symbol do |desc|
-      desc.sub("throw", "a block throwing")
-    end
-
-    alias_matcher :a_lambda_throwing, :throw_symbol do |desc|
-      desc.sub("throw", "a lambda throwing")
-    end
-
-    alias_matcher :a_proc_throwing, :throw_symbol do |desc|
-      desc.sub("throw", "a proc throwing")
-    end
-
     # Passes if the method called in the expect block yields, regardless
     # of whether or not arguments are yielded.
     #
@@ -693,9 +539,6 @@ module RSpec
     def yield_control
       BuiltIn::YieldControl.new
     end
-    alias_matcher :a_block_yielding_control,  :yield_control
-    alias_matcher :a_lambda_yielding_control, :yield_control
-    alias_matcher :a_proc_yielding_control,   :yield_control
 
     # Passes if the method called in the expect block yields with
     # no arguments. Fails if it does not yield, or yields with arguments.
@@ -713,9 +556,6 @@ module RSpec
     def yield_with_no_args
       BuiltIn::YieldWithNoArgs.new
     end
-    alias_matcher :a_block_yielding_with_no_args,  :yield_with_no_args
-    alias_matcher :a_lambda_yielding_with_no_args, :yield_with_no_args
-    alias_matcher :a_proc_yielding_with_no_args,   :yield_with_no_args
 
     # Given no arguments, matches if the method called in the expect
     # block yields with arguments (regardless of what they are or how
@@ -745,9 +585,6 @@ module RSpec
     def yield_with_args(*args)
       BuiltIn::YieldWithArgs.new(*args)
     end
-    alias_matcher :a_block_yielding_with_args,  :yield_with_args
-    alias_matcher :a_lambda_yielding_with_args, :yield_with_args
-    alias_matcher :a_proc_yielding_with_args,   :yield_with_args
 
     # Designed for use with methods that repeatedly yield (such as
     # iterators). Passes if the method called in the expect block yields
@@ -768,20 +605,32 @@ module RSpec
     def yield_successive_args(*args)
       BuiltIn::YieldSuccessiveArgs.new(*args)
     end
-    alias_matcher :a_block_yielding_successive_args,  :yield_successive_args
-    alias_matcher :a_lambda_yielding_successive_args, :yield_successive_args
-    alias_matcher :a_proc_yielding_successive_args,   :yield_successive_args
+
+    # Passes if actual contains all of the expected regardless of order.
+    # This works for collections. Pass in multiple args and it will only
+    # pass if all args are found in collection.
+    #
+    # @note This is also available using the `=~` operator with `should`,
+    #       but `=~` is not supported with `expect`.
+    #
+    # @note This matcher only supports positive expectations.
+    #       expect(..).not_to match_array(other_array) is not supported.
+    #
+    # @example
+    #
+    #   expect([1,2,3]).to match_array([1,2,3])
+    #   expect([1,2,3]).to match_array([1,3,2])
+    def match_array(array)
+      BuiltIn::MatchArray.new(array)
+    end
 
   private
 
     def method_missing(method, *args, &block)
       case method.to_s
-        when BuiltIn::BePredicate::REGEX
-          BuiltIn::BePredicate.new(method, *args, &block)
-        when BuiltIn::Has::REGEX
-          BuiltIn::Has.new(method, *args, &block)
-        else
-          super
+        when /\Abe_/   then BuiltIn::BePredicate.new(method, *args, &block)
+        when /\Ahave_/ then BuiltIn::Has.new(method, *args, &block)
+        else super
       end
     end
 
@@ -793,11 +642,6 @@ module RSpec
 
       obj.respond_to?(:failure_message) ||
       obj.respond_to?(:failure_message_for_should) # support legacy matchers
-    end
-
-    # @api private
-    def self.is_a_describable_matcher?(obj)
-      is_a_matcher?(obj) && obj.respond_to?(:description)
     end
   end
 end
