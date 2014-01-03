@@ -124,13 +124,10 @@ module RSpec
       # @private
       def verify
         @method_doubles.each_value {|d| d.verify}
-      ensure
-        reset
       end
 
       # @private
       def reset
-        @method_doubles.each_value {|d| d.reset}
         @messages_received.clear
       end
 
@@ -238,6 +235,15 @@ module RSpec
     end
 
     # @private
+    class TestDoubleProxy < Proxy
+      def reset
+        @method_doubles.clear
+        object.__disallow_further_usage!
+        super
+      end
+    end
+
+    # @private
     class PartialDoubleProxy < Proxy
       def method_handle_for(message)
         if any_instance_class_recorder_observing_method?(@object.class, message)
@@ -270,6 +276,11 @@ module RSpec
         MethodReference.method_visibility_for(@object, method_name) || :public
       end
 
+      def reset
+        @method_doubles.each_value {|d| d.reset}
+        super
+      end
+
     private
 
       def any_instance_class_recorder_observing_method?(klass, method_name)
@@ -277,6 +288,39 @@ module RSpec
         superklass = klass.superclass
         return false if superklass.nil?
         any_instance_class_recorder_observing_method?(superklass, method_name)
+      end
+    end
+
+    # @private
+    class ProxyForNil < PartialDoubleProxy
+      def initialize(order_group)
+        @warn_about_expectations = true
+        super(nil, order_group)
+      end
+
+      attr_accessor :warn_about_expectations
+      alias warn_about_expectations? warn_about_expectations
+
+      def add_message_expectation(location, method_name, opts={}, &block)
+        warn(method_name) if warn_about_expectations?
+        super
+      end
+
+      def add_negative_message_expectation(location, method_name, &implementation)
+        warn(method_name) if warn_about_expectations?
+        super
+      end
+
+      def add_stub(location, method_name, opts={}, &implementation)
+        warn(method_name) if warn_about_expectations?
+        super
+      end
+
+      private
+
+      def warn method_name
+        source = CallerFilter.first_non_rspec_line
+        Kernel.warn("An expectation of :#{method_name} was set on nil. Called from #{source}. Use allow_message_expectations_on_nil to disable warnings.")
       end
     end
   end

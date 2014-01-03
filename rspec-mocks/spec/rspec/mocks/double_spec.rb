@@ -24,11 +24,10 @@ module RSpec
         expect(m.inspect).to match(/#<RSpec::Mocks::Double:0x[a-f0-9.]+ @name="cup">/)
       end
 
-      it 'restores standard object methods on reset' do
+      it 'does not blow up when resetting standard object methods' do
         dbl = double(:tainted? => true)
         expect(dbl.tainted?).to eq(true)
-        reset dbl
-        expect(dbl.tainted?).to eq(false)
+        expect { reset dbl }.not_to raise_error
       end
 
       it 'does not get string vs symbol messages confused' do
@@ -49,6 +48,60 @@ module RSpec
         # Note the specified return value is thrown away. This is a Ruby semantics
         # thing. You cannot change the return value of assignment.
         expect(dbl.foo = "bar").to eq("bar")
+      end
+
+      context "after it has been torn down" do
+        let(:dbl) { double }
+
+        before do
+          expect(dbl).to receive(:foo).at_least(:once)
+          allow(dbl).to receive(:bar)
+          dbl.foo
+
+          RSpec::Mocks.verify
+          RSpec::Mocks.teardown
+          RSpec::Mocks.setup
+        end
+
+        it 'disallows previously mocked methods' do
+          expect { dbl.foo }.to raise_error(ExpiredTestDoubleError)
+        end
+
+        it 'disallows previously stubbed methods' do
+          expect { dbl.bar }.to raise_error(ExpiredTestDoubleError)
+        end
+
+        it 'disallows stubbing new methods (with receive)' do
+          expect {
+            allow(dbl).to receive(:bazz)
+          }.to raise_error(ExpiredTestDoubleError)
+        end
+
+        it 'disallows stubbing new methods (with receive_messages)' do
+          expect {
+            allow(dbl).to receive_messages(:bazz => 3)
+          }.to raise_error(ExpiredTestDoubleError)
+        end
+
+        it 'disallows stubbing new message chains' do
+          expect {
+            allow(dbl).to receive_message_chain(:bazz, :bam, :goo)
+          }.to raise_error(ExpiredTestDoubleError)
+        end
+
+        it 'disallows mocking new methods' do
+          expect {
+            expect(dbl).to receive(:bazz)
+          }.to raise_error(ExpiredTestDoubleError)
+        end
+
+        it 'disallows being turned into a null object' do
+          expect { dbl.as_null_object }.to raise_error(ExpiredTestDoubleError)
+        end
+
+        it 'disallows being checked for nullness' do
+          expect { dbl.null_object? }.to raise_error(ExpiredTestDoubleError)
+        end
       end
 
       it "reports line number of expectation of unreceived message" do
@@ -139,14 +192,22 @@ module RSpec
         )
       end
 
-      it "passes when receiving message specified as not to be received with wrong args" do
-        @double.should_not_receive(:not_expected).with("unexpected text")
-        @double.not_expected "really unexpected text"
-        verify @double
+      context "when specifying a message should not be received with specific args" do
+        context "using `should_not_receive`" do
+          it 'passes when receiving the message with different args' do
+            @double.should_not_receive(:not_expected).with("unexpected text")
+            @double.not_expected "really unexpected text"
+            verify @double
+          end
+        end
 
-        @double.should_receive(:not_expected).with("unexpected text").never
-        @double.not_expected "really unexpected text"
-        verify @double
+        context "using `should_receive().never`" do
+          it 'passes when receiving the message with different args' do
+            @double.should_receive(:not_expected).with("unexpected text").never
+            @double.not_expected "really unexpected text"
+            verify @double
+          end
+        end
       end
 
       it 'does not get confused when `should_not_received` is used with a string and symbol message' do
@@ -560,34 +621,6 @@ module RSpec
         verify double #should throw if reset didn't work
       end
 
-      it "works even after method_missing starts raising NameErrors instead of NoMethodErrors" do
-        # Object#method_missing throws either NameErrors or NoMethodErrors.
-        #
-        # On a fresh ruby program Object#method_missing:
-        #  * raises a NoMethodError when called directly
-        #  * raises a NameError when called indirectly
-        #
-        # Once Object#method_missing has been called at least once (on any object)
-        # it starts behaving differently:
-        #  * raises a NameError when called directly
-        #  * raises a NameError when called indirectly
-        #
-        # There was a bug in Double#method_missing that relied on the fact
-        # that calling Object#method_missing directly raises a NoMethodError.
-        # This example tests that the bug doesn't exist anymore.
-
-
-        # Ensures that method_missing always raises NameErrors.
-        a_method_that_doesnt_exist rescue
-
-
-        @double.should_receive(:foobar)
-        @double.foobar
-        verify @double
-
-        expect { @double.foobar }.to raise_error(RSpec::Mocks::MockExpectationError)
-      end
-
       it "temporarily replaces a method stub on a double" do
         @double.stub(:msg).and_return(:stub_value)
         @double.should_receive(:msg).with(:arg).and_return(:double_value)
@@ -659,169 +692,168 @@ module RSpec
         expect(double.message).to eq :response
       end
 
-    end
-
-    describe "a double message receiving a block" do
-      before(:each) do
-        @double = double("double")
-        @calls = 0
-      end
-
-      def add_call
-        @calls = @calls + 1
-      end
-
-      it "calls the block after #should_receive" do
-        @double.should_receive(:foo) { add_call }
-
-        @double.foo
-
-        expect(@calls).to eq 1
-      end
-
-      it "calls the block after #should_receive after a similar stub" do
-        @double.stub(:foo).and_return(:bar)
-        @double.should_receive(:foo) { add_call }
-
-        @double.foo
-
-        expect(@calls).to eq 1
-      end
-
-      it "calls the block after #once" do
-        @double.should_receive(:foo).once { add_call }
-
-        @double.foo
-
-        expect(@calls).to eq 1
-      end
-
-      it "calls the block after #twice" do
-        @double.should_receive(:foo).twice { add_call }
-
-        @double.foo
-        @double.foo
-
-        expect(@calls).to eq 2
-      end
-
-      it "calls the block after #times" do
-        @double.should_receive(:foo).exactly(10).times { add_call }
-
-        (1..10).each { @double.foo }
-
-        expect(@calls).to eq 10
-      end
-
-      it "calls the block after #ordered" do
-        @double.should_receive(:foo).ordered { add_call }
-        @double.should_receive(:bar).ordered { add_call }
-
-        @double.foo
-        @double.bar
-
-        expect(@calls).to eq 2
-      end
-    end
-
-    describe 'string representation generated by #to_s' do
-      it 'does not contain < because that might lead to invalid HTML in some situations' do
-        double = double("Dog")
-        valid_html_str = "#{double}"
-        expect(valid_html_str).not_to include('<')
-      end
-    end
-
-    describe "string representation generated by #to_str" do
-      it "looks the same as #to_s" do
-        double = double("Foo")
-        expect(double.to_str).to eq double.to_s
-      end
-    end
-
-    describe "double created with no name" do
-      it "does not use a name in a failure message" do
-        double = double()
-        expect {double.foo}.to raise_error(/Double received/)
-      end
-
-      it "does respond to initially stubbed methods" do
-        double = double(:foo => "woo", :bar => "car")
-        expect(double.foo).to eq "woo"
-        expect(double.bar).to eq "car"
-      end
-    end
-
-    describe "==" do
-      it "sends '== self' to the comparison object" do
-        first = double('first')
-        second = double('second')
-
-        first.should_receive(:==).with(second)
-        second == first
-      end
-    end
-
-    describe "with" do
-      before { @double = double('double') }
-      context "with args" do
-        context "with matching args" do
-          it "passes" do
-            @double.should_receive(:foo).with('bar')
-            @double.foo('bar')
-          end
+      describe "a double message receiving a block" do
+        before(:each) do
+          @double = double("double")
+          @calls = 0
         end
 
-        context "with non-matching args" do
-          it "fails" do
-            @double.should_receive(:foo).with('bar')
-            expect do
-              @double.foo('baz')
-            end.to raise_error
-            reset @double
-          end
+        def add_call
+          @calls = @calls + 1
         end
 
-        context "with non-matching doubles" do
-          it "fails" do
-            d1 = double('1')
-            d2 = double('2')
-            @double.should_receive(:foo).with(d1)
-            expect do
-              @double.foo(d2)
-            end.to raise_error
-            reset @double
-          end
+        it "calls the block after #should_receive" do
+          @double.should_receive(:foo) { add_call }
+
+          @double.foo
+
+          expect(@calls).to eq 1
         end
 
-        context "with non-matching doubles as_null_object" do
-          it "fails" do
-            d1 = double('1').as_null_object
-            d2 = double('2').as_null_object
-            @double.should_receive(:foo).with(d1)
-            expect do
-              @double.foo(d2)
-            end.to raise_error
-            reset @double
-          end
+        it "calls the block after #should_receive after a similar stub" do
+          @double.stub(:foo).and_return(:bar)
+          @double.should_receive(:foo) { add_call }
+
+          @double.foo
+
+          expect(@calls).to eq 1
+        end
+
+        it "calls the block after #once" do
+          @double.should_receive(:foo).once { add_call }
+
+          @double.foo
+
+          expect(@calls).to eq 1
+        end
+
+        it "calls the block after #twice" do
+          @double.should_receive(:foo).twice { add_call }
+
+          @double.foo
+          @double.foo
+
+          expect(@calls).to eq 2
+        end
+
+        it "calls the block after #times" do
+          @double.should_receive(:foo).exactly(10).times { add_call }
+
+          (1..10).each { @double.foo }
+
+          expect(@calls).to eq 10
+        end
+
+        it "calls the block after #ordered" do
+          @double.should_receive(:foo).ordered { add_call }
+          @double.should_receive(:bar).ordered { add_call }
+
+          @double.foo
+          @double.bar
+
+          expect(@calls).to eq 2
         end
       end
 
-      context "with a block" do
-        context "with matching args" do
-          it "returns the result of the block" do
-            @double.should_receive(:foo).with('bar') { 'baz' }
-            expect(@double.foo('bar')).to eq('baz')
+      describe 'string representation generated by #to_s' do
+        it 'does not contain < because that might lead to invalid HTML in some situations' do
+          double = double("Dog")
+          valid_html_str = "#{double}"
+          expect(valid_html_str).not_to include('<')
+        end
+      end
+
+      describe "string representation generated by #to_str" do
+        it "looks the same as #to_s" do
+          double = double("Foo")
+          expect(double.to_str).to eq double.to_s
+        end
+      end
+
+      describe "double created with no name" do
+        it "does not use a name in a failure message" do
+          double = double()
+          expect {double.foo}.to raise_error(/Double received/)
+        end
+
+        it "does respond to initially stubbed methods" do
+          double = double(:foo => "woo", :bar => "car")
+          expect(double.foo).to eq "woo"
+          expect(double.bar).to eq "car"
+        end
+      end
+
+      describe "==" do
+        it "sends '== self' to the comparison object" do
+          first = double('first')
+          second = double('second')
+
+          first.should_receive(:==).with(second)
+          second == first
+        end
+      end
+
+      describe "with" do
+        before { @double = double('double') }
+        context "with args" do
+          context "with matching args" do
+            it "passes" do
+              @double.should_receive(:foo).with('bar')
+              @double.foo('bar')
+            end
+          end
+
+          context "with non-matching args" do
+            it "fails" do
+              @double.should_receive(:foo).with('bar')
+              expect do
+                @double.foo('baz')
+              end.to raise_error
+              reset @double
+            end
+          end
+
+          context "with non-matching doubles" do
+            it "fails" do
+              d1 = double('1')
+              d2 = double('2')
+              @double.should_receive(:foo).with(d1)
+              expect do
+                @double.foo(d2)
+              end.to raise_error
+              reset @double
+            end
+          end
+
+          context "with non-matching doubles as_null_object" do
+            it "fails" do
+              d1 = double('1').as_null_object
+              d2 = double('2').as_null_object
+              @double.should_receive(:foo).with(d1)
+              expect do
+                @double.foo(d2)
+              end.to raise_error
+              reset @double
+            end
           end
         end
 
-        context "with non-matching args" do
-          it "fails" do
-            @double.should_receive(:foo).with('bar') { 'baz' }
-            expect do
-              expect(@double.foo('wrong')).to eq('baz')
-            end.to raise_error(/received :foo with unexpected arguments/)
-            reset @double
+        context "with a block" do
+          context "with matching args" do
+            it "returns the result of the block" do
+              @double.should_receive(:foo).with('bar') { 'baz' }
+              expect(@double.foo('bar')).to eq('baz')
+            end
+          end
+
+          context "with non-matching args" do
+            it "fails" do
+              @double.should_receive(:foo).with('bar') { 'baz' }
+              expect do
+                expect(@double.foo('wrong')).to eq('baz')
+              end.to raise_error(/received :foo with unexpected arguments/)
+              reset @double
+            end
           end
         end
       end
