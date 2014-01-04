@@ -39,9 +39,7 @@ module RSpec
       def diff_as_object(actual, expected)
         actual_as_string = object_to_string(actual)
         expected_as_string = object_to_string(expected)
-        if diff = diff_as_string(actual_as_string, expected_as_string)
-          color_diff diff
-        end
+        diff_as_string(actual_as_string, expected_as_string)
       end
 
     private
@@ -101,7 +99,6 @@ module RSpec
       end
 
       def object_to_string(object)
-        object = Matchers::Composable.surface_descriptions_in(object)
         case object
         when Hash
           object.keys.sort_by { |k| k.to_s }.map do |key|
