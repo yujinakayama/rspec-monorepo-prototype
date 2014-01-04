@@ -1,7 +1,6 @@
 require 'rspec/mocks/framework'
 require 'rspec/mocks/version'
 require 'rspec/support'
-require "rspec/mocks/error_space"
 
 module RSpec
   # Contains top-level utility methods. While this contains a few
@@ -9,7 +8,7 @@ module RSpec
   # a test or example. They exist primarily for integration with
   # test frameworks (such as rspec-core).
   module Mocks
-    ERROR_SPACE = RSpec::Mocks::ErrorSpace.new
+    ROOT_SPACE = RSpec::Mocks::RootSpace.new
     MOCK_SPACE = RSpec::Mocks::Space.new
 
     class << self
@@ -18,7 +17,7 @@ module RSpec
       attr_accessor :space
     end
 
-    self.space = ERROR_SPACE
+    self.space = ROOT_SPACE
 
     # Performs per-test/example setup. This should be called before
     # an test or example begins.
@@ -37,7 +36,7 @@ module RSpec
     # each example, even if an error was raised during the example.
     def self.teardown
       space.reset_all
-      self.space = ERROR_SPACE
+      self.space = ROOT_SPACE
     end
 
     # Adds an allowance (stub) on `subject`
@@ -56,7 +55,7 @@ module RSpec
       orig_caller = opts.fetch(:expected_from) {
         CallerFilter.first_non_rspec_line
       }
-      ::RSpec::Mocks.proxy_for(subject).
+      ::RSpec::Mocks.space.proxy_for(subject).
         add_stub(orig_caller, message, opts, &block)
     end
 
@@ -75,26 +74,8 @@ module RSpec
       orig_caller = opts.fetch(:expected_from) {
         CallerFilter.first_non_rspec_line
       }
-      ::RSpec::Mocks.proxy_for(subject).
+      ::RSpec::Mocks.space.proxy_for(subject).
         add_message_expectation(orig_caller, message, opts, &block)
-    end
-
-    # @api private
-    # Returns the mock proxy for the given object.
-    def self.proxy_for(object)
-      space.proxy_for(object)
-    end
-
-    # @api private
-    # Returns the mock proxies for instances of the given class.
-    def self.proxies_of(klass)
-      space.proxies_of(klass)
-    end
-
-    # @api private
-    # Returns the any instance recorder for the given class.
-    def self.any_instance_recorder_for(klass)
-      space.any_instance_recorder_for(klass)
     end
 
     # @private
