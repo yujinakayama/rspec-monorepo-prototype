@@ -3,20 +3,18 @@ require 'rspec/matchers/built_in/base_matcher'
 module RSpec
   module Matchers
     module BuiltIn
-      autoload :BeAKindOf,               'rspec/matchers/built_in/be_kind_of'
       autoload :BeAnInstanceOf,          'rspec/matchers/built_in/be_instance_of'
-      autoload :BeBetween,               'rspec/matchers/built_in/be_between'
       autoload :Be,                      'rspec/matchers/built_in/be'
-      autoload :BeComparedTo,            'rspec/matchers/built_in/be'
+      autoload :BeTruthy,                'rspec/matchers/built_in/be'
       autoload :BeFalsey,                'rspec/matchers/built_in/be'
       autoload :BeNil,                   'rspec/matchers/built_in/be'
+      autoload :BeComparedTo,            'rspec/matchers/built_in/be'
       autoload :BePredicate,             'rspec/matchers/built_in/be'
-      autoload :BeTruthy,                'rspec/matchers/built_in/be'
+      autoload :BeAKindOf,               'rspec/matchers/built_in/be_kind_of'
       autoload :BeWithin,                'rspec/matchers/built_in/be_within'
       autoload :Change,                  'rspec/matchers/built_in/change'
       autoload :Compound,                'rspec/matchers/built_in/compound'
-      autoload :ContainExactly,          'rspec/matchers/built_in/contain_exactly'
-      autoload :Cover,                   'rspec/matchers/built_in/cover'
+      autoload :Cover,                   'rspec/matchers/built_in/cover' if (1..2).respond_to?(:cover?)
       autoload :EndWith,                 'rspec/matchers/built_in/start_and_end_with'
       autoload :Eq,                      'rspec/matchers/built_in/eq'
       autoload :Eql,                     'rspec/matchers/built_in/eql'
@@ -25,6 +23,7 @@ module RSpec
       autoload :Has,                     'rspec/matchers/built_in/has'
       autoload :Include,                 'rspec/matchers/built_in/include'
       autoload :Match,                   'rspec/matchers/built_in/match'
+      autoload :MatchArray,              'rspec/matchers/built_in/match_array'
       autoload :NegativeOperatorMatcher, 'rspec/matchers/built_in/operators'
       autoload :OperatorMatcher,         'rspec/matchers/built_in/operators'
       autoload :PositiveOperatorMatcher, 'rspec/matchers/built_in/operators'
@@ -34,9 +33,11 @@ module RSpec
       autoload :StartWith,               'rspec/matchers/built_in/start_and_end_with'
       autoload :ThrowSymbol,             'rspec/matchers/built_in/throw_symbol'
       autoload :YieldControl,            'rspec/matchers/built_in/yield'
-      autoload :YieldSuccessiveArgs,     'rspec/matchers/built_in/yield'
       autoload :YieldWithArgs,           'rspec/matchers/built_in/yield'
       autoload :YieldWithNoArgs,         'rspec/matchers/built_in/yield'
+      autoload :YieldSuccessiveArgs,     'rspec/matchers/built_in/yield'
     end
   end
 end
+
+
