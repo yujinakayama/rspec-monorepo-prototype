@@ -77,6 +77,13 @@ module RSpec
 
           actual.any? { |value| values_match?(expected_item, value) }
         end
+
+        def contains_no_matchers?(collection)
+          collection.none? do |item|
+            RSpec::Matchers.is_a_matcher?(item) ||
+            (enumerable?(item) && contains_no_matchers?(item))
+          end
+        end
       end
     end
   end
