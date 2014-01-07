@@ -27,6 +27,10 @@ module RSpec
         false
       end
 
+      def new_scope
+        Space.new
+      end
+
     private
 
       def raise_lifecycle_message
@@ -37,39 +41,27 @@ module RSpec
 
     # @api private
     class Space
-      attr_reader :proxies, :any_instance_recorders
+      attr_reader :proxies, :any_instance_recorders, :expectation_ordering
 
       def initialize
         @proxies                 = {}
         @any_instance_recorders  = {}
         @constant_mutators       = []
+        @expectation_ordering    = OrderGroup.new
+      end
+
+      def new_scope
+        NestedSpace.new(self)
       end
 
       def verify_all
-        proxies.each_value do |object|
-          object.verify
-        end
-
-        any_instance_recorders.each_value do |recorder|
-          recorder.verify
-        end
+        proxies.each_value { |proxy| proxy.verify }
+        any_instance_recorders.each_value { |recorder| recorder.verify }
       end
 
       def reset_all
-        @constant_mutators.reverse.each { |mut| mut.reset }
-
-        proxies.each_value do |object|
-          object.reset
-        end
-
-        proxies.clear
-        any_instance_recorders.clear
-        expectation_ordering.clear
-        @constant_mutators.clear
-      end
-
-      def expectation_ordering
-        @expectation_ordering ||= OrderGroup.new
+        proxies.each_value { |proxy| proxy.reset }
+        @constant_mutators.reverse.each { |mut| mut.idempotently_reset }
       end
 
       def register_constant_mutator(mutator)
@@ -83,7 +75,7 @@ module RSpec
       def any_instance_recorder_for(klass)
         id = klass.__id__
         any_instance_recorders.fetch(id) do
-          any_instance_recorders[id] = AnyInstance::Recorder.new(klass)
+          any_instance_recorder_not_found_for(id, klass)
         end
       end
 
@@ -97,24 +89,32 @@ module RSpec
 
       def proxy_for(object)
         id = id_for(object)
-        proxies.fetch(id) do
-          proxies[id] = case object
-                        when NilClass   then ProxyForNil.new(expectation_ordering)
-                        when TestDouble then object.__build_mock_proxy(expectation_ordering)
-                        else
-                          if RSpec::Mocks.configuration.verify_partial_doubles?
-                            VerifyingPartialDoubleProxy.new(object, expectation_ordering)
-                          else
-                            PartialDoubleProxy.new(object, expectation_ordering)
-                          end
-                        end
-        end
+        proxies.fetch(id) { proxy_not_found_for(id, object) }
       end
 
       alias ensure_registered proxy_for
 
       def registered?(object)
         proxies.has_key?(id_for object)
+      end
+
+    private
+
+      def proxy_not_found_for(id, object)
+        proxies[id] = case object
+          when NilClass   then ProxyForNil.new(@expectation_ordering)
+          when TestDouble then object.__build_mock_proxy(@expectation_ordering)
+          else
+            if RSpec::Mocks.configuration.verify_partial_doubles?
+              VerifyingPartialDoubleProxy.new(object, @expectation_ordering)
+            else
+              PartialDoubleProxy.new(object, @expectation_ordering)
+            end
+        end
+      end
+
+      def any_instance_recorder_not_found_for(id, klass)
+        any_instance_recorders[id] = AnyInstance::Recorder.new(klass)
       end
 
       if defined?(::BasicObject) && !::BasicObject.method_defined?(:__id__) # for 1.9.2
@@ -134,6 +134,35 @@ module RSpec
         def id_for(object)
           object.__id__
         end
+      end
+    end
+
+    class NestedSpace < Space
+      def initialize(parent)
+        @parent = parent
+        super()
+      end
+
+      def proxies_of(klass)
+        super + @parent.proxies_of(klass)
+      end
+
+      def constant_mutator_for(name)
+        super || @parent.constant_mutator_for(name)
+      end
+
+      def registered?(object)
+        super || @parent.registered?(object)
+      end
+
+    private
+
+      def proxy_not_found_for(id, object)
+        @parent.proxies[id] || super
+      end
+
+      def any_instance_recorder_not_found_for(id, klass)
+        @parent.any_instance_recorders[id] || super
       end
     end
   end
