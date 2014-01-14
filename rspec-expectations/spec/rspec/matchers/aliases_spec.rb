@@ -82,6 +82,14 @@ module RSpec
 
     specify do
       expect(
+        a_value_between(1, 10)
+      ).to be_aliased_to(
+        be_between(1, 10)
+      ).with_description("a value between 1 and 10 (inclusive)")
+    end
+
+    specify do
+      expect(
         a_value_within(0.1).of(3)
       ).to be_aliased_to(
         be_within(0.1).of(3)
@@ -224,6 +232,14 @@ module RSpec
 
     specify do
       expect(
+        a_hash_including(:a => 5)
+      ).to be_aliased_to(
+        include(:a => 5)
+      ).with_description('a hash including {:a => 5}')
+    end
+
+    specify do
+      expect(
         including(3)
       ).to be_aliased_to(
         include(3)
@@ -260,22 +276,6 @@ module RSpec
       ).to be_aliased_to(
         match(/foo/)
       ).with_description('matching /foo/')
-    end
-
-    specify do
-      expect(
-        a_block_outputting_to_stdout('foo')
-      ).to be_aliased_to(
-        output_to_stdout('foo')
-      ).with_description('a block outputting "foo" to stdout')
-    end
-
-    specify do
-      expect(
-        a_block_outputting_to_stderr('foo')
-      ).to be_aliased_to(
-        output_to_stderr('foo')
-      ).with_description('a block outputting "foo" to stderr')
     end
 
     specify do
