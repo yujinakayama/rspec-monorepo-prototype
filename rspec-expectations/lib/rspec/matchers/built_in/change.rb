@@ -119,14 +119,12 @@ module RSpec
           @change_details.changed? && matches_before? && matches_after?
         end
 
-        def description
-          "change #{@change_details.message} #{change_description}"
-        end
-
         def failure_message
-          return before_value_failure   unless matches_before?
-          return did_not_change_failure unless @change_details.changed?
-          after_value_failure
+          if !matches_before?
+            "expected #{@change_details.message} to have initially been #{description_of @expected_before}, but was #{description_of @change_details.actual_before}"
+          else
+            "expected #{@change_details.message} to have changed to #{description_of @expected_after}, but is now #{description_of @change_details.actual_after}"
+          end
         end
 
       private
@@ -137,22 +135,6 @@ module RSpec
 
         def matches_after?
           values_match?(@expected_after, @change_details.actual_after)
-        end
-
-        def before_value_failure
-          "expected #{@change_details.message} to have initially been #{description_of @expected_before}, but was #{description_of @change_details.actual_before}"
-        end
-
-        def after_value_failure
-          "expected #{@change_details.message} to have changed to #{description_of @expected_after}, but is now #{description_of @change_details.actual_after}"
-        end
-
-        def did_not_change_failure
-          "expected #{@change_details.message} to have changed #{change_description}, but did not change"
-        end
-
-        def did_change_failure
-          "expected #{@change_details.message} not to have changed, but did change from #{description_of @change_details.actual_before} to #{description_of @change_details.actual_after}"
         end
       end
 
@@ -181,14 +163,15 @@ module RSpec
         end
 
         def failure_message_when_negated
-          return before_value_failure unless matches_before?
-          did_change_failure
+          if !matches_before?
+            "expected #{@change_details.message} to have initially been #{description_of @expected_before}, but was #{description_of @change_details.actual_before}"
+          else
+            "expected #{@change_details.message} not to have changed, but did change from #{description_of @change_details.actual_before} to #{description_of @change_details.actual_after}"
+          end
         end
 
-      private
-
-        def change_description
-          "from #{description_of @expected_before}#{@description_suffix}"
+        def description
+          "change #{@change_details.message} from #{description_of @expected_before}#{@description_suffix}"
         end
       end
 
@@ -211,10 +194,8 @@ module RSpec
           raise NotImplementedError, "`expect { }.not_to change { }.to()` is not supported"
         end
 
-      private
-
-        def change_description
-          "to #{description_of @expected_after}#{@description_suffix}"
+        def description
+          "change #{@change_details.message} to #{description_of @expected_after}#{@description_suffix}"
         end
       end
 
