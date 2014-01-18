@@ -840,14 +840,11 @@ module RSpec
 
   private
 
-    BE_PREDICATE_REGEX = /^(be_(?:an?_)?)(.*)/
-    HAS_REGEX = /^(?:have_)(.*)/
-
     def method_missing(method, *args, &block)
       case method.to_s
-        when BE_PREDICATE_REGEX
+        when BuiltIn::BePredicate::REGEX
           BuiltIn::BePredicate.new(method, *args, &block)
-        when HAS_REGEX
+        when BuiltIn::Has::REGEX
           BuiltIn::Has.new(method, *args, &block)
         else
           super

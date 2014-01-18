@@ -192,8 +192,10 @@ module RSpec
           expected
         end
 
+        REGEX = /^(be_(?:an?_)?)(.*)/
+
         def prefix_and_expected(symbol)
-          Matchers::BE_PREDICATE_REGEX.match(symbol.to_s).captures.compact
+          REGEX.match(symbol.to_s).captures.compact
         end
 
         def prefix_to_sentence
