@@ -124,13 +124,29 @@ module RSpec
           (class << self; self; end).define_example_method name, extra
         end
 
+        # Works like `alias_method name, :example_group` with the added benefit of
+        # assigning default metadata to the generated example group.
+        #
+        # @note Use with caution. This extends the language used in your
+        #   specs, but does not add any additional documentation.  We use this
+        #   in rspec to define methods like `fdescribe` and `xdescribe`, but we
+        #   also add docs for those methods.
+        def alias_example_group_to(name, metadata={})
+          (class << self; self; end).__send__(:define_method, name) do |*args, &block|
+            combined_metadata = metadata.dup
+            combined_metadata.merge!(args.pop) if args.last.is_a? Hash
+            args << combined_metadata
+            example_group(*args, &block)
+          end
+        end
+
         # @private
         # @macro [attach] define_nested_shared_group_method
         #
         #   @see SharedExampleGroup
         def self.define_nested_shared_group_method(new_name, report_label="it should behave like")
           define_method(new_name) do |name, *args, &customization_block|
-            group = describe("#{report_label} #{name}") do
+            group = example_group("#{report_label} #{name}") do
               find_and_eval_shared("examples", name, *args, &customization_block)
             end
             group.metadata[:shared_group_name] = name
@@ -218,7 +234,7 @@ module RSpec
       #
       #     describe "something" do # << This describe method is defined in
       #                             # << RSpec::Core::DSL, included in the
-      #                             # << global namespace
+      #                             # << global namespace (optional)
       #       before do
       #         do_something_before
       #       end
@@ -232,7 +248,7 @@ module RSpec
       #     end
       #
       # @see DSL#describe
-      def self.describe(*args, &example_group_block)
+      def self.example_group(*args, &example_group_block)
         args << {} unless args.last.is_a?(Hash)
         args.last.update(:example_group_block => example_group_block)
 
@@ -242,7 +258,8 @@ module RSpec
       end
 
       class << self
-        alias_method :context, :describe
+        alias_method :describe, :example_group
+        alias_method :context, :example_group
       end
 
       # @private
