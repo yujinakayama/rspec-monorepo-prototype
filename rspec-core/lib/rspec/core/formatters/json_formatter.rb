@@ -14,10 +14,6 @@ module RSpec
           @output_hash = {}
         end
 
-        def notifications
-          super + %w[message dump_summary stop close dump_profile]
-        end
-
         def message(message)
           (@output_hash[:messages] ||= []) << message
         end
@@ -35,7 +31,15 @@ module RSpec
           dump_profile unless mute_profile_output?(failure_count)
         end
 
+        def summary_line(example_count, failure_count, pending_count)
+          summary = pluralize(example_count, "example")
+          summary << ", " << pluralize(failure_count, "failure")
+          summary << ", #{pending_count} pending" if pending_count > 0
+          summary
+        end
+
         def stop
+          super
           @output_hash[:examples] = examples.map do |example|
             format_example(example).tap do |hash|
               if e=example.exception
@@ -60,7 +64,6 @@ module RSpec
           dump_profile_slowest_example_groups
         end
 
-        # @api private
         def dump_profile_slowest_examples
           @output_hash[:profile] = {}
           sorted_examples = slowest_examples
@@ -73,7 +76,6 @@ module RSpec
           @output_hash[:profile][:total] = sorted_examples[:total]
         end
 
-        # @api private
         def dump_profile_slowest_example_groups
           @output_hash[:profile] ||= {}
           @output_hash[:profile][:groups] = slowest_groups.map do |loc, hash|
@@ -82,15 +84,6 @@ module RSpec
         end
 
       private
-
-        def summary_line(example_count, failure_count, pending_count)
-          summary = pluralize(example_count, "example")
-          summary << ", " << pluralize(failure_count, "failure")
-          summary << ", #{pending_count} pending" if pending_count > 0
-          summary
-        end
-
-
         def format_example(example)
           {
             :description => example.description,

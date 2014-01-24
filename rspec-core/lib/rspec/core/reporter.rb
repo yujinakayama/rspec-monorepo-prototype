@@ -1,9 +1,15 @@
 module RSpec::Core
   class Reporter
+    NOTIFICATIONS = %W[start message example_group_started example_group_finished example_started
+                       example_passed example_failed example_pending start_dump dump_pending
+                       dump_failures dump_summary seed close stop deprecation deprecation_summary].map(&:to_sym)
 
-    def initialize(configuration)
+    def initialize(configuration, *formatters)
       @configuration = configuration
-      @listeners = Hash.new { |h,k| h[k] = Set.new }
+      @listeners = Hash.new { |h,k| h[k] = [] }
+      formatters.each do |formatter|
+        register_listener(formatter, *NOTIFICATIONS)
+      end
       @example_count = @failure_count = @pending_count = 0
       @duration = @start = nil
     end
@@ -16,13 +22,13 @@ module RSpec::Core
     # events to all registered listeners
     def register_listener(listener, *notifications)
       notifications.each do |notification|
-        @listeners[notification.to_sym] << listener
+        @listeners[notification.to_sym] << listener if listener.respond_to?(notification)
       end
       true
     end
 
     def registered_listeners(notification)
-      @listeners[notification].to_a
+      @listeners[notification]
     end
 
     # @api
@@ -111,7 +117,7 @@ module RSpec::Core
 
     def notify(event, *args, &block)
       registered_listeners(event).each do |formatter|
-        formatter.send(event, *args, &block)
+        formatter.__send__(event, *args, &block)
       end
     end
 
