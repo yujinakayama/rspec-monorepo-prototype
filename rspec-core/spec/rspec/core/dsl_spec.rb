@@ -12,6 +12,7 @@ RSpec.describe "The RSpec DSL" do
         in_sub_process do
           changing_expose_dsl_globally do
             RSpec.configuration.expose_dsl_globally = true
+            expect(RSpec.configuration.expose_dsl_globally?).to eq true
           end
 
           yield
@@ -34,6 +35,7 @@ RSpec.describe "The RSpec DSL" do
         in_sub_process do
           changing_expose_dsl_globally do
             RSpec.configuration.expose_dsl_globally = false
+            expect(RSpec.configuration.expose_dsl_globally?).to eq false
           end
 
           yield
@@ -54,7 +56,7 @@ RSpec.describe "The RSpec DSL" do
 
   describe "built in DSL methods" do
     include_examples "a dsl method",
-      :example_group, :describe, :context,
+      :describe, :context,
       :share_examples_for, :shared_examples_for, :shared_examples, :shared_context do
 
       def changing_expose_dsl_globally
