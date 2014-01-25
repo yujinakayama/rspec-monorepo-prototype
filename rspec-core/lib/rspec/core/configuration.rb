@@ -110,16 +110,13 @@ module RSpec
       # Default: `$stderr`.
       add_setting :error_stream
 
-      # Indicates if the DSL has been exposed off of modules and `main`.
+      # @macro add_setting
       # Default: true
-      def expose_dsl_globally?
-        Core::DSL.exposed_globally?
-      end
-
       # Use this to expose the core RSpec DSL via `Module` and the `main`
       # object. It will be set automatically but you can override it to
       # remove the DSL.
-      # Default: true
+      define_reader :expose_dsl_globally
+
       def expose_dsl_globally=(value)
         if value
           Core::DSL.expose_globally!
@@ -258,7 +255,6 @@ module RSpec
         @include_or_extend_modules = []
         @mock_framework = nil
         @files_to_run = []
-        @formatters = []
         @color = false
         @pattern = '**/*_spec.rb'
         @failure_exit_code = 1
@@ -297,7 +293,7 @@ module RSpec
       def reset
         @spec_files_loaded = false
         @reporter = nil
-        @formatters.clear
+        @formatter_loader = nil
       end
 
       # @overload add_setting(name)
@@ -340,7 +336,7 @@ module RSpec
         (class << self; self; end).class_eval do
           add_setting(name, opts)
         end
-        __send__("#{name}=", default) if default
+        send("#{name}=", default) if default
       end
 
       # Returns the configured mock framework adapter module
@@ -596,28 +592,28 @@ module RSpec
       # and paths to use for output streams, but you should consider that a
       # private api that may change at any time without notice.
       def add_formatter(formatter_to_use, *paths)
-        formatter_class =
-          built_in_formatter(formatter_to_use) ||
-          custom_formatter(formatter_to_use) ||
-          (raise ArgumentError, "Formatter '#{formatter_to_use}' unknown - maybe you meant 'documentation' or 'progress'?.")
-
         paths << output_stream if paths.empty?
-        new_formatter = formatter_class.new(*paths.map {|p| String === p ? file_at(p) : p})
-        formatters << new_formatter unless duplicate_formatter_exists?(new_formatter)
+        formatter_loader.add formatter_to_use, *paths
       end
-
       alias_method :formatter=, :add_formatter
 
+      # @api private
       def formatters
-        @formatters ||= []
+        formatter_loader.formatters
       end
 
+      # @api private
+      def formatter_loader
+        @formatter_loader ||= Formatters::Loader.new(Reporter.new(self))
+      end
+
+      # @api private
       def reporter
-        @reporter ||= begin
-                        add_formatter('progress') if formatters.empty?
-                        add_formatter(RSpec::Core::Formatters::DeprecationFormatter, deprecation_stream, output_stream)
-                        Reporter.new(self, *formatters)
-                      end
+        @reporter ||=
+          begin
+            formatter_loader.setup_default output_stream, deprecation_stream
+            formatter_loader.reporter
+          end
       end
 
       # @api private
@@ -664,35 +660,6 @@ module RSpec
       def alias_example_to(new_name, *args)
         extra_options = Metadata.build_hash_from(args)
         RSpec::Core::ExampleGroup.alias_example_to(new_name, extra_options)
-      end
-
-      # Creates a method that defines an example group with the provided
-      # metadata. Can be used to define example group/metadata shortcuts.
-      #
-      # @example
-      #     alias_example_group_to :describe_model, :type => :model
-      #     shared_context_for "model tests", :type => :model do
-      #       # define common model test helper methods, `let` declarations, etc
-      #     end
-      #
-      #     # This lets you do this:
-      #
-      #     RSpec.describe_model User do
-      #     end
-      #
-      #     # ... which is the equivalent of
-      #
-      #     RSpec.describe User, :type => :model do
-      #     end
-      #
-      # @note The defined aliased will also be added to the top level
-      #       (e.g. `main` and from within modules) if
-      #       `expose_dsl_globally` is set to true.
-      # @see #alias_example_to
-      # @see #expose_dsl_globally=
-      def alias_example_group_to(new_name, *args)
-        extra_options = Metadata.build_hash_from(args)
-        RSpec::Core::ExampleGroup.alias_example_group_to(new_name, extra_options)
       end
 
       # Define an alias for it_should_behave_like that allows different
@@ -904,13 +871,13 @@ module RSpec
       def configure_group(group)
         include_or_extend_modules.each do |include_or_extend, mod, filters|
           next unless filters.empty? || group.any_apply?(filters)
-          __send__("safe_#{include_or_extend}", mod, group)
+          send("safe_#{include_or_extend}", mod, group)
         end
       end
 
       # @private
       def safe_include(mod, host)
-        host.__send__(:include, mod) unless host < mod
+        host.send(:include,mod) unless host < mod
       end
 
       # @private
@@ -934,13 +901,13 @@ module RSpec
 
       # @private
       def configure_mock_framework
-        RSpec::Core::ExampleGroup.__send__(:include, mock_framework)
+        RSpec::Core::ExampleGroup.send(:include, mock_framework)
       end
 
       # @private
       def configure_expectation_framework
         expectation_frameworks.each do |framework|
-          RSpec::Core::ExampleGroup.__send__(:include, framework)
+          RSpec::Core::ExampleGroup.send(:include, framework)
         end
       end
 
@@ -1129,69 +1096,6 @@ module RSpec
 
       def output_to_tty?(output=output_stream)
         tty? || (output.respond_to?(:tty?) && output.tty?)
-      end
-
-      def built_in_formatter(key)
-        case key.to_s
-        when 'd', 'doc', 'documentation', 's', 'n', 'spec', 'nested'
-          require 'rspec/core/formatters/documentation_formatter'
-          RSpec::Core::Formatters::DocumentationFormatter
-        when 'h', 'html'
-          require 'rspec/core/formatters/html_formatter'
-          RSpec::Core::Formatters::HtmlFormatter
-        when 'p', 'progress'
-          require 'rspec/core/formatters/progress_formatter'
-          RSpec::Core::Formatters::ProgressFormatter
-        when 'j', 'json'
-          require 'rspec/core/formatters/json_formatter'
-          RSpec::Core::Formatters::JsonFormatter
-        end
-      end
-
-      def custom_formatter(formatter_ref)
-        if Class === formatter_ref
-          formatter_ref
-        elsif string_const?(formatter_ref)
-          begin
-            formatter_ref.gsub(/^::/,'').split('::').inject(Object) { |const,string| const.const_get string }
-          rescue NameError
-            require( path_for(formatter_ref) ) ? retry : raise
-          end
-        end
-      end
-
-      def duplicate_formatter_exists?(new_formatter)
-        formatters.any? do |formatter|
-          formatter.class === new_formatter && formatter.output == new_formatter.output
-        end
-      end
-
-      def string_const?(str)
-        str.is_a?(String) && /\A[A-Z][a-zA-Z0-9_:]*\z/ =~ str
-      end
-
-      def path_for(const_ref)
-        underscore_with_fix_for_non_standard_rspec_naming(const_ref)
-      end
-
-      def underscore_with_fix_for_non_standard_rspec_naming(string)
-        underscore(string).sub(%r{(^|/)r_spec($|/)}, '\\1rspec\\2')
-      end
-
-      # activesupport/lib/active_support/inflector/methods.rb, line 48
-      def underscore(camel_cased_word)
-        word = camel_cased_word.to_s.dup
-        word.gsub!(/::/, '/')
-        word.gsub!(/([A-Z]+)([A-Z][a-z])/,'\1_\2')
-        word.gsub!(/([a-z\d])([A-Z])/,'\1_\2')
-        word.tr!("-", "_")
-        word.downcase!
-        word
-      end
-
-      def file_at(path)
-        FileUtils.mkdir_p(File.dirname(path))
-        File.new(path, 'w')
       end
     end
   end
