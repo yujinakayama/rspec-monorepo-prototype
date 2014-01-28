@@ -1,6 +1,8 @@
 require 'spec_helper'
 
 class LoadedClass
+  extend RSpec::Mocks::RubyFeatures
+
   M = :m
   N = :n
   INSTANCE = LoadedClass.new
@@ -32,6 +34,14 @@ class LoadedClass
   end
 
   def defined_instance_method
+  end
+
+  if required_keyword_args_supported?
+    # Need to eval this since it is invalid syntax on earlier rubies.
+    eval <<-RUBY
+      def kw_args_method(optional_arg:'hello', required_arg:)
+      end
+    RUBY
   end
 
   def send(*)
@@ -84,6 +94,13 @@ module RSpec
             expect(o.undefined_instance_method(:arg)).to eq(true)
           end
 
+          it 'handles classes that are materialized after mocking' do
+            stub_const "A::B", Object.new
+            o = instance_double "A", :undefined_instance_method => true
+
+            expect(o.undefined_instance_method).to eq(true)
+          end
+
           context 'for null objects' do
             let(:o) { instance_double('NonLoadedClass').as_null_object }
 
@@ -129,6 +146,14 @@ module RSpec
             o = instance_double('LoadedClass')
             allow(o).to receive(:send).and_return("received")
             expect(o.send(:msg)).to eq("received")
+          end
+
+          it 'gives a descriptive error message for NoMethodError' do
+            o = instance_double("LoadedClass")
+            expect {
+              o.defined_private_method
+            }.to raise_error(NoMethodError,
+                               /Double "LoadedClass \(instance\)"/)
           end
 
           describe "method visibility" do
@@ -199,7 +224,23 @@ module RSpec
             o = instance_double('LoadedClass', :defined_instance_method => 25)
             expect {
               o.defined_instance_method(:a)
-            }.to raise_error(ArgumentError)
+            }.to raise_error(ArgumentError,
+                               "Wrong number of arguments. Expected 0, got 1.")
+          end
+
+          if required_keyword_args_supported?
+            it 'allows keyword arguments' do
+              o = instance_double('LoadedClass', :kw_args_method => true)
+              expect(o.kw_args_method(:required_arg => 'something')).to eq(true)
+            end
+
+            it 'checks that stubbed methods with required keyword args are ' +
+               'invoked with the required arguments' do
+              o = instance_double('LoadedClass', :kw_args_method => true)
+              expect {
+                o.kw_args_method(:optional_arg => 'something')
+              }.to raise_error(ArgumentError)
+            end
           end
 
           it 'allows class to be specified by constant' do
@@ -301,6 +342,13 @@ module RSpec
             prevents { expect(o).to receive(:defined_instance_method) }
             prevents { o.should_receive(:undefined_instance_method) }
             prevents { o.should_receive(:defined_instance_method) }
+          end
+
+          it 'gives a descriptive error message for NoMethodError' do
+            o = class_double("LoadedClass")
+            expect {
+              o.defined_private_class_method
+            }.to raise_error(NoMethodError, /Double "LoadedClass"/)
           end
 
           describe "method visibility" do
