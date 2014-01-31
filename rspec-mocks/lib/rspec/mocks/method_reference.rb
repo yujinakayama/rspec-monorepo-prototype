@@ -43,9 +43,9 @@ module RSpec
         end
       end
 
-      def with_signature
+      def when_defined
         if original = original_method
-          yield MethodSignature.new(original)
+          yield original
         end
       end
 

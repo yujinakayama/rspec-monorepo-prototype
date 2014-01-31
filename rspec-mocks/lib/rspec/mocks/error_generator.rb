@@ -18,6 +18,8 @@ module RSpec
     # @private
     NegationUnsupportedError = Class.new(StandardError)
 
+    VerifyingDoubleNotDefinedError = Class.new(StandardError)
+
     # @private
     class ErrorGenerator
       attr_writer :opts
@@ -81,8 +83,8 @@ module RSpec
       end
 
       # @private
-      def raise_invalid_arguments_error(verifier)
-        __raise verifier.error_message
+      def raise_arity_error(verifier)
+        __raise verifier.error
       end
 
       # @private
@@ -143,8 +145,8 @@ module RSpec
       end
 
       # @private
-      def raise_wrong_arity_error(args_to_yield, signature)
-        __raise "#{intro} yielded |#{arg_list(*args_to_yield)}| to block with #{signature.description}"
+      def raise_wrong_arity_error(args_to_yield, arity)
+        __raise "#{intro} yielded |#{arg_list(*args_to_yield)}| to block with arity of #{arity}"
       end
 
       # @private
