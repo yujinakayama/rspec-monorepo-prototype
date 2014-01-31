@@ -5,7 +5,7 @@ module RSpec
 
     # A message expectation that knows about the real implementation of the
     # message being expected, so that it can verify that any expectations
-    # have the valid arguments.
+    # have the correct arity.
     # @api private
     class VerifyingMessageExpectation < MessageExpectation
 
@@ -35,23 +35,23 @@ module RSpec
             super
           end
 
-          validate_arguments!(expected_args)
+          ensure_arity!(expected_args)
         end
         super
       end
 
     private
 
-      def validate_arguments!(actual_args)
+      def ensure_arity!(actual_args)
         return if method_reference.nil?
 
-        method_reference.with_signature do |signature|
-          verifier = MethodSignatureVerifier.new(signature, actual_args)
+        method_reference.when_defined do |method|
+          verifier = MethodSignatureVerifier.new(method, actual_args)
           unless verifier.valid?
             # Fail fast is required, otherwise the message expecation will fail
             # as well ("expected method not called") and clobber this one.
             @failed_fast = true
-            @error_generator.raise_invalid_arguments_error(verifier)
+            @error_generator.raise_arity_error(verifier)
           end
         end
       end
