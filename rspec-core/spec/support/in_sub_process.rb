@@ -1,8 +1,8 @@
 module InSubProcess
   if RUBY_PLATFORM == 'java'
     def in_sub_process
-      skip "This spec requires forking to work properly, " +
-           "and JRuby does not support forking"
+      pending "This spec requires forking to work properly, " +
+              "and JRuby does not support forking"
     end
   else
     # Useful as a way to isolate a global change to a subprocess.

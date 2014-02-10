@@ -113,13 +113,13 @@ RSpec.describe RSpec::Core::Example, :parent_metadata => 'sample' do
 
       context "if the example is pending" do
         it "still uses the matcher-generated description if a matcher ran" do
-          example = example_group.example { pending; expect(4).to eq(5) }
+          example = example_group.example { pending { expect(4).to eq(5) } }
           example_group.run
           expect(example.description).to eq("should eq 5")
         end
 
         it "uses the file and line number of the example if no matcher ran" do
-          example = example_group.example { pending; fail }
+          example = example_group.example { pending; expect(4).to eq(5) }
           example_group.run
           expect(example.description).to match(/example at #{relative_path(__FILE__)}:#{__LINE__ - 2}/)
         end
@@ -409,7 +409,7 @@ RSpec.describe RSpec::Core::Example, :parent_metadata => 'sample' do
     context "in the example" do
       it "sets the example to pending" do
         group = RSpec::Core::ExampleGroup.describe do
-          example { pending; fail }
+          example { pending }
         end
         group.run
         expect(group.examples.first).to be_pending
@@ -428,19 +428,28 @@ RSpec.describe RSpec::Core::Example, :parent_metadata => 'sample' do
         expect(blah).to be(:success)
       end
 
-      it 'sets the backtrace to the example definition so it can be located by the user' do
-        expected = [__FILE__, __LINE__ + 2].map(&:to_s)
-        group = RSpec::Core::ExampleGroup.describe do
-          example {
-            pending
-          }
+      context "with a block" do
+        it "sets the example to pending if block fails" do
+          group = RSpec::Core::ExampleGroup.describe do
+            example do
+              pending { expect(1).to eq(2) }
+            end
+          end
+          group.run
+          expect(group.examples.first.metadata[:execution_result][:status]).to eq('pending')
+          expect(group.examples.first.metadata[:execution_result][:pending_fixed]).to eq(false)
         end
-        group.run
-        # TODO: De-dup this logic in rspec-support
-        actual = group.examples.first.exception.backtrace.
-          find { |line| line !~ RSpec::CallerFilter::LIB_REGEX }.
-          split(':')[0..1]
-        expect(actual).to eq(expected)
+
+        it "fails if block is fixed, i.e. does not raise" do
+          group = RSpec::Core::ExampleGroup.describe do
+            example do
+              pending {}
+            end
+          end
+          group.run
+          expect(group.examples.first.metadata[:execution_result][:status]).to eq('failed')
+          expect(group.examples.first.metadata[:execution_result][:pending_fixed]).to eq(true)
+        end
       end
     end
 
@@ -448,8 +457,8 @@ RSpec.describe RSpec::Core::Example, :parent_metadata => 'sample' do
       it "sets each example to pending" do
         group = RSpec::Core::ExampleGroup.describe do
           before(:each) { pending }
-          example { fail }
-          example { fail }
+          example {}
+          example {}
         end
         group.run
         expect(group.examples.first).to be_pending
@@ -461,8 +470,8 @@ RSpec.describe RSpec::Core::Example, :parent_metadata => 'sample' do
       it "sets each example to pending" do
         group = RSpec::Core::ExampleGroup.describe do
           before(:all) { pending }
-          example { fail }
-          example { fail }
+          example {}
+          example {}
         end
         group.run
         expect(group.examples.first).to be_pending
@@ -478,68 +487,6 @@ RSpec.describe RSpec::Core::Example, :parent_metadata => 'sample' do
         end
         group.run
         expect(group.examples.first).to be_pending
-      end
-    end
-  end
-
-  describe "#skip" do
-    context "in the example" do
-      it "sets the example to skipped" do
-        group = RSpec::Core::ExampleGroup.describe do
-          example { skip }
-        end
-        group.run
-        expect(group.examples.first).to be_skipped
-      end
-
-      it "allows post-example processing in around hooks (see https://github.com/rspec/rspec-core/issues/322)" do
-        blah = nil
-        group = RSpec::Core::ExampleGroup.describe do
-          around do |example|
-            example.run
-            blah = :success
-          end
-          example { skip }
-        end
-        group.run
-        expect(blah).to be(:success)
-      end
-    end
-
-    context "in before(:each)" do
-      it "sets each example to skipped" do
-        group = RSpec::Core::ExampleGroup.describe do
-          before(:each) { skip }
-          example {}
-          example {}
-        end
-        group.run
-        expect(group.examples.first).to be_skipped
-        expect(group.examples.last).to be_skipped
-      end
-    end
-
-    context "in before(:all)" do
-      it "sets each example to pending" do
-        group = RSpec::Core::ExampleGroup.describe do
-          before(:all) { skip }
-          example {}
-          example {}
-        end
-        group.run
-        expect(group.examples.first).to be_skipped
-        expect(group.examples.last).to be_skipped
-      end
-    end
-
-    context "in around(:each)" do
-      it "sets the example to skipped" do
-        group = RSpec::Core::ExampleGroup.describe do
-          around(:each) { skip }
-          example {}
-        end
-        group.run
-        expect(group.examples.first).to be_skipped
       end
     end
   end

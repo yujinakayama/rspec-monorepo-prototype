@@ -7,15 +7,17 @@ end
 RSpec.describe "pending command with block format" do
   context "with content that would fail" do
     it "is pending" do
-      pending
-      expect(1).to eq(2)
+      pending do
+        expect(1).to eq(2)
+      end
     end
   end
 
   context "with content that would pass" do
     it "fails" do
-      pending
-      expect(1).to eq(1)
+      pending do
+        expect(1).to eq(1)
+      end
     end
   end
 end

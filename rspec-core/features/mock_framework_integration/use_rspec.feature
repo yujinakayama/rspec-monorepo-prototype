@@ -38,18 +38,19 @@ Feature: mock with rspec
     When I run `rspec example_spec.rb`
     Then the output should contain "1 example, 1 failure"
 
-  Scenario: failing message expectation in pending example (remains pending)
+  Scenario: failing message expectation in pending block (remains pending)
     Given a file named "example_spec.rb" with:
       """ruby
       RSpec.configure do |config|
         config.mock_framework = :rspec
       end
 
-      describe "failed message expectation in a pending example" do
+      describe "failed message expectation in a pending block" do
         it "is listed as pending" do
-          pending
-          receiver = double('receiver')
-          expect(receiver).to receive(:message)
+          pending do
+            receiver = double('receiver')
+            expect(receiver).to receive(:message)
+          end
         end
       end
       """
@@ -57,19 +58,20 @@ Feature: mock with rspec
     Then the output should contain "1 example, 0 failures, 1 pending"
     And the exit status should be 0
 
-  Scenario: passing message expectation in pending example (fails)
+  Scenario: passing message expectation in pending block (fails)
     Given a file named "example_spec.rb" with:
       """ruby
       RSpec.configure do |config|
         config.mock_framework = :rspec
       end
 
-      describe "passing message expectation in a pending example" do
+      describe "passing message expectation in a pending block" do
         it "fails with FIXED" do
-          pending
-          receiver = double('receiver')
-          expect(receiver).to receive(:message)
-          receiver.message
+          pending do
+            receiver = double('receiver')
+            expect(receiver).to receive(:message)
+            receiver.message
+          end
         end
       end
       """
