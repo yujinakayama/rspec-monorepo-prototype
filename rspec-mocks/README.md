@@ -324,11 +324,42 @@ See the [mutating constants
 README](https://github.com/rspec/rspec-mocks/blob/master/features/mutating_constants/README.md)
 for info on this feature.
 
-## Use `before(:each)`, not `before(:all)`
+## Use `before(:example)`, not `before(:context)`
 
-Stubs in `before(:all)` are not supported. The reason is that all stubs and mocks get cleared out after each example, so any stub that is set in `before(:all)` would work in the first example that happens to run in that group, but not for any others.
+Stubs in `before(:context)` are not supported. The reason is that all stubs and mocks get cleared out after each example, so any stub that is set in `before(:context)` would work in the first example that happens to run in that group, but not for any others.
 
-Instead of `before(:all)`, use `before(:each)`.
+Instead of `before(:context)`, use `before(:example)`.
+
+## Settings mocks or stubs on any instance of a class
+
+rspec-mocks provides two methods, `allow_any_instance_of` and
+`expect_any_instance_of`, that will allow you to stub or mock any instance
+of a class. They are used in place for `allow` or `expect`:
+
+```ruby
+allow_any_instance_of(Widget).to receive(:name).and_return("Wibble")
+expect_any_instance_of(Widget).to receive(:name).and_return("Wobble")
+```
+
+These methods add the appropriate stub or expectation to all instances of
+`Widget`.
+
+This feature is sometimes useful when working with legacy code, though in
+general we discourage its use for a number of reasons:
+
+* The `rspec-mocks` API is designed for individual object instances, but this
+  feature operates on entire classes of objects. As a result there are some
+  sematically confusing edge cases. For example in
+  `expect_any_instance_of(Widget).to receive(:name).twice` it isn't clear
+  whether each specific instance is allowed to receive `name` twice, or if two
+  receives total are allowed. (It's the former.)
+* Using this feature is often a design smell. It may be
+  that your test is trying to do too much or that the object under test is too
+  complex.
+* It is the most complicated feature of `rspec-mocks`, and has historically
+  received the most bug reports. (None of the core team actively use it,
+  which doesn't help.)
+
 
 ## Further Reading
 
