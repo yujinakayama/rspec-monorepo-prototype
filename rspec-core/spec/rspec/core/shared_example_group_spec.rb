@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'rspec/support/spec/in_sub_process'
+require 'support/in_sub_process'
 
 module RandomTopLevelModule
   def self.setup!
@@ -9,7 +9,7 @@ end
 
 module RSpec::Core
   RSpec.describe SharedExampleGroup do
-    include RSpec::Support::InSubProcess
+    include InSubProcess
 
     ExampleModule = Module.new
     ExampleClass = Class.new

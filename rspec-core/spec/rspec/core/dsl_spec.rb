@@ -1,10 +1,10 @@
 require 'spec_helper'
-require 'rspec/support/spec/in_sub_process'
+require 'support/in_sub_process'
 
 main = self
 
 RSpec.describe "The RSpec DSL" do
-  include RSpec::Support::InSubProcess
+  include InSubProcess
 
   shared_examples_for "dsl methods" do |*method_names|
     context "when expose_dsl_globally is enabled" do
