@@ -1,0 +1,7 @@
+--load ./yard/alias_matcher.rb
+--exclude features
+--no-private
+--markup markdown
+-
+Changelog.md
+License.txt
