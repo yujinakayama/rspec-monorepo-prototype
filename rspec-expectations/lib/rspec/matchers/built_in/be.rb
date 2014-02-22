@@ -135,9 +135,8 @@ module RSpec
           @block = block
         end
 
-        def matches?(actual, &block)
-          @actual  = actual
-          @block ||= block
+        def matches?(actual)
+          @actual = actual
 
           if is_private_on?( @actual )
             raise Expectations::ExpectationNotMetError.new("expectation set on private method `#{predicate}`")
