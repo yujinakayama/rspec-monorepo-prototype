@@ -115,42 +115,42 @@ module RSpec
 
       alias_method :a_kind_of, :kind_of
 
-      # @private
+      # @api private
       def self.anythingize_lonely_keys(*args)
         hash = args.last.class == Hash ? args.delete_at(-1) : {}
         args.each { | arg | hash[arg] = AnyArgMatcher.new }
         hash
       end
 
-      # @private
+      # @api private
       class AnyArgsMatcher
         def description
           "any args"
         end
       end
 
-      # @private
+      # @api private
       class AnyArgMatcher
         def ===(other)
           true
         end
       end
 
-      # @private
+      # @api private
       class NoArgsMatcher
         def description
           "no args"
         end
       end
 
-      # @private
+      # @api private
       class BooleanMatcher
         def ===(value)
           true == value || false == value
         end
       end
 
-      # @private
+      # @api private
       class BaseHashMatcher
         def initialize(expected)
           @expected = expected
@@ -169,7 +169,7 @@ module RSpec
         end
       end
 
-      # @private
+      # @api private
       class HashIncludingMatcher < BaseHashMatcher
         def ===(actual)
           super(:all?, actual)
@@ -180,7 +180,7 @@ module RSpec
         end
       end
 
-      # @private
+      # @api private
       class HashExcludingMatcher < BaseHashMatcher
         def ===(actual)
           super(:none?, actual)
@@ -191,7 +191,7 @@ module RSpec
         end
       end
 
-      # @private
+      # @api private
       class ArrayIncludingMatcher
         def initialize(expected)
           @expected = expected
@@ -206,7 +206,7 @@ module RSpec
         end
       end
 
-      # @private
+      # @api private
       class DuckTypeMatcher
         def initialize(*methods_to_respond_to)
           @methods_to_respond_to = methods_to_respond_to
@@ -217,7 +217,7 @@ module RSpec
         end
       end
 
-      # @private
+      # @api private
       class InstanceOf
         def initialize(klass)
           @klass = klass

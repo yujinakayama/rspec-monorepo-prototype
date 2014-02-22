@@ -39,7 +39,7 @@ module RSpec
       end
     end
 
-    # @private
+    # @api private
     class Space
       attr_reader :proxies, :any_instance_recorders, :expectation_ordering
 
@@ -57,8 +57,6 @@ module RSpec
       def verify_all
         proxies.each_value { |proxy| proxy.verify }
         any_instance_recorders.each_value { |recorder| recorder.verify }
-      ensure
-        reset_all
       end
 
       def reset_all
@@ -137,7 +135,6 @@ module RSpec
       end
     end
 
-    # @private
     class NestedSpace < Space
       def initialize(parent)
         @parent = parent
