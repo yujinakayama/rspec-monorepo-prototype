@@ -1,4 +1,4 @@
-RSpec::Support.require_rspec_core "formatters/helpers"
+require 'rspec/core/formatters/helpers'
 
 module RSpec::Core
   module Notifications
