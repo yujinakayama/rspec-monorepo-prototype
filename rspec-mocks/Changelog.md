@@ -1,27 +1,13 @@
 ### 3.0.0.rc1 Development
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v3.0.0.beta2...master)
-
-Breaking Changes for 3.0.0:
-
-* Remove `RSpec::Mocks::TestDouble.extend_onto`. (Myron Marston)
-
-Enhancements:
-
-* Instead of crashing when cleaning up stub methods on a frozen object, it now
-  issues a warning explaining that it's impossible to clean up the stubs.
-  (Justin Coyne and Sam Phippen)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v3.0.0.beta2...master)
 
 Bug Fixes:
 
-* Fix regression introduced in 3.0.0.bet2 that caused
-  `double.as_null_object.to_str` to return the double rather
-  than a string. (Myron Marston)
-* Fix bug in `expect(dbl).to receive_message_chain(:foo, :bar)` where it was
-  not setting an expectation for the last message in the chain.
-  (Jonathan del Strother)
+* Ensure `any_instance` expectations and mocks are torn down regardless of
+  expectation failures. (Sam Phippen)
 
 ### 3.0.0.beta2 / 2014-02-17
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v3.0.0.beta1...v3.0.0.beta2)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v3.0.0.beta1...v3.0.0.beta2)
 
 Breaking Changes for 3.0.0:
 
@@ -88,7 +74,7 @@ Bug Fixes:
   behavior. (Maurício Linhares)
 
 ### 3.0.0.beta1 / 2013-11-07
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.99.0.beta1...v3.0.0.beta1)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.99.0.beta1...v3.0.0.beta1)
 
 Breaking Changes for 3.0.0:
 
@@ -152,7 +138,7 @@ Bug Fixes:
   (Nick DeLuca)
 
 ### 2.99.0.beta2 / 2014-02-17
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.99.0.beta1...v2.99.0.beta2)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.99.0.beta1...v2.99.0.beta2)
 
 Deprecations:
 
@@ -167,7 +153,7 @@ Deprecations:
 * Deprecate `and_return { value }` and `and_return` without arguments. (Yuji Nakayama)
 
 ### 2.99.0.beta1 / 2013-11-07
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.4...v2.99.0.beta1)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.4...v2.99.0.beta1)
 
 Deprecations
 
@@ -191,16 +177,8 @@ Enhancements:
 * Add a config option to yield the receiver to `any_instance` implementation
   blocks. (Sam Phippen)
 
-### 2.14.6 / 2014-02-20
-[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.5...v2.14.6)
-
-Bug Fixes:
-
-* Ensure `any_instance` method stubs and expectations are torn down regardless of
-  expectation failures. (Sam Phippen)
-
 ### 2.14.5 / 2014-02-01
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.4...v2.14.5)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.4...v2.14.5)
 
 Bug Fixes:
 
@@ -210,7 +188,7 @@ Bug Fixes:
   receives a block, too. (Myron Marston)
 
 ### 2.14.4 / 2013-10-15
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.3...v2.14.4)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.3...v2.14.4)
 
 Bug Fixes:
 
@@ -220,7 +198,7 @@ Bug Fixes:
   the usage of modifications (`and_return` etc) (Jon Rowe)
 
 ### 2.14.3 / 2013-08-08
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.2...v2.14.3)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.2...v2.14.3)
 
 Bug Fixes:
 
@@ -228,7 +206,7 @@ Bug Fixes:
   a prepended Module (Bradley Schaefer)
 
 ### 2.14.2 / 2013-07-30
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.1...v2.14.2)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.1...v2.14.2)
 
 Bug Fixes:
 
@@ -238,7 +216,7 @@ Bug Fixes:
   return a test double rather than stub a method (Myron Marston).
 
 ### 2.14.1 / 2013-07-07
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.0...v2.14.1)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.0...v2.14.1)
 
 Bug Fixes:
 
@@ -250,7 +228,7 @@ Bug Fixes:
   in 3.0. (Myron Marston)
 
 ### 2.14.0 / 2013-07-06
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.0.rc1...v2.14.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.14.0.rc1...v2.14.0)
 
 Enhancements:
 
@@ -274,7 +252,7 @@ Bug Fixes:
   similar preloading gems (Andy Lindeman).
 
 ### 2.14.0.rc1 / 2013-05-27
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.13.0...v2.14.0.rc1)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.13.0...v2.14.0.rc1)
 
 Enhancements:
 
@@ -324,7 +302,7 @@ Deprecations
 * Deprecate `at_least(0).times` and `any_number_of_times` (Michi Huber).
 
 ### 2.13.1 / 2013-04-06
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.13.0...v2.13.1)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.13.0...v2.13.1)
 
 Bug fixes
 
@@ -332,7 +310,7 @@ Bug fixes
   `and_yield`, `and_raise`, `and_return` or `and_throw` (Myron Marston).
 
 ### 2.13.0 / 2013-02-23
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.12.2...v2.13.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.12.2...v2.13.0)
 
 Bug fixes
 
@@ -362,7 +340,7 @@ Bug fixes
   (Myron Marston).
 
 ### 2.12.2 / 2013-01-27
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.12.1...v.2.12.2)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.12.1...v.2.12.2)
 
 Bug fixes
 
@@ -377,7 +355,7 @@ Bug fixes
   versions (Andy Lindeman).
 
 ### 2.12.1 / 2012-12-21
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.12.0...v2.12.1)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.12.0...v2.12.1)
 
 Bug fixes
 
@@ -389,7 +367,7 @@ Bug fixes
   work properly with constant strings that are prefixed with `::` (Myron Marston).
 
 ### 2.12.0 / 2012-11-12
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.11.3...v2.12.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.11.3...v2.12.0)
 
 Enhancements
 
@@ -405,7 +383,7 @@ Deprecations:
   (Neha Kumari)
 
 ### 2.11.3 / 2012-09-19
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.11.2...v2.11.3)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.11.2...v2.11.3)
 
 Bug fixes
 
@@ -419,7 +397,7 @@ Bug fixes
   extra time with the wrong arguments (Myron Marston).
 
 ### 2.11.2 / 2012-08-11
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.11.1...v2.11.2)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.11.1...v2.11.2)
 
 Bug fixes
 
@@ -431,7 +409,7 @@ Bug fixes
   Marston)
 
 ### 2.11.1 / 2012-07-09
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.11.0...v2.11.1)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.11.0...v2.11.1)
 
 Bug fixes
 
@@ -441,7 +419,7 @@ Bug fixes
   overriden with the null object implementation--`return self`). (Myron Marston)
 
 ### 2.11.0 / 2012-07-07
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.10.1...v2.11.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.10.1...v2.11.0)
 
 Enhancements
 
@@ -466,7 +444,7 @@ Bug fixes
   `Exception` by default, just like ruby does. (Andrew Marshall)
 
 ### 2.10.1 / 2012-05-05
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.10.0...v2.10.1)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.10.0...v2.10.1)
 
 Bug fixes
 
@@ -476,14 +454,14 @@ Bug fixes
     * fixed failure of `object.should_not_receive(:message).and_return value`
 
 ### 2.10.0 / 2012-05-03
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.9.0...v2.10.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.9.0...v2.10.0)
 
 Bug fixes
 
 * fail fast when an `exactly` or `at_most` expectation is exceeded
 
 ### 2.9.0 / 2012-03-17
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.8.0...v2.9.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.8.0...v2.9.0)
 
 Enhancements
 
@@ -498,19 +476,19 @@ Bug fixes
 
 ### 2.8.0 / 2012-01-04
 
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.8.0.rc2...v2.8.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.8.0.rc2...v2.8.0)
 
 No changes for this release. Just releasing with the other rspec gems.
 
 ### 2.8.0.rc2 / 2011-12-19
 
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.8.0.rc1...v2.8.0.rc2)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.8.0.rc1...v2.8.0.rc2)
 
 No changes for this release. Just releasing with the other rspec gems.
 
 ### 2.8.0.rc1 / 2011-11-06
 
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.7.0...v2.8.0.rc1)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.7.0...v2.8.0.rc1)
 
 Enhancements
 
@@ -518,7 +496,7 @@ Enhancements
 
 ### 2.7.0 / 2011-10-16
 
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.6.0...v2.7.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.6.0...v2.7.0)
 
 Enhancements
 
@@ -541,7 +519,7 @@ Bug fixes
 
 ### 2.6.0 / 2011-05-12
 
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.5.0...v2.6.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.5.0...v2.6.0)
 
 Enhancements
 
@@ -555,7 +533,7 @@ Bug fixes
 
 ### 2.5.0 / 2011-02-05
 
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.4.0...v2.5.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.4.0...v2.5.0)
 
 Bug fixes
 
@@ -566,14 +544,14 @@ Bug fixes
 
 ### 2.4.0 / 2011-01-02
 
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.3.0...v2.4.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.3.0...v2.4.0)
 
 No functional changes in this release, which was made to align with the
 rspec-core-2.4.0 release.
 
 ### 2.3.0 / 2010-12-12
 
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.2.0...v2.3.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.2.0...v2.3.0)
 
 Bug fixes
 
@@ -582,7 +560,7 @@ Bug fixes
 
 ### 2.2.0 / 2010-11-28
 
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.1.0...v2.2.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.1.0...v2.2.0)
 
 Enhancements
 
@@ -596,7 +574,7 @@ Bug fix
 
 ### 2.1.0 / 2010-11-07
 
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.0.1...v2.1.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.0.1...v2.1.0)
 
 Bug fixes
 
@@ -604,11 +582,11 @@ Bug fixes
 
 ### 2.0.0 / 2010-10-10
 
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.0.0.beta.22...v2.0.0)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.0.0.beta.22...v2.0.0)
 
 ### 2.0.0.rc / 2010-10-05
 
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.0.0.beta.22...v2.0.0.rc)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.0.0.beta.22...v2.0.0.rc)
 
 Enhancements
 
@@ -622,7 +600,7 @@ Bug fixes
 
 ### 2.0.0.beta.22 / 2010-09-12
 
-[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.0.0.beta.20...v2.0.0.beta.22)
+[full changelog](http://github.com/rspec/rspec-mocks/compare/v2.0.0.beta.20...v2.0.0.beta.22)
 
 Bug fixes
 

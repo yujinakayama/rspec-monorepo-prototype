@@ -1,3 +1,5 @@
+require 'spec_helper'
+
 module RSpec
   module Mocks
     describe "a double stubbed with multiple return values" do

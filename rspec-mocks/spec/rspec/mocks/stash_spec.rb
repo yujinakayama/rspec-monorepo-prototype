@@ -1,5 +1,8 @@
+require 'spec_helper'
+
 module RSpec
   module Mocks
+
     describe "only stashing the original method" do
       let(:klass) do
         Class.new do

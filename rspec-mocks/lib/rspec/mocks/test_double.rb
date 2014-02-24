@@ -4,17 +4,23 @@ module RSpec
     # includes this module, and it is provided for cases where you want a
     # pure test double without subclassing RSpec::Mocks::Double.
     module TestDouble
+      # Extends the TestDouble module onto the given object and
+      # initializes it as a test double.
+      #
+      # @example
+      #
+      #   module = Module.new
+      #   RSpec::Mocks::TestDouble.extend_onto(module, "MyMixin", :foo => "bar")
+      #   module.foo  #=> "bar"
+      def self.extend_onto(object, name=nil, stubs={})
+        object.extend self
+        object.send(:__initialize_as_test_double, name, stubs)
+      end
+
       # Creates a new test double with a `name` (that will be used in error
       # messages only)
       def initialize(name=nil, stubs={})
-        @__expired = false
-        if Hash === name && stubs.empty?
-          stubs = name
-          @name = nil
-        else
-          @name = name
-        end
-        assign_stubs(stubs)
+        __initialize_as_test_double(name, stubs)
       end
 
       # Tells the object to respond to all messages. If specific stub values
@@ -61,11 +67,18 @@ module RSpec
         @__expired = true
       end
 
-      def freeze
-        RSpec.warn_with("WARNING: you attempted to freeze a test double. This is explicitly a no-op as freezing doubles can lead to undesired behaviour when resetting tests.")
-      end
-
     private
+
+      def __initialize_as_test_double(name=nil, stubs={})
+        @__expired = false
+        if Hash === name && stubs.empty?
+          stubs = name
+          @name = nil
+        else
+          @name = name
+        end
+        assign_stubs(stubs)
+      end
 
       def method_missing(message, *args, &block)
         proxy = __mock_proxy
@@ -75,7 +88,6 @@ module RSpec
           case message
           when :to_int        then return 0
           when :to_a, :to_ary then return nil
-          when :to_str        then return to_s
           else return self
           end
         end

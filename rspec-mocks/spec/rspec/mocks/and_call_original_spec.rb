@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'delegate'
 
 describe "and_call_original" do
