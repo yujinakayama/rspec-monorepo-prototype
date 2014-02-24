@@ -1,3 +1,5 @@
+require "spec_helper"
+
 describe RSpec::Mocks do
   describe ".verify" do
     it "delegates to the space" do

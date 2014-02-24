@@ -1,5 +1,3 @@
-require 'rspec/mocks/matchers/expectation_customization'
-
 module RSpec
   module Mocks
     module Matchers
@@ -101,6 +99,21 @@ module RSpec
           last.block ||= block
           nil
         end
+      end
+    end
+
+    # @private
+    class ExpectationCustomization
+      attr_accessor :block
+
+      def initialize(method_name, args, block)
+        @method_name = method_name
+        @args        = args
+        @block       = block
+      end
+
+      def playback_onto(expectation)
+        expectation.__send__(@method_name, *@args, &@block)
       end
     end
   end

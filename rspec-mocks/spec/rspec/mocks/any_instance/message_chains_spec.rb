@@ -1,3 +1,5 @@
+require 'spec_helper'
+
 describe RSpec::Mocks::AnyInstance::MessageChains do
   let(:recorder) { double }
   let(:chains) { RSpec::Mocks::AnyInstance::MessageChains.new }

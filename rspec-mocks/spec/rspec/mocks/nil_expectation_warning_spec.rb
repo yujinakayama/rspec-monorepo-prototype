@@ -1,3 +1,5 @@
+require 'spec_helper'
+
 module RSpec
   module Mocks
     describe "an expectation set on nil" do

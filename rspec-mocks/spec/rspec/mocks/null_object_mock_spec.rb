@@ -1,3 +1,5 @@
+require 'spec_helper'
+
 module RSpec
   module Mocks
     describe "a double _not_ acting as a null object" do
@@ -42,10 +44,6 @@ module RSpec
       it "allows explicit expectation" do
         @double.should_receive(:something)
         @double.something
-      end
-
-      it 'returns a string from `to_str`' do
-        expect(@double.to_str).to be_a(String)
       end
 
       it 'continues to return self from an explicit expectation' do

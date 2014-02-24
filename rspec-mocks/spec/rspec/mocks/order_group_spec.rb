@@ -1,3 +1,4 @@
+require 'spec_helper'
 describe 'OrderGroup' do
   let(:order_group) { ::RSpec::Mocks::OrderGroup.new }
 

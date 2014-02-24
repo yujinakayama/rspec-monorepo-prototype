@@ -1,3 +1,5 @@
+require 'spec_helper'
+
 describe Marshal, 'extensions' do
   # An object that raises when code attempts to dup it.
   #
