@@ -1,4 +1,4 @@
-RSpec::Support.require_rspec_core "formatters/base_formatter"
+require 'rspec/core/formatters/base_formatter'
 require 'json'
 
 module RSpec
