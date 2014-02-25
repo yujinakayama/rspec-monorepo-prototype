@@ -1,5 +1,5 @@
 require 'drb/drb'
-RSpec::Support.require_rspec_core "drb_options"
+require 'rspec/core/drb_options'
 
 module RSpec
   module Core
