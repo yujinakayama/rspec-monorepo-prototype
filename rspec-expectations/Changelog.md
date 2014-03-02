@@ -1,11 +1,26 @@
 ### 3.0.0.rc1 Development
 [Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.0.beta2...master)
 
+Breaking Changes for 3.0.0:
+
+* Remove `matcher_execution_context` attribute from DSL-defined
+  custom matchers. (Myron Marston)
+* Remove `RSpec::Matchers::Pretty#_pretty_print`. (Myron Marston)
+* Remove `RSpec::Matchers::Pretty#expected_to_sentence`. (Myron Marston)
+* Rename `RSpec::Matchers::Configuration` constant to
+  `RSpec::Expectations::Configuration`. (Myron Marston)
+
 Bug Fixes:
 
 * Fix `NoMethodError` triggered by beta2 when `YARD` was loaded in
   the test environment. (Myron Marston)
 * Fix `be_xyz` matcher to accept a `do...end` block. (Myron Marston)
+
+Enhancements:
+
+* Document the remaining public APIs. rspec-expectations now has 100% of
+  the public API documented and will remain that way (as new undocumented
+  methods will fail the build). (Myron Marston)
 
 ### 3.0.0.beta2 / 2014-02-17
 [Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.0.beta1...v3.0.0.beta2)
