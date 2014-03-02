@@ -1,7 +1,7 @@
 module RSpec
   module Mocks
 
-    # @private
+    # @api private
     class ObjectReference
       # Returns an appropriate Object or Module reference based
       # on the given argument.
@@ -22,8 +22,7 @@ module RSpec
 
     # Used when an object is passed to `object_double`.
     # Represents a reference to that object.
-    #
-    # @private
+    # @api private
     class DirectObjectReference
       def initialize(object)
         @object = object
@@ -49,8 +48,7 @@ module RSpec
 
     # Used when a module is passed to `class_double` or `instance_double`.
     # Represents a reference to that module.
-    #
-    # @private
+    # @api private
     class DirectModuleReference < DirectObjectReference
       def const_to_replace
         @object.name
@@ -62,8 +60,7 @@ module RSpec
     # or `object_double`.
     # Represents a reference to the object named (via a constant lookup)
     # by the string.
-    #
-    # @private
+    # @api private
     class NamedObjectReference
       def initialize(const_name)
         @const_name = const_name

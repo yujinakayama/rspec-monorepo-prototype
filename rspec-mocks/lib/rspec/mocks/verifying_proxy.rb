@@ -4,7 +4,7 @@ RSpec::Support.require_rspec_mocks 'method_reference'
 module RSpec
   module Mocks
 
-    # @private
+    # @api private
     module VerifyingProxyMethods
       def add_stub(location, method_name, opts={}, &implementation)
         ensure_implemented(method_name)
@@ -53,7 +53,7 @@ module RSpec
     # loaded, otherwise they are disabled. This allows for testing in
     # isolation.
     #
-    # @private
+    # @api private
     class VerifyingProxy < Proxy
       include VerifyingProxyMethods
 
@@ -82,7 +82,7 @@ module RSpec
       end
     end
 
-    # @private
+    # @api private
     class VerifyingPartialDoubleProxy < PartialDoubleProxy
       include VerifyingProxyMethods
 
@@ -102,7 +102,7 @@ module RSpec
       end
     end
 
-    # @private
+    # @api private
     class VerifyingMethodDouble < MethodDouble
       def initialize(object, method_name, proxy, method_reference)
         super(object, method_name, proxy)
@@ -140,7 +140,7 @@ module RSpec
     # collapse the reference and the method double into a single object so that
     # we can access the original pristine method definition.
     #
-    # @private
+    # @api private
     class VerifyingExistingMethodDouble < VerifyingMethodDouble
       def initialize(object, method_name, proxy)
         super(object, method_name, proxy, self)

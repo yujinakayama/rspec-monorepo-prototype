@@ -35,7 +35,8 @@ module RSpec
       attr_reader :expected_args
 
       # @api public
-      # @param [Array] expected_args a list of expected literals and/or argument matchers
+      # @param [Array] *expected_args a list of expected literals and/or argument matchers
+      # @param [Block] block a block with arity matching the expected
       #
       # Initializes an `ArgumentListMatcher` with a collection of literal
       # values and/or argument matchers.
@@ -53,7 +54,7 @@ module RSpec
       end
 
       # @api public
-      # @param [Array] args
+      # @param [Array] *args
       #
       # Matches each element in the `expected_args` against the element in the same
       # position of the arguments passed to `new`.

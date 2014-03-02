@@ -1,4 +1,3 @@
-# Re-opening core class to monkey-patch it. Need to make this opt-in.
 module Marshal
   class << self
     # Duplicates any mock objects before serialization. Otherwise,
