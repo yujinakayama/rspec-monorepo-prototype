@@ -2,8 +2,7 @@ module RSpec
   module Mocks
     # Provides recursive constant lookup methods useful for
     # constant stubbing.
-    #
-    # @private
+    # @api private
     module RecursiveConstMethods
       # We only want to consider constants that are defined directly on a
       # particular module, and not include top-level/inherited constants.
@@ -124,13 +123,12 @@ module RSpec
         @hidden
       end
 
-      # The default `to_s` isn't very useful, so a custom version is provided.
       def to_s
         "#<#{self.class.name} #{name}>"
       end
       alias inspect to_s
 
-      # @private
+      # @api private
       def self.unmutated(name)
         const = new(name)
         const.previously_defined = recursive_const_defined?(name)
@@ -197,7 +195,7 @@ module RSpec
 
       # Contains common functionality used by all of the constant mutators.
       #
-      # @private
+      # @api private
       class BaseMutator
         include RecursiveConstMethods
 
@@ -227,7 +225,7 @@ module RSpec
 
       # Hides a defined constant for the duration of an example.
       #
-      # @private
+      # @api private
       class ConstantHider < BaseMutator
         def mutate
           return unless @defined = recursive_const_defined?(full_constant_name)
@@ -255,7 +253,7 @@ module RSpec
 
       # Replaces a defined constant for the duration of an example.
       #
-      # @private
+      # @api private
       class DefinedConstantReplacer < BaseMutator
         def mutate
           @context = recursive_const_get(@context_parts.join('::'))
@@ -321,7 +319,7 @@ module RSpec
 
       # Sets an undefined constant for the duration of an example.
       #
-      # @private
+      # @api private
       class UndefinedConstantSetter < BaseMutator
         def mutate
           @parent = @context_parts.inject(Object) do |klass, name|
@@ -363,7 +361,7 @@ module RSpec
       # the mutator is correctly registered so it can be backed out at the end
       # of the test.
       #
-      # @private
+      # @api private
       def self.mutate(mutator)
         ::RSpec::Mocks.space.register_constant_mutator(mutator)
         mutator.mutate

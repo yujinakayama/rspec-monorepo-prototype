@@ -23,6 +23,7 @@ module RSpec
         super
       end
 
+      # @override
       def with(*args, &block)
         unless ArgumentMatchers::AnyArgsMatcher === args.first
           expected_args = if ArgumentMatchers::NoArgsMatcher === args.first
