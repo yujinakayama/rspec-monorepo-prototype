@@ -89,6 +89,10 @@ Spork.prefork do
     end
   end
 
+  def in_editor?
+    ENV.has_key?('TM_MODE') || ENV.has_key?('EMACS') || ENV.has_key?('VIM')
+  end
+
   module EnvHelpers
     def with_env_vars(vars)
       original = ENV.to_hash
@@ -131,7 +135,7 @@ Spork.prefork do
     end
 
     # runtime options
-    c.color = true
+    c.color = !in_editor?
     c.include EnvHelpers
     c.filter_run_excluding :ruby => lambda {|version|
       case version.to_s
