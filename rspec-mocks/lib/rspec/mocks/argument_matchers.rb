@@ -115,50 +115,42 @@ module RSpec
 
       alias_method :a_kind_of, :kind_of
 
-      # @api private
+      # @private
       def self.anythingize_lonely_keys(*args)
         hash = args.last.class == Hash ? args.delete_at(-1) : {}
         args.each { | arg | hash[arg] = AnyArgMatcher.new }
         hash
       end
 
-      # @api private
+      # @private
       class AnyArgsMatcher
         def description
           "any args"
         end
       end
 
-      # @api private
+      # @private
       class AnyArgMatcher
         def ===(other)
           true
         end
-
-        def description
-          "anything"
-        end
       end
 
-      # @api private
+      # @private
       class NoArgsMatcher
         def description
           "no args"
         end
       end
 
-      # @api private
+      # @private
       class BooleanMatcher
         def ===(value)
           true == value || false == value
         end
-
-        def description
-          "boolean"
-        end
       end
 
-      # @api private
+      # @private
       class BaseHashMatcher
         def initialize(expected)
           @expected = expected
@@ -177,7 +169,7 @@ module RSpec
         end
       end
 
-      # @api private
+      # @private
       class HashIncludingMatcher < BaseHashMatcher
         def ===(actual)
           super(:all?, actual)
@@ -188,7 +180,7 @@ module RSpec
         end
       end
 
-      # @api private
+      # @private
       class HashExcludingMatcher < BaseHashMatcher
         def ===(actual)
           super(:none?, actual)
@@ -199,7 +191,7 @@ module RSpec
         end
       end
 
-      # @api private
+      # @private
       class ArrayIncludingMatcher
         def initialize(expected)
           @expected = expected
@@ -210,11 +202,11 @@ module RSpec
         end
 
         def description
-          "array_including(#{@expected.join(", ")})"
+          "array_including(#{@expected.join(",")})"
         end
       end
 
-      # @api private
+      # @private
       class DuckTypeMatcher
         def initialize(*methods_to_respond_to)
           @methods_to_respond_to = methods_to_respond_to
@@ -223,13 +215,9 @@ module RSpec
         def ===(value)
           @methods_to_respond_to.all? {|message| value.respond_to?(message)}
         end
-
-        def description
-          "duck_type(#{@methods_to_respond_to.map(&:inspect).join(', ')})"
-        end
       end
 
-      # @api private
+      # @private
       class InstanceOf
         def initialize(klass)
           @klass = klass
@@ -237,10 +225,6 @@ module RSpec
 
         def ===(actual)
           actual.instance_of?(@klass)
-        end
-
-        def description
-          "an_instance_of(#{@klass.name})"
         end
       end
 

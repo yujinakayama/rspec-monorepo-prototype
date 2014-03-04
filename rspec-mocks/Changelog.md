@@ -11,8 +11,6 @@ Enhancements:
 * Instead of crashing when cleaning up stub methods on a frozen object, it now
   issues a warning explaining that it's impossible to clean up the stubs.
   (Justin Coyne and Sam Phippen)
-* Add meaningful descriptions to `anything`, `duck_type` and `instance_of` argument
-  matchers. (Jon Rowe)
 
 Bug Fixes:
 
@@ -23,8 +21,6 @@ Bug Fixes:
   not setting an expectation for the last message in the chain.
   (Jonathan del Strother)
 * Allow verifying partial doubles to have private methods stubbed. (Xavier Shay)
-* Fix bug with allowing/expecting messages on Class objects which have had
-  their singleton class prepended to. (Jon Rowe)
 
 ### 3.0.0.beta2 / 2014-02-17
 [Full Changelog](http://github.com/rspec/rspec-mocks/compare/v3.0.0.beta1...v3.0.0.beta2)
