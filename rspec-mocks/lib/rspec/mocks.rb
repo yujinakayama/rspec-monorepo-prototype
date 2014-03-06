@@ -17,7 +17,6 @@ RSpec::Support.define_optimized_require_for_rspec(:mocks) { |f| require_relative
   order_group
   error_generator
   space
-  extensions/marshal
   mutate_const
   targets
   syntax
@@ -62,7 +61,7 @@ module RSpec
     #                added.
     # @param opts a hash of options, :expected_from is used to set the
     #             original call site
-    # @yield an optional implementation for the allowance
+    # @param block an optional implementation for the allowance
     #
     # @example Defines the implementation of `foo` on `bar`, using the passed block
     #   x = 0
@@ -80,7 +79,7 @@ module RSpec
     #                expected.
     # @param opts a hash of options, :expected_from is used to set the
     #             original call site
-    # @yield an optional implementation for the expectation
+    # @param block an optional implementation for the expectation
     #
     # @example Expect the message `foo` to receive `bar`, then call it
     #   RSpec::Mocks.expect_message(bar, :foo)
@@ -105,10 +104,7 @@ module RSpec
       end
     end
 
-    class << self
-      # @private
-      attr_reader :space
-    end
+    class << self; attr_reader :space; end
     @space_stack = []
     @root_space  = @space = RSpec::Mocks::RootSpace.new
 
@@ -117,9 +113,10 @@ module RSpec
 
     # To speed up boot time a bit, delay loading optional or rarely
     # used features until their first use.
-    autoload :AnyInstance, "rspec/mocks/any_instance"
-    autoload :ExpectChain, "rspec/mocks/message_chain"
-    autoload :StubChain,   "rspec/mocks/message_chain"
+    autoload :AnyInstance,      "rspec/mocks/any_instance"
+    autoload :ExpectChain,      "rspec/mocks/message_chain"
+    autoload :StubChain,        "rspec/mocks/message_chain"
+    autoload :MarshalExtension, "rspec/mocks/marshal_extension"
 
     # Namespace for mock-related matchers.
     module Matchers

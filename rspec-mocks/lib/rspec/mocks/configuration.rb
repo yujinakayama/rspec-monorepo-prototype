@@ -15,14 +15,13 @@ module RSpec
       end
 
       # Sets whether or not RSpec will yield the receiving instance of a
-      # message to blocks that are used for any_instance stub implementations.
-      # When set, the first yielded argument will be the receiving instance.
-      # Defaults to `true`.
+      # message to blocks that are used for stub implementations. Defaults to
+      # `true`
       #
       # @example
       #
       #   RSpec.configure do |rspec|
-      #     rspec.mock_with :rspc do |mocks|
+      #     rspec.mock_with :rspc do |mocks
       #       mocks.yield_receiver_to_any_instance_implementation_blocks = false
       #     end
       #   end
@@ -128,6 +127,21 @@ module RSpec
 
       def verify_partial_doubles?
         @verify_partial_doubles
+      end
+
+      # Monkey-patch `Marshal.dump` to enable dumping of mocked or stubbed
+      # objects. By default this will not work since RSpec mocks works by
+      # adding singleton methods that cannot be serialized. This patch removes
+      # these singleton methods before serialization. Setting to falsey removes
+      # the patch.
+      #
+      # This method is idempotent.
+      def patch_marshal_to_support_partial_doubles=(val)
+        if val
+          RSpec::Mocks::MarshalExtension.patch!
+        else
+          RSpec::Mocks::MarshalExtension.unpatch!
+        end
       end
 
       # @api private
