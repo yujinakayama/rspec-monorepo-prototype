@@ -2,7 +2,7 @@ require 'rspec/support/spec'
 require 'rspec/mocks/ruby_features'
 
 RSpec::Support::Spec.setup_simplecov do
-  minimum_coverage 96
+  minimum_coverage 95
 end
 
 require 'yaml'
@@ -16,6 +16,7 @@ RSpec::Matchers.define :include_method do |expected|
     actual.map { |m| m.to_s }.include?(expected.to_s)
   end
 end
+require 'support/matchers'
 
 module VerifyAndResetHelpers
   def verify(object)
