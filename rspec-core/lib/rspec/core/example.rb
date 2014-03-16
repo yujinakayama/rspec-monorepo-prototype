@@ -79,21 +79,20 @@ module RSpec
       attr_accessor :clock
 
       # Creates a new instance of Example.
-      # @param example_group_class [Class] the subclass of ExampleGroup in which this Example is declared
-      # @param description [String] the String passed to the `it` method (or alias)
-      # @param user_metadata [Hash] additional args passed to `it` to be used as metadata
-      # @param example_block [Proc] the block of code that represents the example
-      # @api private
-      def initialize(example_group_class, description, user_metadata, example_block=nil)
-        @example_group_class = example_group_class
-        @example_block       = example_block
-
-        @metadata = Metadata::ExampleHash.create(
-          @example_group_class.metadata, user_metadata, description, example_block
-        )
-
+      # @param example_group_class the subclass of ExampleGroup in which this Example is declared
+      # @param description the String passed to the `it` method (or alias)
+      # @param metadata additional args passed to `it` to be used as metadata
+      # @param example_block the block of code that represents the example
+      def initialize(example_group_class, description, metadata, example_block=nil)
+        @example_group_class, @options, @example_block = example_group_class, metadata, example_block
+        @metadata  = @example_group_class.metadata.for_example(description, metadata)
         @example_group_instance = @exception = nil
         @clock = RSpec::Core::Time
+      end
+
+      # @deprecated access options via metadata instead
+      def options
+        @options
       end
 
       # Returns the example group class that provides the context for running
@@ -129,7 +128,7 @@ module RSpec
 
                   raise Pending::PendingExampleFixedError,
                     'Expected example to fail since it is pending, but it passed.',
-                    [location]
+                    metadata[:caller]
                 end
               rescue Pending::SkipDeclaredInExample
                 # no-op, required metadata has already been set by the `skip`
@@ -212,10 +211,10 @@ module RSpec
       # Used internally to set an exception in an after hook, which
       # captures the exception but doesn't raise it.
       def set_exception(exception, context=nil)
-        if pending? && !(Pending::PendingExampleFixedError === exception)
-          execution_result.pending_exception = exception
+        if pending?
+          metadata[:execution_result].pending_exception = exception
         else
-          if @exception
+          if @exception && context != :dont_print
             # An error has already been set; we don't want to override it,
             # but we also don't want silence the error, so let's print it.
             msg = <<-EOS
@@ -280,7 +279,7 @@ module RSpec
       end
 
       def finish(reporter)
-        pending_message = execution_result.pending_message
+        pending_message = metadata[:execution_result].pending_message
 
         if @exception
           record_finished 'failed'
@@ -319,24 +318,24 @@ module RSpec
       end
 
       def verify_mocks
-        @example_group_instance.verify_mocks_for_rspec if mocks_need_verification?
+        @example_group_instance.verify_mocks_for_rspec
       rescue Exception => e
-        if pending?
-          execution_result.pending_fixed = false
+        if metadata[:execution_result].pending_message
+          metadata[:execution_result].pending_fixed = false
+          # TODO: should we really change this? In the user metadata,
+          # `:pending` indicates the user intends to make the example
+          # pending, not that it actually was -- that's what the
+          # execution_result is for.
+          metadata[:pending] = true
           @exception = nil
         else
-          set_exception(e)
+          set_exception(e, :dont_print)
         end
       end
 
-      def mocks_need_verification?
-        exception.nil? || execution_result.pending_fixed?
-      end
-
       def assign_generated_description
-        if metadata[:description].empty? && (description = RSpec::Matchers.generated_description)
-          metadata[:description] = description
-          metadata[:full_description] << description
+        if metadata[:description_args].empty?
+          metadata[:description_args] << RSpec::Matchers.generated_description
         end
       rescue Exception => e
         set_exception(e, "while assigning the example description")
@@ -374,9 +373,8 @@ module RSpec
 
       private
 
-        def issue_deprecation(method_name, *args)
-          RSpec.deprecate("Treating `metadata[:execution_result]` as a hash",
-                          :replacement => "the attributes methods to access the data")
+        def deprecation_prefix
+          "execution_result"
         end
       end
     end
