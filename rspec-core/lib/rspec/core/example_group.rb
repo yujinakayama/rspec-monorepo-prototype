@@ -33,17 +33,19 @@ module RSpec
         # @private
         def self.delegate_to_metadata(*names)
           names.each do |name|
-            define_method(name) { metadata.fetch(name) }
+            define_method name do
+              metadata[:example_group][name]
+            end
           end
         end
 
         # @return [String] the current example group description
         def description
-          description = metadata[:description]
+          description = metadata[:example_group][:description]
           RSpec.configuration.format_docstrings_block.call(description)
         end
 
-        delegate_to_metadata :described_class, :file_path, :location
+        delegate_to_metadata :described_class, :file_path
         alias_method :display_name, :description
         # @private
         alias_method :describes, :described_class
@@ -85,10 +87,6 @@ module RSpec
             options[:pending] = true
             reason = RSpec::Core::Pending::NO_REASON_GIVEN
           end
-
-          # Assign :caller so that the callback's source_location isn't used
-          # as the example location.
-          options[:caller] ||= Metadata.backtrace_from(block)
 
           # This will fail if no block is provided, which is effectively the
           # same as failing the example so it will be marked correctly as
@@ -181,10 +179,7 @@ module RSpec
         #   @see SharedExampleGroup
         def self.define_nested_shared_group_method(new_name, report_label="it should behave like")
           define_method(new_name) do |name, *args, &customization_block|
-            # Pass :caller so the :location metadata is set properly...
-            # otherwise, it'll be set to the next line because that's
-            # the block's source_location.
-            group = example_group("#{report_label} #{name}", :caller => caller) do
+            group = example_group("#{report_label} #{name}") do
               find_and_eval_shared("examples", name, *args, &customization_block)
             end
             group.metadata[:shared_group_name] = name
@@ -288,6 +283,8 @@ module RSpec
       # @see DSL#describe
       def self.example_group(*args, &example_group_block)
         args << {} unless args.last.is_a?(Hash)
+        args.last.update(:example_group_block => example_group_block)
+
         child = subclass(self, args, &example_group_block)
         children << child
         child
@@ -322,12 +319,12 @@ module RSpec
       # @private
       def self.subclass(parent, args, &example_group_block)
         subclass = Class.new(parent)
-        subclass.set_it_up(*args, &example_group_block)
+        subclass.set_it_up(*args)
         ExampleGroups.assign_const(subclass)
         subclass.module_eval(&example_group_block) if example_group_block
 
         # The LetDefinitions module must be included _after_ other modules
-        # to ensure that it takes precendence when there are name collisions.
+        # to ensure that it takes precedence when there are name collisions.
         # Thus, we delay including it until after the example group block
         # has been eval'd.
         MemoizedHelpers.define_helpers_on(subclass)
@@ -365,7 +362,7 @@ module RSpec
       end
 
       # @private
-      def self.set_it_up(*args, &example_group_block)
+      def self.set_it_up(*args)
         # Ruby 1.9 has a bug that can lead to infinite recursion and a
         # SystemStackError if you include a module in a superclass after
         # including it in a subclass: https://gist.github.com/845896
@@ -376,12 +373,9 @@ module RSpec
         ensure_example_groups_are_configured
 
         symbol_description = args.shift if args.first.is_a?(Symbol)
-        user_metadata = Metadata.build_hash_from(args)
+        args << Metadata.build_hash_from(args)
         args.unshift(symbol_description) if symbol_description
-        @metadata = Metadata::ExampleGroupHash.create(
-          superclass_metadata || {}, user_metadata, *args, &example_group_block
-        )
-
+        @metadata = RSpec::Core::Metadata.new(superclass_metadata).process(*args)
         hooks.register_globals(self, RSpec.configuration.hooks)
         world.configure_group(self)
       end
@@ -458,7 +452,7 @@ module RSpec
           warn <<-WARNING.gsub(/^ +\|/, '')
             |WARNING: Ignoring unknown ordering specified using `:order => #{order.inspect}` metadata.
             |         Falling back to configured global ordering.
-            |         Unrecognized ordering specified at: #{location}
+            |         Unrecognized ordering specified at: #{metadata[:example_group][:location]}
           WARNING
 
           registry.fetch(:global)
@@ -506,7 +500,7 @@ module RSpec
 
       # @private
       def self.declaration_line_numbers
-        @declaration_line_numbers ||= [metadata[:line_number]] +
+        @declaration_line_numbers ||= [metadata[:example_group][:line_number]] +
           examples.collect {|e| e.metadata[:line_number]} +
           children.inject([]) {|l,c| l + c.declaration_line_numbers}
       end
