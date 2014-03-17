@@ -10,6 +10,23 @@ Breaking Changes for 3.0.0:
   tighter, more domain-specific interface. (Sergey Pchelincev)
 * Remove legacy colours definitions from `BaseTextFormatter`. (Jon Rowe)
 * Remove console color definitions from `BaseTextFormatter`. (Jon Rowe)
+* Restructure example group metadata so that the computed keys are
+  exposed directly off of the metadata hash rather than being on
+  a nested `:example_group` subhash. In addition, the parent example
+  group metadata is now available as `[:parent_example_group]` rather
+  than `[:example_group][:example_group]`. Deprecated access via the
+  old key structure is still provided. (Myron Marston)
+* Remove `:describes` metadata key. It duplicates `:described_class`
+  for no good reason. Deprecated access via `:describes` is still
+  provided. (Myron Marston)
+* Rename `:example_group_block` metadata key to `:block`.
+  (Myron Marston)
+* Remove deprecated `RSpec::Core::Example#options`. (Myron Marston)
+* Move `BaseTextFormatter#colorize_summary` to `SummaryNotification#colorize_with`
+  (Jon Rowe).
+* `describe some_hash` treated `some_hash` as metadata in RSpec 2.x but
+  will treat it as the described object in RSpec 3.0. Metadata must
+  always come after the description args. (Myron Marston)
 
 Enhancements:
 
@@ -21,6 +38,11 @@ Enhancements:
   first-class object with appropriate attributes. It retains deprecated
   hash behavior for backwards compatibility. (Myron Marston)
 * Provide console code helper for formatters. (Jon Rowe)
+* Use raw ruby hashes for the metadata hashes rather than a subclass of
+  a hash. Computed metadata entries are now computed in advance rather
+  than being done lazily on first access. (Myron Marston)
+* Add `:block` metadata entry to the example metadata, bringing
+  parity with `:block` in the example group metadata. (Myron Marston)
 
 Bug Fixes:
 
@@ -30,6 +52,8 @@ Bug Fixes:
 * Fix ordering problem where descriptions were generated after
   tearing down mocks, which resulted in unexpected exceptions.
   (Bradley Schaefer, Aaron Kromer, Andrey Savchenko)
+* Allow a symbol to be used as an implicit subject (e.g. `describe
+  :foo`). (Myron Marston)
 
 ### 3.0.0.beta2 / 2014-02-17
 [Full Changelog](http://github.com/rspec/rspec-core/compare/v3.0.0.beta1...v3.0.0.beta2)

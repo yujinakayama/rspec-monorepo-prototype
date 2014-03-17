@@ -3,6 +3,7 @@ require 'pp'
 require 'stringio'
 
 RSpec.describe RSpec::Core::Example, :parent_metadata => 'sample' do
+
   let(:example_group) do
     RSpec::Core::ExampleGroup.describe('group description')
   end
@@ -18,18 +19,8 @@ RSpec.describe RSpec::Core::Example, :parent_metadata => 'sample' do
     end
   end
 
-  def capture_stdout
-    orig_stdout = $stdout
-    $stdout = StringIO.new
-    yield
-    $stdout.string
-  ensure
-    $stdout = orig_stdout
-  end
-
   it "can be pretty printed" do
-    output = ignoring_warnings { capture_stdout { pp example_instance } }
-    expect(output).to include("RSpec::Core::Example")
+    expect { ignoring_warnings { pp example_instance }}.to output(/RSpec::Core::Example/).to_stdout
   end
 
   describe "#exception" do
@@ -450,17 +441,16 @@ RSpec.describe RSpec::Core::Example, :parent_metadata => 'sample' do
       end
 
       it 'sets the backtrace to the example definition so it can be located by the user' do
-        expected = [__FILE__, __LINE__ + 2].map(&:to_s)
+        file = RSpec::Core::Metadata.relative_path(__FILE__)
+        expected = [file, __LINE__ + 2].map(&:to_s)
         group = RSpec::Core::ExampleGroup.describe do
           example {
             pending
           }
         end
         group.run
-        # TODO: De-dup this logic in rspec-support
-        actual = group.examples.first.exception.backtrace.
-          find { |line| line !~ RSpec::CallerFilter::LIB_REGEX }.
-          split(':')[0..1]
+
+        actual = group.examples.first.exception.backtrace.first.split(':')[0..1]
         expect(actual).to eq(expected)
       end
     end
@@ -498,21 +488,6 @@ RSpec.describe RSpec::Core::Example, :parent_metadata => 'sample' do
         expect(group.examples.first.exception).to be
         expect(group.examples.first.exception.message).to \
           match(/may not be used outside of examples/)
-      end
-
-      it "fails with an ArgumentError if a block is provided" do
-        group = RSpec::Core::ExampleGroup.describe('group') do
-          before(:all) do
-            pending { :no_op }
-          end
-          example { fail }
-        end
-        example = group.examples.first
-        group.run
-        expect(example).to fail_with ArgumentError
-        expect(example.exception.message).to match(
-          /Passing a block within an example is now deprecated./
-        )
       end
     end
 

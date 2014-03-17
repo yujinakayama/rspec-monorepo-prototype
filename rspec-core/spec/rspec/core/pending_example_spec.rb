@@ -23,6 +23,31 @@ RSpec.describe "an example" do
       example.run(group.new, double.as_null_object)
       expect(example).to be_pending_with('No reason given')
     end
+
+    it "passes if a mock expectation is not satisifed" do
+      group = RSpec::Core::ExampleGroup.describe('group') do
+        example "example", :pending => "because" do
+          expect(RSpec).to receive(:a_message_in_a_bottle)
+        end
+      end
+
+      example = group.examples.first
+      example.run(group.new, double.as_null_object)
+      expect(example).to be_pending_with('because')
+      expect(example.execution_result.status).to eq('pending')
+    end
+
+    it "does not mutate the :pending attribute of the user metadata when handling mock expectation errors" do
+      group = RSpec::Core::ExampleGroup.describe('group') do
+        example "example", :pending => "because" do
+          expect(RSpec).to receive(:a_message_in_a_bottle)
+        end
+      end
+
+      group.run
+      example = group.examples.first
+      expect(example.metadata[:pending]).to be_truthy
+    end
   end
 
   context "with no block" do
@@ -64,6 +89,18 @@ RSpec.describe "an example" do
       result = example.execution_result
       expect(result.pending_fixed).to eq(true)
       expect(result.status).to eq("failed")
+    end
+
+    it "does not mutate the :pending attribute of the user metadata when the rest of the example passes" do
+      group = RSpec::Core::ExampleGroup.describe('group') do
+        it "does something" do
+          pending
+        end
+      end
+
+      group.run
+      example = group.examples.first
+      expect(example.metadata).to include(:pending => true)
     end
   end
 
@@ -112,39 +149,6 @@ RSpec.describe "an example" do
       example = group.examples.first
       example.run(group.new, double.as_null_object)
       expect(example).to be_pending_with('just because')
-    end
-  end
-
-  context "with a block" do
-    it "fails with an ArgumentError stating the syntax is deprecated" do
-      group = RSpec::Core::ExampleGroup.describe('group') do
-        it "calls pending with a block" do
-          pending("with invalid syntax") do
-            :no_op
-          end
-          fail
-        end
-      end
-      example = group.examples.first
-      group.run
-      expect(example).to fail_with ArgumentError
-      expect(example.exception.message).to match(
-        /Passing a block within an example is now deprecated./
-      )
-    end
-
-    it "does not yield to the block" do
-      example_to_have_yielded = :did_not_yield
-      group = RSpec::Core::ExampleGroup.describe('group') do
-        it "calls pending with a block" do
-          pending("just because") do
-            example_to_have_yielded = :pending_block
-          end
-          fail
-        end
-      end
-      group.run
-      expect(example_to_have_yielded).to eq :did_not_yield
     end
   end
 end
