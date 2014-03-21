@@ -21,9 +21,8 @@ module RSpec
       extend  Hooks
 
       include MemoizedHelpers
-      extend  MemoizedHelpers::ClassMethods
       include Pending
-      extend  SharedExampleGroup
+      extend SharedExampleGroup
 
       unless respond_to?(:define_singleton_method)
         # @private
@@ -383,40 +382,40 @@ module RSpec
       end
 
       # @private
-      def self.before_context_ivars
-        @before_context_ivars ||= {}
+      def self.before_all_ivars
+        @before_all_ivars ||= {}
       end
 
       # @private
-      def self.store_before_context_ivars(example_group_instance)
+      def self.store_before_all_ivars(example_group_instance)
         return if example_group_instance.instance_variables.empty?
 
         example_group_instance.instance_variables.each { |ivar|
-          before_context_ivars[ivar] = example_group_instance.instance_variable_get(ivar)
+          before_all_ivars[ivar] = example_group_instance.instance_variable_get(ivar)
         }
       end
 
       # @private
-      def self.run_before_context_hooks(example_group_instance)
+      def self.run_before_all_hooks(example_group_instance)
         return if descendant_filtered_examples.empty?
         begin
-          set_ivars(example_group_instance, superclass.before_context_ivars)
+          set_ivars(example_group_instance, superclass.before_all_ivars)
 
-          ContextHookMemoizedHash::Before.isolate_for_context_hook(example_group_instance) do
-            hooks.run(:before, :context, example_group_instance)
+          AllHookMemoizedHash::Before.isolate_for_all_hook(example_group_instance) do
+            hooks.run(:before, :all, example_group_instance)
           end
         ensure
-          store_before_context_ivars(example_group_instance)
+          store_before_all_ivars(example_group_instance)
         end
       end
 
       # @private
-      def self.run_after_context_hooks(example_group_instance)
+      def self.run_after_all_hooks(example_group_instance)
         return if descendant_filtered_examples.empty?
-        set_ivars(example_group_instance, before_context_ivars)
+        set_ivars(example_group_instance, before_all_ivars)
 
-        ContextHookMemoizedHash::After.isolate_for_context_hook(example_group_instance) do
-          hooks.run(:after, :context, example_group_instance)
+        AllHookMemoizedHash::After.isolate_for_all_hook(example_group_instance) do
+          hooks.run(:after, :all, example_group_instance)
         end
       end
 
@@ -429,7 +428,7 @@ module RSpec
         reporter.example_group_started(self)
 
         begin
-          run_before_context_hooks(new)
+          run_before_all_hooks(new)
           result_for_this_group = run_examples(reporter)
           results_for_descendants = ordering_strategy.order(children).map { |child| child.run(reporter) }.all?
           result_for_this_group && results_for_descendants
@@ -439,8 +438,8 @@ module RSpec
           RSpec.world.wants_to_quit = true if fail_fast?
           for_filtered_examples(reporter) {|example| example.fail_with_exception(reporter, ex) }
         ensure
-          run_after_context_hooks(new)
-          before_context_ivars.clear
+          run_after_all_hooks(new)
+          before_all_ivars.clear
           reporter.example_group_finished(self)
         end
       end
@@ -466,7 +465,7 @@ module RSpec
         ordering_strategy.order(filtered_examples).map do |example|
           next if RSpec.world.wants_to_quit
           instance = new
-          set_ivars(instance, before_context_ivars)
+          set_ivars(instance, before_all_ivars)
           succeeded = example.run(instance, reporter)
           RSpec.world.wants_to_quit = true if fail_fast? && !succeeded
           succeeded

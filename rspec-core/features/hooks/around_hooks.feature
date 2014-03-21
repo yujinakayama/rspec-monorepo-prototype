@@ -28,7 +28,7 @@ Feature: around hooks
       end
 
       describe "around filter" do
-        around(:example) do |example|
+        around(:each) do |example|
           Database.transaction(&example)
         end
 
@@ -49,10 +49,10 @@ Feature: around hooks
     Given a file named "example_spec.rb" with:
       """ruby
       describe "around hook" do
-        around(:example) do |example|
-          puts "around example before"
+        around(:each) do |example|
+          puts "around each before"
           example.run
-          puts "around example after"
+          puts "around each after"
         end
 
         it "gets run in order" do
@@ -63,16 +63,16 @@ Feature: around hooks
     When I run `rspec example_spec.rb`
     Then the output should contain:
       """
-      around example before
+      around each before
       in the example
-      around example after
+      around each after
       """
 
   Scenario: access the example metadata
     Given a file named "example_spec.rb" with:
       """ruby
       describe "something" do
-        around(:example) do |example|
+        around(:each) do |example|
           puts example.metadata[:foo]
           example.run
         end
@@ -88,10 +88,10 @@ Feature: around hooks
     Given a file named "example_spec.rb" with:
       """ruby
       RSpec.configure do |c|
-        c.around(:example) do |example|
-          puts "around example before"
+        c.around(:each) do |example|
+          puts "around each before"
           example.run
-          puts "around example after"
+          puts "around each after"
         end
       end
 
@@ -104,27 +104,27 @@ Feature: around hooks
     When I run `rspec example_spec.rb`
     Then the output should contain:
       """
-      around example before
+      around each before
       in the example
-      around example after
+      around each after
       """
 
-  Scenario: before/after(:example) hooks are wrapped by the around hook
+  Scenario: before/after(:each) hooks are wrapped by the around hook
     Given a file named "example_spec.rb" with:
       """ruby
       describe "around filter" do
-        around(:example) do |example|
-          puts "around example before"
+        around(:each) do |example|
+          puts "around each before"
           example.run
-          puts "around example after"
+          puts "around each after"
         end
 
-        before(:example) do
-          puts "before example"
+        before(:each) do
+          puts "before each"
         end
 
-        after(:example) do
-          puts "after example"
+        after(:each) do
+          puts "after each"
         end
 
         it "gets run in order" do
@@ -135,29 +135,29 @@ Feature: around hooks
     When I run `rspec example_spec.rb`
     Then the output should contain:
       """
-      around example before
-      before example
+      around each before
+      before each
       in the example
-      after example
-      around example after
+      after each
+      around each after
       """
 
-  Scenario: before/after(:context) hooks are NOT wrapped by the around hook
+  Scenario: before/after(:all) hooks are NOT wrapped by the around hook
     Given a file named "example_spec.rb" with:
       """ruby
       describe "around filter" do
-        around(:example) do |example|
-          puts "around example before"
+        around(:each) do |example|
+          puts "around each before"
           example.run
-          puts "around example after"
+          puts "around each after"
         end
 
-        before(:context) do
-          puts "before context"
+        before(:all) do
+          puts "before all"
         end
 
-        after(:context) do
-          puts "after context"
+        after(:all) do
+          puts "after all"
         end
 
         it "gets run in order" do
@@ -168,11 +168,11 @@ Feature: around hooks
     When I run `rspec --format progress example_spec.rb`
     Then the output should contain:
       """
-      before context
-      around example before
+      before all
+      around each before
       in the example
-      around example after
-      .after context
+      around each after
+      .after all
       """
 
   Scenario: examples run by an around block are run in the configured context
@@ -187,7 +187,7 @@ Feature: around hooks
       end
 
       describe "around filter" do
-        around(:example) do |example|
+        around(:each) do |example|
           example.run
         end
 
@@ -203,7 +203,7 @@ Feature: around hooks
     Given a file named "example_spec.rb" with:
       """ruby
       describe "implicit pending example" do
-        around(:example) do |example|
+        around(:each) do |example|
           example.run
         end
 
@@ -224,7 +224,7 @@ Feature: around hooks
     Given a file named "example_spec.rb" with:
       """ruby
       describe "explicit pending example" do
-        around(:example) do |example|
+        around(:each) do |example|
           example.run
         end
 
@@ -246,13 +246,13 @@ Feature: around hooks
     Given a file named "example_spec.rb" with:
       """ruby
       describe "if there are multiple around hooks in the same scope" do
-        around(:example) do |example|
+        around(:each) do |example|
           puts "first around hook before"
           example.run
           puts "first around hook after"
         end
 
-        around(:example) do |example|
+        around(:each) do |example|
           puts "second around hook before"
           example.run
           puts "second around hook after"
@@ -279,39 +279,39 @@ Feature: around hooks
     Given a file named "example_spec.rb" with:
     """ruby
     describe "if there are around hooks in an outer scope" do
-      around(:example) do |example|
+      around(:each) do |example|
         puts "first outermost around hook before"
         example.run
         puts "first outermost around hook after"
       end
 
-      around(:example) do |example|
+      around(:each) do |example|
         puts "second outermost around hook before"
         example.run
         puts "second outermost around hook after"
       end
 
       describe "outer scope" do
-        around(:example) do |example|
+        around(:each) do |example|
           puts "first outer around hook before"
           example.run
           puts "first outer around hook after"
         end
 
-        around(:example) do |example|
+        around(:each) do |example|
           puts "second outer around hook before"
           example.run
           puts "second outer around hook after"
         end
 
         describe "inner scope" do
-          around(:example) do |example|
+          around(:each) do |example|
             puts "first inner around hook before"
             example.run
             puts "first inner around hook after"
           end
 
-          around(:example) do |example|
+          around(:each) do |example|
             puts "second inner around hook before"
             example.run
             puts "second inner around hook after"
