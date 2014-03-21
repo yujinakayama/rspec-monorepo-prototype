@@ -7,7 +7,7 @@ module RSpec
     #
     #     module LoggedInAsAdmin
     #       extend RSpec::Core::SharedContext
-    #       before(:example) do
+    #       before(:each) do
     #         log_in_as :admin
     #       end
     #     end
