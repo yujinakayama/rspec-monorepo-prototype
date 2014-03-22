@@ -324,11 +324,11 @@ See the [mutating constants
 README](https://github.com/rspec/rspec-mocks/blob/master/features/mutating_constants/README.md)
 for info on this feature.
 
-## Use `before(:example)`, not `before(:context)`
+## Use `before(:each)`, not `before(:all)`
 
-Stubs in `before(:context)` are not supported. The reason is that all stubs and mocks get cleared out after each example, so any stub that is set in `before(:context)` would work in the first example that happens to run in that group, but not for any others.
+Stubs in `before(:all)` are not supported. The reason is that all stubs and mocks get cleared out after each example, so any stub that is set in `before(:all)` would work in the first example that happens to run in that group, but not for any others.
 
-Instead of `before(:context)`, use `before(:example)`.
+Instead of `before(:all)`, use `before(:each)`.
 
 ## Further Reading
 
