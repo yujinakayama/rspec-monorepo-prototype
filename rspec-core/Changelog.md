@@ -66,7 +66,6 @@ Enhancements:
   parity with `:block` in the example group metadata. (Myron Marston)
 * Add `fspecify` and `fexample` as aliases of `specify` and `example`
   with `:focus => true` metadata for parity with `fit`. (Myron Marston)
-* Add legacy support for `colorize_summary`. (Jon Rowe)
 
 Bug Fixes:
 
@@ -154,6 +153,8 @@ Enhancements:
   `context`) on the `RSpec` constant. If `expose_dsl_globally` is set to
   `true`, also expose them on `main` and `Module`. Historically, only `describe`
   was exposed. (Jon Rowe, Michi Huber)
+* Add hook scope `:example` as an alias for `:each`, and `:context` as an alias
+  for `:all`. (John Feminella)
 
 Bug Fixes:
 
