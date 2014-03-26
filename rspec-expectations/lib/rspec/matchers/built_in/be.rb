@@ -5,15 +5,10 @@ module RSpec
       # Provides the implementation for `be_truthy`.
       # Not intended to be instantiated directly.
       class BeTruthy < BaseMatcher
-
-        # @api private
-        # @return [String]
         def failure_message
           "expected: truthy value\n     got: #{actual.inspect}"
         end
 
-        # @api private
-        # @return [String]
         def failure_message_when_negated
           "expected: falsey value\n     got: #{actual.inspect}"
         end
@@ -29,15 +24,10 @@ module RSpec
       # Provides the implementation for `be_falsey`.
       # Not intended to be instantiated directly.
       class BeFalsey < BaseMatcher
-
-        # @api private
-        # @return [String]
         def failure_message
           "expected: falsey value\n     got: #{actual.inspect}"
         end
 
-        # @api private
-        # @return [String]
         def failure_message_when_negated
           "expected: truthy value\n     got: #{actual.inspect}"
         end
@@ -53,15 +43,10 @@ module RSpec
       # Provides the implementation for `be_nil`.
       # Not intended to be instantiated directly.
       class BeNil < BaseMatcher
-
-        # @api private
-        # @return [String]
         def failure_message
           "expected: nil\n     got: #{actual.inspect}"
         end
 
-        # @api private
-        # @return [String]
         def failure_message_when_negated
           "expected: not nil\n     got: nil"
         end
@@ -108,14 +93,10 @@ module RSpec
           @args = args
         end
 
-        # @api private
-        # @return [String]
         def failure_message
           "expected #{@actual.inspect} to evaluate to true"
         end
 
-        # @api private
-        # @return [String]
         def failure_message_when_negated
           "expected #{@actual.inspect} to evaluate to false"
         end
@@ -149,14 +130,10 @@ module RSpec
           @actual.__send__ @operator, @expected
         end
 
-        # @api private
-        # @return [String]
         def failure_message
           "expected: #{@operator} #{@expected.inspect}\n     got: #{@operator.to_s.gsub(/./, ' ')} #{@actual.inspect}"
         end
 
-        # @api private
-        # @return [String]
         def failure_message_when_negated
           message = "`expect(#{@actual.inspect}).not_to be #{@operator} #{@expected.inspect}`"
           if [:<, :>, :<=, :>=].include?(@operator)
@@ -166,8 +143,6 @@ module RSpec
           end
         end
 
-        # @api private
-        # @return [String]
         def description
           "be #{@operator} #{expected_to_sentence}#{args_to_sentence}"
         end
@@ -205,20 +180,14 @@ module RSpec
           end
         end
 
-        # @api private
-        # @return [String]
         def failure_message
           "expected #{predicate}#{args_to_s} to return true, got #{@result.inspect}"
         end
 
-        # @api private
-        # @return [String]
         def failure_message_when_negated
           "expected #{predicate}#{args_to_s} to return false, got #{@result.inspect}"
         end
 
-        # @api private
-        # @return [String]
         def description
           "#{prefix_to_sentence}#{expected_to_sentence}#{args_to_sentence}"
         end
