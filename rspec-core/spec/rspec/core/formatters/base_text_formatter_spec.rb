@@ -254,7 +254,7 @@ RSpec.describe RSpec::Core::Formatters::BaseTextFormatter do
   describe "custom_colors" do
     it "uses the custom success color" do
       RSpec.configure do |config|
-        config.color = true
+        config.color_enabled = true
         config.tty = true
         config.success_color = :cyan
       end
