@@ -11,10 +11,10 @@ describe "exist matcher" do
 
     [:to, :not_to].each do |expect_method|
       describe "expect(...).#{expect_method} exist" do
-        it "fails" do
+        it "raises an error" do
           expect {
             expect(subject).send(expect_method, exist)
-          }.to fail_matching("it does not respond to either `exist?` or `exists?`")
+          }.to raise_error(NoMethodError)
         end
       end
     end
@@ -104,10 +104,10 @@ describe "exist matcher" do
 
       [:to, :not_to].each do |expect_method|
         describe "expect(...).#{expect_method} exist" do
-          it "fails" do
+          it "raises an error" do
             expect {
               expect(subject).send(expect_method, exist)
-            }.to fail_matching("`exist?` and `exists?` returned different values")
+            }.to raise_error(/#exist\? and #exists\? returned different values/)
           end
         end
       end
