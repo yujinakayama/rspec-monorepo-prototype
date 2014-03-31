@@ -37,8 +37,6 @@ module RSpec
           self
         end
 
-        # @api private
-        # @return [Boolean]
         def matches?(actual)
           @actual = actual
           comparable? && compare
@@ -46,14 +44,10 @@ module RSpec
           false
         end
 
-        # @api private
-        # @return [String]
         def failure_message
           "#{super}#{not_comparable_clause}"
         end
 
-        # @api private
-        # @return [String]
         def description
           "be between #{@min.inspect} and #{@max.inspect} (#{@mode})"
         end

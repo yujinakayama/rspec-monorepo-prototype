@@ -5,27 +5,18 @@ module RSpec
       # Provides the implementation for `eq`.
       # Not intended to be instantiated directly.
       class Eq < BaseMatcher
-
-        # @api private
-        # @return [String]
         def failure_message
           "\nexpected: #{format_object(expected)}\n     got: #{format_object(actual)}\n\n(compared using ==)\n"
         end
 
-        # @api private
-        # @return [String]
         def failure_message_when_negated
           "\nexpected: value != #{format_object(expected)}\n     got: #{format_object(actual)}\n\n(compared using ==)\n"
         end
 
-        # @api private
-        # @return [String]
         def description
           "#{name_to_sentence} #{@expected.inspect}"
         end
 
-        # @api private
-        # @return [Boolean]
         def diffable?
           true
         end
@@ -41,8 +32,6 @@ module RSpec
             format_time(object)
           elsif defined?(DateTime) && DateTime === object
             format_date_time(object)
-          elsif defined?(BigDecimal) && BigDecimal === object
-            "#{object.to_s 'F'} (#{object.inspect})"
           else
             object.inspect
           end
@@ -74,3 +63,4 @@ module RSpec
     end
   end
 end
+

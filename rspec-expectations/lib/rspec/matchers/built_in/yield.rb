@@ -130,16 +130,14 @@ module RSpec
           end
         end
 
-        # @api private
-        # @return [String]
+        # @private
         def failure_message
           'expected given block to yield control'.tap do |failure_message|
             failure_message << relativity_failure_message
           end
         end
 
-        # @api private
-        # @return [String]
+        # @private
         def failure_message_when_negated
           'expected given block not to yield control'.tap do |failure_message|
             failure_message << relativity_failure_message

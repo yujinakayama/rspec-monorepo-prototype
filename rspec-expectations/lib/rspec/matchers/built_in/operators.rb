@@ -71,8 +71,7 @@ module RSpec
           RSpec::Expectations.fail_with(message, @expected, @actual)
         end
 
-        # @api private
-        # @return [String]
+        # @private
         def description
           "#{@operator} #{@expected.inspect}"
         end

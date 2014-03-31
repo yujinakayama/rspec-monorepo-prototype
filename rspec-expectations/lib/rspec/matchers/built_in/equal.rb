@@ -5,9 +5,6 @@ module RSpec
       # Provides the implementation for `equal`.
       # Not intended to be instantiated directly.
       class Equal < BaseMatcher
-
-        # @api private
-        # @return [String]
         def failure_message
           if expected_is_a_literal_singleton?
             simple_failure_message
@@ -16,8 +13,6 @@ module RSpec
           end
         end
 
-        # @api private
-        # @return [String]
         def failure_message_when_negated
           return <<-MESSAGE
 
@@ -29,8 +24,6 @@ Compared using equal?, which compares object identity.
 MESSAGE
         end
 
-        # @api private
-        # @return [Boolean]
         def diffable?
           !expected_is_a_literal_singleton?
         end

@@ -58,20 +58,17 @@ module RSpec
           end
         end
 
-        # @api private
-        # @return [String]
+        # @private
         def failure_message
           "expected #{expected} to be thrown, got #{caught}"
         end
 
-        # @api private
-        # @return [String]
+        # @private
         def failure_message_when_negated
           "expected #{expected('no Symbol')}#{' not' if @expected_symbol} to be thrown, got #{caught}"
         end
 
-        # @api private
-        # @return [String]
+        # @private
         def description
           "throw #{expected}"
         end

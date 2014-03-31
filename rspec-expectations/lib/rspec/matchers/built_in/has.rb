@@ -16,20 +16,17 @@ module RSpec
           actual.__send__(predicate, *@args, &(@block || block))
         end
 
-        # @api private
-        # @return [String]
+        # @private
         def failure_message
           "expected ##{predicate}#{failure_message_args_description} to return true, got false"
         end
 
-        # @api private
-        # @return [String]
+        # @private
         def failure_message_when_negated
           "expected ##{predicate}#{failure_message_args_description} to return false, got true"
         end
 
-        # @api private
-        # @return [String]
+        # @private
         def description
           [method_description, args_description].compact.join(' ')
         end
