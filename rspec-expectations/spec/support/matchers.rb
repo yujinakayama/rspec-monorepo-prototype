@@ -15,12 +15,7 @@ module RSpec
     end
 
     def fail_matching(message)
-      if String === message
-        regexp = /#{Regexp.escape(message)}/
-      else
-        regexp = message
-      end
-      raise_error(RSpec::Expectations::ExpectationNotMetError, regexp)
+      raise_error(RSpec::Expectations::ExpectationNotMetError, /#{Regexp.escape(message)}/)
     end
   end
 end
