@@ -42,8 +42,7 @@ module RSpec
       end
 
       # @private
-      def add_message_expectation(method_name, opts={}, &block)
-        location = opts.fetch(:expected_from) { CallerFilter.first_non_rspec_line }
+      def add_message_expectation(location, method_name, opts={}, &block)
         meth_double = method_double_for(method_name)
 
         if null_object? && !block
@@ -102,8 +101,7 @@ module RSpec
       end
 
       # @private
-      def add_stub(method_name, opts={}, &implementation)
-        location = opts.fetch(:expected_from) { CallerFilter.first_non_rspec_line }
+      def add_stub(location, method_name, opts={}, &implementation)
         method_double_for(method_name).add_stub @error_generator, @order_group, location, opts, &implementation
       end
 
@@ -118,8 +116,8 @@ module RSpec
       end
 
       # @private
-      def remove_stub_if_present(method_name)
-        method_double_for(method_name).remove_stub_if_present
+      def remove_single_stub(method_name, stub)
+        method_double_for(method_name).remove_single_stub(stub)
       end
 
       # @private
@@ -382,7 +380,7 @@ module RSpec
       attr_accessor :warn_about_expectations
       alias warn_about_expectations? warn_about_expectations
 
-      def add_message_expectation(method_name, opts={}, &block)
+      def add_message_expectation(location, method_name, opts={}, &block)
         warn(method_name) if warn_about_expectations?
         super
       end
@@ -392,7 +390,7 @@ module RSpec
         super
       end
 
-      def add_stub(method_name, opts={}, &implementation)
+      def add_stub(location, method_name, opts={}, &implementation)
         warn(method_name) if warn_about_expectations?
         super
       end

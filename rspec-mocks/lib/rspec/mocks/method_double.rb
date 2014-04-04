@@ -189,12 +189,13 @@ module RSpec
       # @private
       def remove_stub
         raise_method_not_stubbed_error if stubs.empty?
-        remove_stub_if_present
+        expectations.empty? ? reset : stubs.clear
       end
 
       # @private
-      def remove_stub_if_present
-        expectations.empty? ? reset : stubs.clear
+      def remove_single_stub(stub)
+        stubs.delete(stub)
+        restore_original_method if stubs.empty? && expectations.empty?
       end
 
       # @private

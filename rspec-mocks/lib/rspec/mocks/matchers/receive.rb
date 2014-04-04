@@ -9,6 +9,7 @@ module RSpec
           @message                 = message
           @block                   = block
           @recorded_customizations = []
+          @backtrace_line          = CallerFilter.first_non_rspec_line
         end
 
         def name
@@ -61,7 +62,7 @@ module RSpec
       private
 
         def warn_if_any_instance(expression, subject)
-          if AnyInstance::Proxy === subject
+          if AnyInstance::Recorder === subject
             RSpec.warning(
               "`#{expression}(#{subject.klass}.any_instance).to` " <<
               "is probably not what you meant, it does not operate on " <<
@@ -73,12 +74,12 @@ module RSpec
 
         def setup_mock_proxy_method_substitute(subject, method, block)
           proxy = ::RSpec::Mocks.space.proxy_for(subject)
-          setup_method_substitute(proxy, method, block)
+          setup_method_substitute(proxy, method, block, @backtrace_line)
         end
 
         def setup_any_instance_method_substitute(subject, method, block)
-          proxy = ::RSpec::Mocks.space.any_instance_proxy_for(subject)
-          setup_method_substitute(proxy, method, block)
+          any_instance_recorder = ::RSpec::Mocks.space.any_instance_recorder_for(subject)
+          setup_method_substitute(any_instance_recorder, method, block)
         end
 
         def setup_method_substitute(host, method, block, *args)
