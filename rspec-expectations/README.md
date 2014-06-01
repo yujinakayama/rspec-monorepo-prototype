@@ -1,4 +1,4 @@
-# RSpec Expectations [![Build Status](https://secure.travis-ci.org/rspec/rspec-expectations.png?branch=master)](http://travis-ci.org/rspec/rspec-expectations) [![Code Climate](https://codeclimate.com/github/rspec/rspec-expectations.png)](https://codeclimate.com/github/rspec/rspec-expectations) [![Inline docs](http://inch-pages.github.io/github/rspec/rspec-expectations.png)](http://inch-pages.github.io/github/rspec/rspec-expectations)
+# RSpec Expectations [![Build Status](https://secure.travis-ci.org/rspec/rspec-expectations.png?branch=master)](http://travis-ci.org/rspec/rspec-expectations) [![Code Climate](https://codeclimate.com/github/rspec/rspec-expectations.png)](https://codeclimate.com/github/rspec/rspec-expectations)
 
 RSpec::Expectations lets you express expected outcomes on an object in an
 example.
@@ -247,6 +247,27 @@ expect(hash).to match(
 expect { |probe|
   [1, 2, 3].each(&probe)
 }.to yield_successive_args( a_value < 2, 2, a_value > 2 )
+```
+
+## Usage outside rspec-core
+
+You always need to load `rspec/expectations` even if you only want to use one part of the library:
+
+```ruby
+require 'rspec/expectations'
+```
+
+Then simply include `RSpec::Matchers` in any class:
+
+```ruby
+class MyClass
+  include RSpec::Matchers
+
+  def do_something(arg)
+    expect(arg).to be > 0
+    # do other stuff
+  end
+end
 ```
 
 ## Also see

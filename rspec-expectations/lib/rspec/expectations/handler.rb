@@ -1,6 +1,5 @@
 module RSpec
   module Expectations
-
     # @private
     module ExpectationHelper
       def self.check_message(msg)
@@ -18,8 +17,8 @@ module RSpec
       #
       # @private
       def self.modern_matcher_from(matcher)
-        LegacyMacherAdapter::RSpec2.wrap(matcher) ||
-        LegacyMacherAdapter::RSpec1.wrap(matcher) || matcher
+        LegacyMatcherAdapter::RSpec2.wrap(matcher) ||
+        LegacyMatcherAdapter::RSpec1.wrap(matcher) || matcher
       end
 
       def self.setup(handler, matcher, message)
@@ -46,7 +45,7 @@ module RSpec
         matcher = ExpectationHelper.setup(self, initial_matcher, message)
 
         return ::RSpec::Matchers::BuiltIn::PositiveOperatorMatcher.new(actual) unless initial_matcher
-        matcher.matches?(actual, &block) or ExpectationHelper.handle_failure(matcher, message, :failure_message)
+        matcher.matches?(actual, &block) || ExpectationHelper.handle_failure(matcher, message, :failure_message)
       end
 
       def self.verb
@@ -68,7 +67,7 @@ module RSpec
         matcher = ExpectationHelper.setup(self, initial_matcher, message)
 
         return ::RSpec::Matchers::BuiltIn::NegativeOperatorMatcher.new(actual) unless initial_matcher
-        !(does_not_match?(matcher, actual, &block) or ExpectationHelper.handle_failure(matcher, message, :failure_message_when_negated))
+        !(does_not_match?(matcher, actual, &block) || ExpectationHelper.handle_failure(matcher, message, :failure_message_when_negated))
       end
 
       def self.does_not_match?(matcher, actual, &block)
@@ -96,7 +95,7 @@ module RSpec
     # order to present the current protocol.
     #
     # @private
-    class LegacyMacherAdapter < Matchers::MatcherDelegator
+    class LegacyMatcherAdapter < Matchers::MatcherDelegator
       def initialize(matcher)
         super
         ::RSpec.warn_deprecation(<<-EOS.gsub(/^\s+\|/, ''), :type => "legacy_matcher")
@@ -160,4 +159,3 @@ module RSpec
     end
   end
 end
-
