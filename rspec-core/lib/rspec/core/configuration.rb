@@ -1,3 +1,5 @@
+require 'fileutils'
+
 RSpec::Support.require_rspec_core "backtrace_formatter"
 RSpec::Support.require_rspec_core "ruby_project"
 RSpec::Support.require_rspec_core "formatters/deprecation_formatter"
@@ -180,9 +182,9 @@ module RSpec
         end
       end
 
-      # @macro define_reader
+      # @macro add_setting
       # Load files matching this pattern (default: `'**/*_spec.rb'`)
-      define_reader :pattern
+      add_setting :pattern
 
       # Set pattern to match files to load
       # @attr value [String] the filename pattern to filter spec files by
