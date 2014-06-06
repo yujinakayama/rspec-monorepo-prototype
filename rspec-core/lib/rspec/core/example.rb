@@ -201,9 +201,7 @@ module RSpec
         attr_reader :example
 
         Example.public_instance_methods(false).each do |name|
-          unless name.to_sym == :run
-            define_method(name) { |*a, &b| @example.__send__(name, *a, &b) }
-          end
+          define_method(name) { |*a, &b| @example.__send__(name, *a, &b) }
         end
 
         Proc.public_instance_methods(false).each do |name|
