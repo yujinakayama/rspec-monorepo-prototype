@@ -15,8 +15,17 @@ RSpec::Support.define_optimized_require_for_rspec(:matchers) { |f| require_relat
 # in the `RSpec::Expectations` and `RSpec::Matchers` namespaces.
 module RSpec
   # RSpec::Matchers provides a number of useful matchers we use to define
-  # expectations. Any object that implements the [matcher protocol](Matchers/MatcherProtocol)
-  # can be used as a matcher.
+  # expectations. A matcher is any object that responds to the following:
+  #
+  #     matches?(actual)
+  #     failure_message
+  #
+  # These methods are also part of the matcher protocol, but are optional:
+  #
+  #     does_not_match?(actual)
+  #     failure_message_when_negated
+  #     description
+  #     supports_block_expectations?
   #
   # ## Predicates
   #
@@ -550,6 +559,30 @@ module RSpec
     end
     alias_matcher :an_object_existing, :exist
     alias_matcher :existing,           :exist
+
+    # Passes if actual's attribute values match the expected attributes hash.
+    # This works no matter how you define your attribute readers.
+    #
+    # @example
+    #
+    #   Person = Struct.new(:name, :age)
+    #   person = Person.new("Bob", 32)
+    #
+    #   expect(person).to have_attributes(:name => "Bob", :age => 32)
+    #   expect(person).to have_attributes(:name => a_string_starting_with("B"), :age => (a_value > 30) )
+    #
+    # @note It will fail if actual doesn't respond to any of the expected attributes.
+    #
+    # @example
+    #
+    #   expect(person).to have_attributes(:color => "red")
+    #
+    # rubocop:disable Style/PredicateName
+    def have_attributes(expected)
+      BuiltIn::HaveAttributes.new(expected)
+    end
+    # rubocop:enable Style/PredicateName
+    alias_matcher :an_object_having_attributes, :have_attributes
 
     # Passes if actual includes expected. This works for
     # collections and Strings. You can also pass in multiple args

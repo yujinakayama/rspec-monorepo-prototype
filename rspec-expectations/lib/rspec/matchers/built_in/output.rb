@@ -8,9 +8,7 @@ module RSpec
       # Not intended to be instantiated directly.
       class Output < BaseMatcher
         def initialize(expected)
-          @expected        = expected
-          @actual          = ""
-          @block           = nil
+          @expected = expected
           @stream_capturer = NullCapture
         end
 

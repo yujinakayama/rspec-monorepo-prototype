@@ -6,7 +6,9 @@ module RSpec
       # @api private
       # Provides the implementation for `respond_to`.
       # Not intended to be instantiated directly.
-      class RespondTo < BaseMatcher
+      class RespondTo
+        include Composable
+
         def initialize(*names)
           @names = names
           @expected_arity = nil
@@ -58,6 +60,11 @@ module RSpec
         # @return [String]
         def description
           "respond to #{pp_names}#{with_arity}"
+        end
+
+        # @private
+        def supports_block_expectations?
+          false
         end
 
       private

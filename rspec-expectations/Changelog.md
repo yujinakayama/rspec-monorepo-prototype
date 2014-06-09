@@ -1,19 +1,13 @@
 ### 3.1.0 Development
-[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.2...master)
+[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.0...master)
 
 Bug Fixes:
 
 * Rename private `LegacyMacherAdapter` constant to `LegacyMatcherAdapter`
   to fix typo. (Abdelkader Boudih, #563)
 
-Enhancements:
-
-* Extended compound matcher support to block matchers, for cases like:
-  `expect { ... }.to change { x }.to(3).and change { y }.to(4)`. (Myron
-  Marston, #567)
-
-### 3.0.2 / 2014-06-19
-[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.1...v3.0.2)
+### 3.0.2 Development
+[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.1...3-0-maintenance)
 
 Bug Fixes:
 
@@ -22,8 +16,6 @@ Bug Fixes:
 * Provide a better error message when you use the `change(obj, :msg)`
   form of the change matcher but forget the message argument. (Alex
   Sunderland, #585)
-* Make the `contain_exactly` matcher work with arrays that contain hashes in
-  arbitrary ordering. (Sam Phippen, #578)
 
 ### 3.0.1 / 2014-06-12
 [Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.0...v3.0.1)
@@ -34,6 +26,15 @@ Bug Fixes:
   fail when used in a project where the rest of RSpec (e.g. core and
   expecatations) weren't being used. (Myron Marston, #566)
 * Structs are no longer treated as arrays when diffed. (Jon Rowe, #576)
+
+Enhancements:
+
+* Add `have_attributes` matcher, that passes if actual's attribute
+  values match the expected attributes hash:
+  `Person = Struct.new(:name, :age)`
+  `person = Person.new("Bob", 32)`
+  `expect(person).to have_attributes(:name => "Bob", :age => 32)`.
+  (Adam Farhi)
 
 ### 3.0.0 / 2014-06-01
 [Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.0.rc1...v3.0.0)
@@ -196,7 +197,7 @@ Deprecations:
   a deprecation warning. (Myron Marston)
 
 ### 3.0.0.beta1 / 2013-11-07
-[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v2.99.1...v3.0.0.beta1)
+[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v2.99.0...v3.0.0.beta1)
 
 Breaking Changes for 3.0.0:
 
@@ -243,14 +244,6 @@ Deprecations:
  * Using the old `:should` syntax without explicitly configuring it is deprecated.
    It will continue to work but will emit a deprecation warning in RSpec 3 if
    you do not explicitly enable it. (Sam Phippen)
-
-### 2.99.1 / 2014-06-19
-[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v2.99.0...v2.99.1)
-
-Bug Fixes:
-
-* Fix typo in custom matcher `expected` deprecation warning -- it's
-  `expected_as_array`, not `expected_array`. (Frederick Cheung, #562)
 
 ### 2.99.0 / 2014-06-01
 [Full Changelog](http://github.com/rspec/rspec-expectations/compare/v2.99.0.rc1...v2.99.0)

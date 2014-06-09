@@ -95,11 +95,6 @@ module RSpec
           false
         end
 
-        # @api private
-        def expects_call_stack_jump?
-          false
-        end
-
       private
 
         def assert_ivars(*expected_ivars)

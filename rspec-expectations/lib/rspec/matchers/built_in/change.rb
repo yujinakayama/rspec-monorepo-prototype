@@ -4,7 +4,9 @@ module RSpec
       # @api private
       # Provides the implementation for `change`.
       # Not intended to be instantiated directly.
-      class Change < BaseMatcher
+      class Change
+        include Composable
+
         # @api public
         # Specifies the delta of the expected change.
         def by(expected_delta)
@@ -102,7 +104,9 @@ module RSpec
 
       # Used to specify a relative change.
       # @api private
-      class ChangeRelatively < BaseMatcher
+      class ChangeRelatively
+        include Composable
+
         def initialize(change_details, expected_delta, relativity, &comparer)
           @change_details = change_details
           @expected_delta = expected_delta
@@ -148,7 +152,8 @@ module RSpec
 
       # @api private
       # Base class for specifying a change from and/or to specific values.
-      class SpecificValuesChange < BaseMatcher
+      class SpecificValuesChange
+        include Composable
         # @private
         MATCH_ANYTHING = ::Object.ancestors.last
 

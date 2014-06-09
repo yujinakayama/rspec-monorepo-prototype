@@ -94,10 +94,6 @@ module RSpec
           true
         end
 
-        def expects_call_stack_jump?
-          true
-        end
-
       private
 
         def actual_result
