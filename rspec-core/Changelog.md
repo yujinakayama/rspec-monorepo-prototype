@@ -1,5 +1,5 @@
 ### 3.1.0 Development
-[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.0.2...master)
+[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.0.3...master)
 
 Enhancements:
 
@@ -8,14 +8,29 @@ Enhancements:
   have to consciously opt-in to the setting. (Andrew Hooker, #1572)
 * Provide an `inspect` output for example procsy objects (used in around
   hooks) that doesn't make them look like procs. (Jon Rowe, #1620)
-* Improve documentation for `include_context` to clarify behaviour with
-  a block. (Mark Lorenz, #1624)
+* Remove a few unneeded `require` statements from
+  `rspec/core/rake_task.rb`, making it even lighterweight. (Myron Marston, #1640)
+* Allow rspec-core to be used when neither rspec-mocks or
+  rspec-expectations are installed, without requiring any
+  user configuration. (Sam Phippen, Myron Marston, #1615)
 
 Bug Fixes:
 
 * Remove dependency on `FileUtils` from the standard library so that users do
   not get false positives where their code relies on it but they are not
   requiring it. (Sam Phippen, #1565)
+
+### 3.0.3 / 2014-07-21
+[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.0.2...v3.0.3)
+
+Bug Fixes:
+
+* Properly convert both parts of a description into strings before
+  concatenation.  (@nicklink483, #1636)
+* Exclude the working directory when figuring out folders to ignore.
+  (Jon Rowe, Myron Marston, #1616)
+* Allow `::RSpec::Core::Notifications::FailedExampleNotification#message_lines`
+  to be accessed without a colouriser. (@tomykaira, #1637)
 
 ### 3.0.2 / 2014-06-19
 [Full Changelog](http://github.com/rspec/rspec-core/compare/v3.0.1...v3.0.2)
