@@ -1,32 +1,15 @@
 Feature: rake task
 
-  RSpec ships with a rake task with a number of useful options.
-
-  We recommend you wrap this in a `rescue` clause so that you can
-  use your `Rakefile` in an environment where RSpec is unavailable
-  (for example on a production server). e.g:
-
-  ```ruby
-  begin
-    require 'rspec/core/rake_task'
-    RSpec::Core::RakeTask.new(:spec)
-  rescue LoadError
-  end
-  ```
+  RSpec ships with a rake task with a number of useful options
 
   Scenario: Default options with passing spec (prints command and exit status is 0)
     Given a file named "Rakefile" with:
       """ruby
+      require 'rspec/core/rake_task'
 
-      begin
-        require 'rspec/core/rake_task'
+      RSpec::Core::RakeTask.new(:spec)
 
-        RSpec::Core::RakeTask.new(:spec)
-
-        task :default => :spec
-      rescue LoadError
-        # no rspec available
-      end
+      task :default => :spec
       """
     And a file named "spec/thing_spec.rb" with:
       """ruby
@@ -46,15 +29,11 @@ Feature: rake task
   Scenario: Default options with failing spec (exit status is 1)
     Given a file named "Rakefile" with:
       """ruby
-      begin
-        require 'rspec/core/rake_task'
+      require 'rspec/core/rake_task'
 
-        RSpec::Core::RakeTask.new(:spec)
+      RSpec::Core::RakeTask.new(:spec)
 
-        task :default => :spec
-      rescue LoadError
-        # no rspec available
-      end
+      task :default => :spec
       """
     And a file named "spec/thing_spec.rb" with:
       """ruby
@@ -70,17 +49,13 @@ Feature: rake task
   Scenario: Setting `fail_on_error = false` with failing spec (exit status is 0)
     Given a file named "Rakefile" with:
       """ruby
-      begin
-        require 'rspec/core/rake_task'
+      require 'rspec/core/rake_task'
 
-        RSpec::Core::RakeTask.new(:spec) do |t|
-          t.fail_on_error = false
-        end
-
-        task :default => :spec
-      rescue LoadError
-        # no rspec available
+      RSpec::Core::RakeTask.new(:spec) do |t|
+        t.fail_on_error = false
       end
+
+      task :default => :spec
       """
     And a file named "spec/thing_spec.rb" with:
       """ruby
@@ -96,14 +71,10 @@ Feature: rake task
   Scenario: Passing arguments to the `rspec` command using `rspec_opts`
     Given a file named "Rakefile" with:
       """ruby
-      begin
-        require 'rspec/core/rake_task'
+      require 'rspec/core/rake_task'
 
-        RSpec::Core::RakeTask.new(:spec) do |t|
-          t.rspec_opts = "--tag fast"
-        end
-      rescue LoadError
-        # no rspec available
+      RSpec::Core::RakeTask.new(:spec) do |t|
+        t.rspec_opts = "--tag fast"
       end
       """
     And a file named "spec/thing_spec.rb" with:
@@ -128,14 +99,10 @@ Feature: rake task
   Scenario: Passing rake task arguments to the `rspec` command via `rspec_opts`
     Given a file named "Rakefile" with:
       """ruby
-      begin
-        require 'rspec/core/rake_task'
+      require 'rspec/core/rake_task'
 
-        RSpec::Core::RakeTask.new(:spec, :tag) do |t, task_args|
-          t.rspec_opts = "--tag #{task_args[:tag]}"
-        end
-      rescue LoadError
-        # no rspec available
+      RSpec::Core::RakeTask.new(:spec, :tag) do |t, task_args|
+        t.rspec_opts = "--tag #{task_args[:tag]}"
       end
       """
     And a file named "spec/thing_spec.rb" with:
