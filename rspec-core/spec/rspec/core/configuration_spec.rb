@@ -89,8 +89,6 @@ module RSpec::Core
     end
 
     describe "#requires=" do
-      include_context "isolate load path mutation"
-
       def absolute_path_to(dir)
         File.expand_path("../../../../#{dir}", __FILE__)
       end
@@ -145,7 +143,16 @@ module RSpec::Core
     describe "#mock_framework" do
       it "defaults to :rspec" do
         expect(RSpec::Support).to receive(:require_rspec_core).with('mocking_adapters/rspec')
-        config.mock_framework
+        expect(config.mock_framework).to eq(MockingAdapters::RSpec)
+      end
+
+      context "when rspec-mocks is not installed" do
+        it 'gracefully falls back to :nothing' do
+          allow(RSpec::Support).to receive(:require_rspec_core).and_call_original
+          allow(RSpec::Support).to receive(:require_rspec_core).with('mocking_adapters/rspec').and_raise(LoadError)
+
+          expect(config.mock_framework).to eq(MockingAdapters::Null)
+        end
       end
     end
 
@@ -257,15 +264,27 @@ module RSpec::Core
       end
     end
 
-    describe "#expectation_framework" do
+    describe "#expectation_frameworks" do
       it "defaults to :rspec" do
         expect(config).to receive(:require).with('rspec/expectations')
-        config.expectation_frameworks
+        expect(config.expectation_frameworks).to eq([RSpec::Matchers])
+      end
+
+      context "when rspec-expectations is not installed" do
+        def an_anonymous_module
+          name = RUBY_VERSION.to_f < 1.9 ? '' : nil
+          an_object_having_attributes(:class => Module, :name => name)
+        end
+
+        it 'gracefully falls back to an anonymous module' do
+          allow(config).to receive(:require).with('rspec/expectations').and_raise(LoadError)
+          expect(config.expectation_frameworks).to match([an_anonymous_module])
+        end
       end
     end
 
     describe "#expectation_framework=" do
-      it "delegates to expect_with=" do
+      it "delegates to expect_with" do
         expect(config).to receive(:expect_with).with(:rspec)
         config.expectation_framework = :rspec
       end
@@ -615,6 +634,16 @@ module RSpec::Core
           config.reset
           expect(RSpec).to_not receive(:warning)
           config.pattern = "rspec/**/*.spec"
+        end
+      end
+
+      context "after `files_to_run` has been accessed but before files have been loaded" do
+        it 'still takes affect' do
+          file = File.expand_path(File.dirname(__FILE__) + "/resources/a_foo.rb")
+          assign_files_or_directories_to_run File.dirname(file)
+          expect(config.files_to_run).not_to include(file)
+          config.pattern = "**/*_foo.rb"
+          expect(config.files_to_run).to include(file)
         end
       end
     end
@@ -1078,8 +1107,6 @@ module RSpec::Core
     end
 
     describe "#libs=" do
-      include_context "isolate load path mutation"
-
       it "adds directories to the LOAD_PATH" do
         expect($LOAD_PATH).to receive(:unshift).with("a/dir")
         config.libs = ["a/dir"]
@@ -1087,8 +1114,6 @@ module RSpec::Core
     end
 
     describe "libs" do
-      include_context "isolate load path mutation"
-
       it 'records paths added to the load path' do
         config.libs = ["a/dir"]
         expect(config.libs).to eq ["a/dir"]

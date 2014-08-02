@@ -19,12 +19,12 @@ module RSpec::Core
         expect(make_backtrace_formatter.exclude?("/lib/rspec/support/foo.rb")).to be true
       end
 
-      it "excludes java files (for JRuby)" do
-        expect(make_backtrace_formatter.exclude?("org/jruby/RubyArray.java:2336")).to be true
+      it "excludes the rspec binary, even when rspec-core has installed as a bundler :git dependency" do
+        expect(make_backtrace_formatter.exclude?("exe/rspec")).to be true
       end
 
-      it "excludes files within installed gems" do
-        expect(make_backtrace_formatter.exclude?('ruby-1.8.7-p334/gems/mygem-2.3.0/lib/mygem.rb')).to be true
+      it "excludes java files (for JRuby)", :if => (RUBY_PLATFORM == 'java')  do
+        expect(make_backtrace_formatter.exclude?("org/jruby/RubyArray.java:2336")).to be true
       end
 
       it "includes files in projects containing 'gems' in the name" do
@@ -38,6 +38,29 @@ module RSpec::Core
       it "includes something in the current working directory even with a matching exclusion pattern" do
         formatter = make_backtrace_formatter([/foo/])
         expect(formatter.exclude? "#{Dir.getwd}/foo").to be false
+      end
+
+      context "when the exclusion list has been replaced" do
+        it "includes a line that the default patterns exclude" do
+          formatter = make_backtrace_formatter
+          expect {
+            formatter = make_backtrace_formatter([/spec_helper/])
+          }.to change { formatter.exclude? "/path/to/lib/rspec/expectations/foo.rb" }.from(true).to(false)
+        end
+      end
+
+      context "when the current working directory includes `gems` in the name" do
+        around(:example) do |ex|
+          Dir.mktmpdir do |tmp_dir|
+            dir = File.join(tmp_dir, "gems")
+            Dir.mkdir(dir)
+            Dir.chdir(dir, &ex)
+          end
+        end
+
+        it "includes something in the current working directory" do
+          expect(make_backtrace_formatter.exclude?("#{Dir.getwd}/arbitrary")).to be false
+        end
       end
     end
 

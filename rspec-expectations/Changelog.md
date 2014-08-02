@@ -1,19 +1,36 @@
 ### 3.1.0 Development
-[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.2...master)
+[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.3...master)
 
 Bug Fixes:
 
 * Rename private `LegacyMacherAdapter` constant to `LegacyMatcherAdapter`
   to fix typo. (Abdelkader Boudih, #563)
-* Fix issue with detection of generic operator matchers so they work
-  correctly when undefined. (Myron Marston, #597)
-* Don't inadvertently define `BasicObject` in 1.8.7. (Chris Griego, #603)
 
 Enhancements:
 
+* Add `have_attributes` matcher, that passes if actual's attribute
+  values match the expected attributes hash:
+  `Person = Struct.new(:name, :age)`
+  `person = Person.new("Bob", 32)`
+  `expect(person).to have_attributes(:name => "Bob", :age => 32)`.
+  (Adam Farhi, #571)
 * Extended compound matcher support to block matchers, for cases like:
   `expect { ... }.to change { x }.to(3).and change { y }.to(4)`. (Myron
   Marston, #567)
+* Include chained methods in custom matcher description and failure message
+  when new `include_chain_clauses_in_custom_matcher_descriptions` config
+  option is enabled. (Dan Oved, #600)
+
+### 3.0.3 / 2014-07-21
+[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.2...v3.0.3)
+
+Bug Fixes:
+
+* Fix issue with detection of generic operator matchers so they work
+  correctly when undefined. (Myron Marston, #597)
+* Don't inadvertently define `BasicObject` in 1.8.7. (Chris Griego, #603)
+* Fix `include` matcher so that it fails gracefully when matched against
+  an object that does not respond to `include?`. (Myron Marston, #607)
 
 ### 3.0.2 / 2014-06-19
 [Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.1...v3.0.2)
@@ -37,15 +54,6 @@ Bug Fixes:
   fail when used in a project where the rest of RSpec (e.g. core and
   expecatations) weren't being used. (Myron Marston, #566)
 * Structs are no longer treated as arrays when diffed. (Jon Rowe, #576)
-
-Enhancements:
-
-* Add `have_attributes` matcher, that passes if actual's attribute
-  values match the expected attributes hash:
-  `Person = Struct.new(:name, :age)`
-  `person = Person.new("Bob", 32)`
-  `expect(person).to have_attributes(:name => "Bob", :age => 32)`.
-  (Adam Farhi)
 
 ### 3.0.0 / 2014-06-01
 [Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.0.rc1...v3.0.0)
@@ -208,7 +216,7 @@ Deprecations:
   a deprecation warning. (Myron Marston)
 
 ### 3.0.0.beta1 / 2013-11-07
-[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v2.99.1...v3.0.0.beta1)
+[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v2.99.2...v3.0.0.beta1)
 
 Breaking Changes for 3.0.0:
 
@@ -255,6 +263,17 @@ Deprecations:
  * Using the old `:should` syntax without explicitly configuring it is deprecated.
    It will continue to work but will emit a deprecation warning in RSpec 3 if
    you do not explicitly enable it. (Sam Phippen)
+
+### 2.99.2 / 2014-07-21
+[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v2.99.1...v2.99.2)
+
+Bug Fixes:
+
+* Fix regression in `Expectations#method_handle_for` where proxy objects
+  with method delegated would wrongly not return a method handle.
+  (Jon Rowe, #594)
+* Fix issue with detection of generic operator matchers so they work
+  correctly when undefined. (Myron Marston, #597)
 
 ### 2.99.1 / 2014-06-19
 [Full Changelog](http://github.com/rspec/rspec-expectations/compare/v2.99.0...v2.99.1)
