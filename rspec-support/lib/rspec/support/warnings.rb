@@ -1,6 +1,3 @@
-require 'rspec/support'
-RSpec::Support.require_rspec_support "caller_filter"
-
 module RSpec
   module Support
     module Warnings

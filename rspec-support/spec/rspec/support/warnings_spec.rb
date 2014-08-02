@@ -1,18 +1,9 @@
 require "spec_helper"
 require "rspec/support/warnings"
-require 'rspec/support/spec/shell_out'
 
 describe "rspec warnings and deprecations" do
-  include RSpec::Support::ShellOut
   let(:warning_object) do
     Object.new.tap { |o| o.extend(RSpec::Support::Warnings) }
-  end
-
-  it 'works when required in isolation' do
-    out, err, status = run_ruby_with_current_load_path("RSpec.deprecate('foo')", "-rrspec/support/warnings")
-    expect(out).to eq("")
-    expect(err).to start_with("DEPRECATION: foo is deprecated")
-    expect(status.exitstatus).to eq(0)
   end
 
   context "when rspec-core is not available" do
