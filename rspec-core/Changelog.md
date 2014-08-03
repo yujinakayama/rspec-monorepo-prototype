@@ -1,5 +1,5 @@
 ### 3.2.0 Development
-[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.1.6...master)
+[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.1.7...master)
 
 Enhancements:
 
@@ -10,9 +10,10 @@ Enhancements:
   spec runs, whilst retaining user configuration.  (Alexey Fedorov, #1706)
 * Reduce string allocations when defining and running examples by 70%
   and 50% respectively. (Myron Marston, #1738)
+* Removed dependency on pathname from stdlib. (Sam Phippen, #1703)
 
-### 3.1.7 Development
-[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.1.6...3-1-maintenance)
+### 3.1.7 / 2014-10-11
+[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.1.6...v3.1.7)
 
 Bug Fixes:
 
@@ -22,6 +23,10 @@ Bug Fixes:
 * Prevent constant lookup mistakenly finding `RSpec::ExampleGroups` generated
   constants on 1.9.2 by appending a trailing `_` to the generated names.
   (Jon Rowe, #1737)
+* Fix bug in `:pending` metadata. If it got set in any way besides passing
+  it as part of the metadata literal passed to `it` (such as by using
+  `define_derived_metadata`), it did not have the desired effect,
+  instead marking the example as `:passed`. (Myron Marston, #1739)
 
 ### 3.1.6 / 2014-10-08
 [Full Changelog](http://github.com/rspec/rspec-core/compare/v3.1.5...v3.1.6)
