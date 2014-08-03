@@ -2,7 +2,7 @@ begin
   # Only the minitest 5.x gem includes the minitest.rb and assertions.rb files
   require 'minitest'
   require 'minitest/assertions'
-rescue LoadError
+rescue LoadError => _ignored
   # We must be using Ruby Core's MiniTest or the Minitest gem 4.x
   require 'minitest/unit'
   Minitest = MiniTest
