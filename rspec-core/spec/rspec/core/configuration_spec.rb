@@ -89,6 +89,8 @@ module RSpec::Core
     end
 
     describe "#requires=" do
+      include_context "isolate load path mutation"
+
       def absolute_path_to(dir)
         File.expand_path("../../../../#{dir}", __FILE__)
       end
@@ -1107,6 +1109,8 @@ module RSpec::Core
     end
 
     describe "#libs=" do
+      include_context "isolate load path mutation"
+
       it "adds directories to the LOAD_PATH" do
         expect($LOAD_PATH).to receive(:unshift).with("a/dir")
         config.libs = ["a/dir"]
@@ -1114,6 +1118,8 @@ module RSpec::Core
     end
 
     describe "libs" do
+      include_context "isolate load path mutation"
+
       it 'records paths added to the load path' do
         config.libs = ["a/dir"]
         expect(config.libs).to eq ["a/dir"]
