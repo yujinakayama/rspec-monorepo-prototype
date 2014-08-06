@@ -430,6 +430,17 @@ module RSpec
         self
       end
 
+      # Expect a message to be received exactly three times.
+      #
+      # @example
+      #
+      #   expect(car).to receive(:go).thrice
+      def thrice(&block)
+        self.inner_implementation_action = block
+        set_expected_received_count :exactly, 3
+        self
+      end
+
       # Expect messages to be received in a specific order.
       #
       # @example
@@ -555,7 +566,7 @@ module RSpec
         block_signature = Support::BlockSignature.new(block)
 
         @args_to_yield.each do |args|
-          unless Support::StrictSignatureVerifier.new(block_signature, args).valid?
+          unless Support::MethodSignatureVerifier.new(block_signature, args).valid?
             @error_generator.raise_wrong_arity_error(args, block_signature)
           end
 

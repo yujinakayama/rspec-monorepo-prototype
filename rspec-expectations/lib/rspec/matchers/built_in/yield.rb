@@ -106,9 +106,16 @@ module RSpec
         end
 
         # @api public
-        # Specifies that the method is expected to yield once.
+        # Specifies that the method is expected to yield twice.
         def twice
           exactly(2)
+          self
+        end
+
+        # @api public
+        # Specifies that the method is expected to yield thrice.
+        def thrice
+          exactly(3)
           self
         end
 
@@ -181,6 +188,7 @@ module RSpec
                                    when Numeric then n
                                    when :once then 1
                                    when :twice then 2
+                                   when :thrice then 3
                                    end
         end
 
