@@ -21,10 +21,6 @@ module RSpec
         # @api private
         # @return [String]
         def failure_message
-          unless enumerable?
-            return "#{improve_hash_formatting(super)}, #{not_enumerable_clause}"
-          end
-
           all_messages = [improve_hash_formatting(super)]
           failed_objects.each do |index, matcher_failure_message|
             all_messages << failure_message_for_item(index, matcher_failure_message)
@@ -41,8 +37,6 @@ module RSpec
       private
 
         def match(_expected, _actual)
-          return false unless enumerable?
-
           index_failed_objects
           failed_objects.empty?
         end
@@ -60,10 +54,6 @@ module RSpec
           indent_multiline_message("object at index #{index} failed to match:#{failure_message}")
         end
 
-        def not_enumerable_clause
-          'but was not enumerable'
-        end
-
         def add_new_line_if_needed(message)
           message.start_with?("\n") ? message : "\n#{message}"
         end
@@ -78,10 +68,6 @@ module RSpec
         def initialize_copy(other)
           @matcher = @matcher.clone
           super
-        end
-
-        def enumerable?
-          Enumerable === @actual
         end
       end
     end
