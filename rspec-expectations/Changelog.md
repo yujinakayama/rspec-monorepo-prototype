@@ -5,6 +5,13 @@ Bug Fixes:
 
 * Rename private `LegacyMacherAdapter` constant to `LegacyMatcherAdapter`
   to fix typo. (Abdelkader Boudih, #563)
+* Fix `start_with` and `end_with` so that they work properly with
+  structs. (Myron Marston, #620)
+* Fix failure message generation so that structs are printed properly
+  in failures. Previously failure messages would represent them as
+  an array. (Myron Marston, #620)
+* Fix composable matcher support so that it does not wrongly treat
+  structs as arrays. (Myron Marston, #620)
 
 Enhancements:
 
@@ -22,6 +29,8 @@ Enhancements:
   option is enabled. (Dan Oved, #600)
 * Add `thrice` modifier to `yield_control` matcher as a synonym for
   `exactly(3).times`. (Dennis Taylor, #615)
+* Add `RSpec::Matchers.define_negated_matcher`, which defines a negated
+  version of the named matcher. (Adam Farhi, Myron Marston, #618)
 
 ### 3.0.3 / 2014-07-21
 [Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.0.2...v3.0.3)
