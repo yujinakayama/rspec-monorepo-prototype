@@ -102,14 +102,12 @@ RSpec.describe RSpec::Core::ConfigurationOptions, :isolated_directory => true, :
       opts.configure(config)
     end
 
-    { "pattern" => :pattern, "exclude-pattern" => :exclude_pattern }.each do |flag, attr|
-      it "sets #{attr} before `requires` so users can check `files_to_run` in a `spec_helper` loaded by `--require`" do
-        opts = config_options_object(*%W[--require spec_helpe --#{flag} **/*.spec])
-        config = RSpec::Core::Configuration.new
-        expect(config).to receive(:force).with(attr => '**/*.spec').ordered
-        expect(config).to receive(:requires=).ordered
-        opts.configure(config)
-      end
+    it "sets pattern before `requires` so users can check `files_to_run` in a `spec_helper` loaded by `--require`" do
+      opts = config_options_object(*%w[--require spec_helpe --pattern **/*.spec])
+      config = RSpec::Core::Configuration.new
+      expect(config).to receive(:force).with(:pattern => '**/*.spec').ordered
+      expect(config).to receive(:requires=).ordered
+      opts.configure(config)
     end
 
     it "assigns inclusion_filter" do
