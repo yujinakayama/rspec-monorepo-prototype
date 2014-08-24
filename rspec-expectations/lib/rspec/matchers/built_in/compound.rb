@@ -14,10 +14,8 @@ module RSpec
 
         # @private
         def does_not_match?(_actual)
-          raise NotImplementedError, "`expect(...).not_to matcher.#{conjunction} matcher` " \
-            "is not supported, since it creates a bit of an ambiguity. Instead, define negated versions " \
-            "of whatever matchers you wish to negate with `RSpec::Matchers.define_negated_matcher` and " \
-            "use `expect(...).to matcher.#{conjunction} matcher`."
+          raise NotImplementedError, "`expect(...).not_to " \
+            "matcher.#{conjunction} matcher` is not supported"
         end
 
         # @api private
