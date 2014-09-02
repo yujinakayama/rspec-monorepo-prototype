@@ -72,8 +72,7 @@ RSpec.describe "FailedExampleNotification" do
     let(:exception) { instance_double(Exception, :backtrace => [ "#{__FILE__}:#{__LINE__}"], :message => 'Test exception') }
 
     before do
-      metadata = {:shared_group_name => 'double shared group'}
-      allow(example).to receive(:example_group) { class_double(RSpec::Core::ExampleGroup, :metadata => metadata, :parent_groups => [], location: "#{__FILE__}:#{__LINE__}") }
+      allow(example).to receive(:example_group) { class_double(RSpec::Core::ExampleGroup, :metadata => {}, :parent_groups => []) }
     end
 
     it 'should return failure_lines without color' do

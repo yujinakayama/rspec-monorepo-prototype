@@ -6,8 +6,7 @@ module RSpec::Core
   # with information about a particular event of interest.
   module Notifications
     # @private
-    module NullColorizer
-      module_function
+    class NullColorizer
       def wrap(line, _code_or_symbol)
         line
       end
