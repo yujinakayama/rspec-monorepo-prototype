@@ -3,7 +3,7 @@ RSpec::Support.require_rspec_support 'recursive_const_methods'
 module RSpec
   module Core
     # ExampleGroup and {Example} are the main structural elements of
-    # rspec-core.  Consider this example:
+    # rspec-core. Consider this example:
     #
     #     describe Thing do
     #       it "does something" do
@@ -17,13 +17,13 @@ module RSpec
     #
     # Example group bodies (e.g. `describe` or `context` blocks) are evaluated
     # in the context of a new subclass of ExampleGroup. Individual examples are
-    # evaluated in the context of an instance of the specific ExampleGroup subclass
-    # to which they belong.
+    # evaluated in the context of an instance of the specific ExampleGroup
+    # subclass to which they belong.
     #
     # Besides the class methods defined here, there are other interesting macros
-    # defined in {Hooks}, {MemoizedHelpers::ClassMethods} and {SharedExampleGroup}.
-    # There are additional instance methods available to your examples defined in
-    # {MemoizedHelpers} and {Pending}.
+    # defined in {Hooks}, {MemoizedHelpers::ClassMethods} and
+    # {SharedExampleGroup}. There are additional instance methods available to
+    # your examples defined in {MemoizedHelpers} and {Pending}.
     class ExampleGroup
       extend Hooks
 
@@ -77,7 +77,6 @@ module RSpec
       #       end
       #     end
       #
-      #
       def described_class
         self.class.described_class
       end
@@ -109,10 +108,20 @@ module RSpec
       def self.define_example_method(name, extra_options={})
         define_singleton_method(name) do |*all_args, &block|
           desc, *args = *all_args
-
           options = Metadata.build_hash_from(args)
           options.update(:skip => RSpec::Core::Pending::NOT_YET_IMPLEMENTED) unless block
           options.update(extra_options)
+
+          # Metadata inheritance normally happens in `Example#initialize`,
+          # but for `:pending` specifically we need it earlier.
+          pending_metadata = options[:pending] || metadata[:pending]
+
+          if pending_metadata
+            options, block = ExampleGroup.pending_metadata_and_block_for(
+              options.merge(:pending => pending_metadata),
+              block
+            )
+          end
 
           examples << RSpec::Core::Example.new(self, desc, options, block)
           examples.last
@@ -134,25 +143,25 @@ module RSpec
       #  end
       define_example_method :specify
 
-      # Shortcut to define an example with `:focus => true`
+      # Shortcut to define an example with `:focus => true`.
       # @see example
       define_example_method :focus,    :focus => true
-      # Shortcut to define an example with `:focus => true`
+      # Shortcut to define an example with `:focus => true`.
       # @see example
       define_example_method :fexample, :focus => true
-      # Shortcut to define an example with `:focus => true`
+      # Shortcut to define an example with `:focus => true`.
       # @see example
       define_example_method :fit,      :focus => true
-      # Shortcut to define an example with `:focus => true`
+      # Shortcut to define an example with `:focus => true`.
       # @see example
       define_example_method :fspecify, :focus => true
-      # Shortcut to define an example with `:skip => 'Temporarily skipped with xexample'`
+      # Shortcut to define an example with `:skip => 'Temporarily skipped with xexample'`.
       # @see example
       define_example_method :xexample, :skip => 'Temporarily skipped with xexample'
-      # Shortcut to define an example with `:skip => 'Temporarily skipped with xit'`
+      # Shortcut to define an example with `:skip => 'Temporarily skipped with xit'`.
       # @see example
       define_example_method :xit,      :skip => 'Temporarily skipped with xit'
-      # Shortcut to define an example with `:skip => 'Temporarily skipped with xspecify'`
+      # Shortcut to define an example with `:skip => 'Temporarily skipped with xspecify'`.
       # @see example
       define_example_method :xspecify, :skip => 'Temporarily skipped with xspecify'
       # Shortcut to define an example with `:skip => true`
@@ -170,7 +179,8 @@ module RSpec
       # @macro [attach] alias_example_group_to
       #   @!scope class
       #   @param name [String] The example group doc string
-      #   @param metadata [Hash] Additional metadata to attach to the example group
+      #   @param metadata [Hash] Additional metadata to attach to the example
+      #     group
       #   @yield The example group definition
       #
       #   Generates a subclass of this example group which inherits
@@ -230,8 +240,8 @@ module RSpec
 
       define_example_group_method :example_group
 
-      # An alias of `example_group`. Generally used when grouping
-      # examples by a thing you are describing (e.g. an object, class or method).
+      # An alias of `example_group`. Generally used when grouping examples by a
+      # thing you are describing (e.g. an object, class or method).
       # @see example_group
       define_example_group_method :describe
 
@@ -267,8 +277,8 @@ module RSpec
       #   @see SharedExampleGroup
       def self.define_nested_shared_group_method(new_name, report_label="it should behave like")
         define_singleton_method(new_name) do |name, *args, &customization_block|
-          # Pass :caller so the :location metadata is set properly...
-          # otherwise, it'll be set to the next line because that's
+          # Pass :caller so the :location metadata is set properly.
+          # Otherwise, it'll be set to the next line because that's
           # the block's source_location.
           group = example_group("#{report_label} #{name}", :caller => caller) do
             find_and_eval_shared("examples", name, *args, &customization_block)
@@ -287,7 +297,8 @@ module RSpec
 
       # Includes shared content mapped to `name` directly in the group in which
       # it is declared, as opposed to `it_behaves_like`, which creates a nested
-      # group. If given a block, that block is also eval'd in the current context.
+      # group. If given a block, that block is also eval'd in the current
+      # context.
       #
       # @see SharedExampleGroup
       def self.include_context(name, *args, &block)
@@ -296,7 +307,8 @@ module RSpec
 
       # Includes shared content mapped to `name` directly in the group in which
       # it is declared, as opposed to `it_behaves_like`, which creates a nested
-      # group. If given a block, that block is also eval'd in the current context.
+      # group. If given a block, that block is also eval'd in the current
+      # context.
       #
       # @see SharedExampleGroup
       def self.include_examples(name, *args, &block)
@@ -338,10 +350,11 @@ module RSpec
         # Ruby 1.9 has a bug that can lead to infinite recursion and a
         # SystemStackError if you include a module in a superclass after
         # including it in a subclass: https://gist.github.com/845896
-        # To prevent this, we must include any modules in RSpec::Core::ExampleGroup
-        # before users create example groups and have a chance to include
-        # the same module in a subclass of RSpec::Core::ExampleGroup.
-        # So we need to configure example groups here.
+        # To prevent this, we must include any modules in
+        # RSpec::Core::ExampleGroup before users create example groups and have
+        # a chance to include the same module in a subclass of
+        # RSpec::Core::ExampleGroup. So we need to configure example groups
+        # here.
         ensure_example_groups_are_configured
 
         description = args.shift
@@ -368,7 +381,8 @@ module RSpec
 
       # @private
       def self.descendant_filtered_examples
-        @descendant_filtered_examples ||= filtered_examples + children.inject([]) { |a, e| a + e.descendant_filtered_examples }
+        @descendant_filtered_examples ||= filtered_examples +
+          children.inject([]) { |a, e| a + e.descendant_filtered_examples }
       end
 
       # @private
@@ -438,7 +452,7 @@ module RSpec
         end
       end
 
-      # Runs all the examples in this group
+      # Runs all the examples in this group.
       def self.run(reporter)
         if RSpec.world.wants_to_quit
           RSpec.world.clear_remaining_example_groups if top_level?
@@ -537,6 +551,30 @@ module RSpec
         ivars.each { |name, value| instance.instance_variable_set(name, value) }
       end
 
+      # @private
+      def self.pending_metadata_and_block_for(options, block)
+        if String === options[:pending]
+          reason = options[:pending]
+        else
+          options[:pending] = true
+          reason = RSpec::Core::Pending::NO_REASON_GIVEN
+        end
+
+        # Assign :caller so that the callback's source_location isn't used
+        # as the example location.
+        options[:caller] ||= Metadata.backtrace_from(block)
+
+        # This will fail if no block is provided, which is effectively the
+        # same as failing the example so it will be marked correctly as
+        # pending.
+        callback = Proc.new do
+          pending(reason)
+          instance_exec(&block)
+        end
+
+        return options, callback
+      end
+
       if RUBY_VERSION.to_f < 1.9
         # @private
         def self.instance_variables_for_example(group)
@@ -570,7 +608,8 @@ module RSpec
 
   # @private
   #
-  # Namespace for the example group subclasses generated by top-level `describe`.
+  # Namespace for the example group subclasses generated by top-level
+  # `describe`.
   module ExampleGroups
     extend Support::RecursiveConstMethods
 
@@ -591,7 +630,7 @@ module RSpec
     def self.base_name_for(group)
       return "Anonymous" if group.description.empty?
 
-      # convert to CamelCase
+      # Convert to CamelCase.
       name = ' ' + group.description
       name.gsub!(/[^0-9a-zA-Z]+([0-9a-zA-Z])/) { Regexp.last_match[1].upcase }
 
@@ -618,7 +657,8 @@ module RSpec
     def self.disambiguate(name, const_scope)
       return name unless const_defined_on?(const_scope, name)
 
-      # Add a trailing number if needed to disambiguate from an existing constant.
+      # Add a trailing number if needed to disambiguate from an existing
+      # constant.
       name << "_2"
       name.next! while const_defined_on?(const_scope, name)
       name
