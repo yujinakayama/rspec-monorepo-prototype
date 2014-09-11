@@ -3,8 +3,7 @@ module RSpec
     module Formatters
       # @api private
       #
-      # Extracts code snippets by looking at the backtrace of the passed error
-      # and applies synax highlighting and line numbers using html.
+      # Extracts code snippets by looking at the backtrace of the passed error and applies synax highlighting and line numbers using html.
       class SnippetExtractor
         # @private
         class NullConverter
@@ -34,8 +33,7 @@ module RSpec
         # Extract lines of code corresponding to  a backtrace.
         #
         # @param backtrace [String] the backtrace from a test failure
-        # @return [String] highlighted code snippet indicating where the test
-        #   failure occured
+        # @return [String] highlighted code snippet indicating where the test failure occured
         #
         # @see #post_process
         def snippet(backtrace)
@@ -48,8 +46,7 @@ module RSpec
         #
         # Create a snippet from a line of code.
         #
-        # @param error_line [String] file name with line number (i.e.
-        #   'foo_spec.rb:12')
+        # @param error_line [String] file name with line number (i.e. 'foo_spec.rb:12')
         # @return [String] lines around the target line within the file
         #
         # @see #lines_around
@@ -65,13 +62,11 @@ module RSpec
 
         # @api private
         #
-        # Extract lines of code centered around a particular line within a
-        # source file.
+        # Extract lines of code centered around a particular line within a source file.
         #
         # @param file [String] filename
         # @param line [Fixnum] line number
-        # @return [String] lines around the target line within the file (2 above
-        #   and 1 below).
+        # @return [String] lines around the target line within the file (2 above and 1 below).
         def lines_around(file, line)
           if File.file?(file)
             lines = File.read(file).split("\n")
@@ -89,11 +84,9 @@ module RSpec
 
         # @api private
         #
-        # Adds line numbers to all lines and highlights the line where the
-        # failure occurred using html `span` tags.
+        # Adds line numbers to all lines and highlights the line where the failure occurred using html `span` tags.
         #
-        # @param highlighted [String] syntax-highlighted snippet surrounding the
-        #   offending line of code
+        # @param highlighted [String] syntax-highlighted snippet surrounding the offending line of code
         # @param offending_line [Fixnum] line where failure occured
         # @return [String] completed snippet
         def post_process(highlighted, offending_line)

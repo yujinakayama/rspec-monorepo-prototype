@@ -39,14 +39,12 @@ module RSpec
         # @api public
         # @group Group Notifications
         #
-        # This method is invoked at the beginning of the execution of each
-        # example group.
+        # This method is invoked at the beginning of the execution of each example group.
         #
         # The next method to be invoked after this is {#example_passed},
         # {#example_pending}, or {#example_group_finished}.
         #
-        # @param notification [GroupNotification] containing example_group
-        #   subclass of `RSpec::Core::ExampleGroup`
+        # @param notification [GroupNotification] containing example_group subclass of `RSpec::Core::ExampleGroup`
 
         # @method example_group_finished
         # @api public
@@ -54,8 +52,7 @@ module RSpec
         #
         # Invoked at the end of the execution of each example group.
         #
-        # @param notification [GroupNotification] containing example_group
-        #   subclass of `RSpec::Core::ExampleGroup`
+        # @param notification [GroupNotification] containing example_group subclass of `RSpec::Core::ExampleGroup`
 
         # @method example_started
         # @api public
@@ -63,8 +60,7 @@ module RSpec
         #
         # Invoked at the beginning of the execution of each example.
         #
-        # @param notification [ExampleNotification] containing example subclass
-        #   of `RSpec::Core::Example`
+        # @param notification [ExampleNotification] containing example subclass of `RSpec::Core::Example`
 
         # @method example_passed
         # @api public
@@ -72,8 +68,7 @@ module RSpec
         #
         # Invoked when an example passes.
         #
-        # @param notification [ExampleNotification] containing example subclass
-        #   of `RSpec::Core::Example`
+        # @param notification [ExampleNotification] containing example subclass of `RSpec::Core::Example`
 
         # @method example_pending
         # @api public
@@ -81,8 +76,7 @@ module RSpec
         #
         # Invoked when an example is pending.
         #
-        # @param notification [ExampleNotification] containing example subclass
-        #   of `RSpec::Core::Example`
+        # @param notification [ExampleNotification] containing example subclass of `RSpec::Core::Example`
 
         # @method example_failed
         # @api public
@@ -90,8 +84,7 @@ module RSpec
         #
         # Invoked when an example fails.
         #
-        # @param notification [ExampleNotification] containing example subclass
-        #   of `RSpec::Core::Example`
+        # @param notification [ExampleNotification] containing example subclass of `RSpec::Core::Example`
 
         # @method message
         # @api public
@@ -105,8 +98,7 @@ module RSpec
         # @api public
         # @group Suite Notifications
         #
-        # Invoked after all examples have executed, before dumping post-run
-        # reports.
+        # Invoked after all examples have executed, before dumping post-run reports.
         #
         # @param notification [NullNotification]
 
@@ -114,10 +106,9 @@ module RSpec
         # @api public
         # @group Suite Notifications
         #
-        # This method is invoked after all of the examples have executed. The
-        # next method to be invoked after this one is {#dump_failures}
-        # (BaseTextFormatter then calls {#dump_failure} once for each failed
-        # example).
+        # This method is invoked after all of the examples have executed. The next method
+        # to be invoked after this one is {#dump_failures}
+        # (BaseTextFormatter then calls {#dump_failure} once for each failed example.)
         #
         # @param notification [NullNotification]
 
@@ -133,11 +124,11 @@ module RSpec
         # @api public
         # @group Suite Notifications
         #
-        # This method is invoked after the dumping of examples and failures.
-        # Each parameter is assigned to a corresponding attribute.
+        # This method is invoked after the dumping of examples and failures. Each parameter
+        # is assigned to a corresponding attribute.
         #
-        # @param summary [SummaryNotification] containing duration,
-        #   example_count, failure_count and pending_count
+        # @param summary [SummaryNotification] containing duration, example_count,
+        #                                      failure_count and pending_count
 
         # @method dump_profile
         # @api public
@@ -146,14 +137,14 @@ module RSpec
         # This method is invoked after the dumping the summary if profiling is
         # enabled.
         #
-        # @param profile [ProfileNotification] containing duration,
-        #   slowest_examples and slowest_example_groups
+        # @param profile [ProfileNotification] containing duration, slowest_examples
+        #                                      and slowest_example_groups
 
         # @method dump_pending
         # @api public
         # @group Suite Notifications
         #
-        # Outputs a report of pending examples. This gets invoked
+        # Outputs a report of pending examples.  This gets invoked
         # after the summary if option is set to do so.
         #
         # @param notification [NullNotification]

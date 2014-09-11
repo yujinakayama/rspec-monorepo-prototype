@@ -31,9 +31,7 @@ module RSpec
           @example_group_number += 1
 
           @printer.print_example_group_end unless example_group_number == 1
-          @printer.print_example_group_start(example_group_number,
-                                             notification.group.description,
-                                             notification.group.parent_groups.size)
+          @printer.print_example_group_start(example_group_number, notification.group.description, notification.group.parent_groups.size)
           @printer.flush
         end
 
@@ -113,16 +111,15 @@ module RSpec
 
       private
 
-        # If these methods are declared with attr_reader Ruby will issue a
-        # warning because they are private.
+        # If these methods are declared with attr_reader Ruby will issue a warning because they are private
         # rubocop:disable Style/TrivialAccessors
 
-        # The number of the currently running example_group.
+        # The number of the currently running example_group
         def example_group_number
           @example_group_number
         end
 
-        # The number of the currently running example (a global counter).
+        # The number of the currently running example (a global counter)
         def example_number
           @example_number
         end
@@ -136,14 +133,12 @@ module RSpec
           result
         end
 
-        # Override this method if you wish to output extra HTML for a failed
-        # spec. For example, you could output links to images or other files
-        # produced during the specs.
+        # Override this method if you wish to output extra HTML for a failed spec. For example, you
+        # could output links to images or other files produced during the specs.
+        #
         def extra_failure_content(failure)
           RSpec::Support.require_rspec_core "formatters/snippet_extractor"
-          backtrace = failure.exception.backtrace.map do |line|
-            RSpec.configuration.backtrace_formatter.backtrace_line(line)
-          end
+          backtrace = failure.exception.backtrace.map { |line| RSpec.configuration.backtrace_formatter.backtrace_line(line) }
           backtrace.compact!
           @snippet_extractor ||= SnippetExtractor.new
           "    <pre class=\"ruby\"><code>#{@snippet_extractor.snippet(backtrace)}</code></pre>"
