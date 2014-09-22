@@ -1,0 +1,5 @@
+inherit_from: .rubocop_rspec_base.yml
+
+# Over time we'd like to get this down, but this is what we're at now.
+LineLength:
+  Max: 186
