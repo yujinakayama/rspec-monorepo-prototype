@@ -71,11 +71,11 @@ Feature: `any_instance`
       """ruby
       RSpec.describe "Stubbing any instance of a class" do
         it 'yields the receiver to the block implementation' do
-          String.any_instance.stub(:slice) do |value, start, length|
-            value[start, length]
+          Array.any_instance.stub(:shuffle) do |array|
+            array.unshift(array.pop)
           end
 
-          expect('string'.slice(2, 3)).to eq('rin')
+          expect([1, 2, 3].shuffle).to eq([3, 1, 2])
         end
       end
       """
