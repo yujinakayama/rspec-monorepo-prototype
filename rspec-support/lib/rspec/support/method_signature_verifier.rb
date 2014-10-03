@@ -9,12 +9,10 @@ module RSpec
     #
     # @private
     class MethodSignature
-      attr_reader :min_non_kw_args, :max_non_kw_args, :optional_kw_args, :required_kw_args
+      attr_reader :min_non_kw_args, :max_non_kw_args
 
       def initialize(method)
-        @method           = method
-        @optional_kw_args = []
-        @required_kw_args = []
+        @method = method
         classify_parameters
       end
 
@@ -76,6 +74,7 @@ module RSpec
 
         def classify_parameters
           optional_non_kw_args = @min_non_kw_args = 0
+          @optional_kw_args, @required_kw_args = [], []
           @allows_any_kw_args = false
 
           @method.parameters.each do |(type, name)|
@@ -112,10 +111,6 @@ module RSpec
         end
 
         def has_kw_args_in?(_args)
-          false
-        end
-
-        def could_contain_kw_args?(*)
           false
         end
 
