@@ -14,13 +14,6 @@ module RSpec::Core
     # @private
     attr_reader :examples, :failed_examples, :pending_examples
 
-    # @private
-    def reset
-      @examples = []
-      @failed_examples = []
-      @pending_examples = []
-    end
-
     # Registers a listener to a list of notifications. The reporter will send notification of
     # events to all registered listeners
     #
