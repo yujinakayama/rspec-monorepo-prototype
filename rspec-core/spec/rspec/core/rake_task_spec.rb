@@ -162,6 +162,17 @@ module RSpec::Core
 
             expect(spec_command).to include(" -I#{path_template % "rspec-core"}:#{path_template % "rspec-support"} ")
           end
+
+          it "avoids adding the same load path entries twice" do
+            $LOAD_PATH.replace([
+              path_template % "rspec-core",
+              path_template % "rspec-support",
+              path_template % "rspec-core",
+              path_template % "rspec-support"
+            ])
+
+            expect(spec_command).to include(" -I#{path_template % "rspec-core"}:#{path_template % "rspec-support"} ")
+          end
         end
       end
 
@@ -230,6 +241,19 @@ module RSpec::Core
             "./spec/rspec/core/resources/acceptance/foo_spec.rb",
             "./spec/rspec/core/resources/a_spec.rb"
           )
+        end
+      end
+
+      context "that is a relative file glob, for a path not under the default spec dir (`spec`)" do
+        it "loads the matching spec files" do
+          Dir.chdir("./spec/rspec/core") do
+            task.pattern = "resources/**/*_spec.rb"
+
+            expect(loaded_files).to contain_files(
+              "resources/acceptance/foo_spec.rb",
+              "resources/a_spec.rb"
+            )
+          end
         end
       end
 

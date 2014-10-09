@@ -279,6 +279,8 @@ module RSpec
       # @private
       attr_accessor :filter_manager
       # @private
+      attr_accessor :static_config_filter_manager
+      # @private
       attr_reader :backtrace_formatter, :ordering_manager
 
       def initialize
@@ -303,6 +305,7 @@ module RSpec
         @reporter = nil
         @reporter_buffer = nil
         @filter_manager = FilterManager.new
+        @static_config_filter_manager = FilterManager.new
         @ordering_manager = Ordering::ConfigurationManager.new
         @preferred_options = {}
         @failure_color = :red
@@ -330,6 +333,17 @@ module RSpec
         @spec_files_loaded = false
         @reporter = nil
         @formatter_loader = nil
+      end
+
+      # @private
+      def reset_filters
+        self.filter_manager = FilterManager.new
+        filter_manager.include_only(
+          Metadata.deep_hash_dup(static_config_filter_manager.inclusions.rules)
+        )
+        filter_manager.exclude_only(
+          Metadata.deep_hash_dup(static_config_filter_manager.exclusions.rules)
+        )
       end
 
       # @overload add_setting(name)
@@ -900,6 +914,7 @@ module RSpec
       def filter_run_including(*args)
         meta = Metadata.build_hash_from(args, :warn_about_example_group_filtering)
         filter_manager.include_with_low_priority meta
+        static_config_filter_manager.include_with_low_priority Metadata.deep_hash_dup(meta)
       end
 
       alias_method :filter_run, :filter_run_including
@@ -958,6 +973,7 @@ module RSpec
       def filter_run_excluding(*args)
         meta = Metadata.build_hash_from(args, :warn_about_example_group_filtering)
         filter_manager.exclude_with_low_priority meta
+        static_config_filter_manager.exclude_with_low_priority Metadata.deep_hash_dup(meta)
       end
 
       # Clears and reassigns the `exclusion_filter`. Set to `nil` if you don't
@@ -1323,10 +1339,19 @@ module RSpec
     private
 
       def get_files_to_run(paths)
-        FlatMap.flat_map(paths) do |path|
+        FlatMap.flat_map(paths_to_check(paths)) do |path|
           path = path.gsub(File::ALT_SEPARATOR, File::SEPARATOR) if File::ALT_SEPARATOR
           File.directory?(path) ? gather_directories(path) : extract_location(path)
-        end.sort
+        end.sort.uniq
+      end
+
+      def paths_to_check(paths)
+        return paths if pattern_might_load_specs_from_vendored_dirs?
+        paths + ['.']
+      end
+
+      def pattern_might_load_specs_from_vendored_dirs?
+        pattern.split(File::SEPARATOR).first.include?('**')
       end
 
       def gather_directories(path)
@@ -1369,6 +1394,7 @@ module RSpec
           filter_manager.add_location path, lines
         end
 
+        return [] if path == default_path
         path
       end
 

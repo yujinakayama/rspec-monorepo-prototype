@@ -68,6 +68,17 @@ module RSpec
       end
 
       # @private
+      def self.deep_hash_dup(object)
+        return object.dup if Array === object
+        return object unless Hash  === object
+
+        object.inject(object.dup) do |duplicate, (key, value)|
+          duplicate[key] = deep_hash_dup(value)
+          duplicate
+        end
+      end
+
+      # @private
       def self.backtrace_from(block)
         return caller unless block.respond_to?(:source_location)
         [block.source_location.join(':')]
