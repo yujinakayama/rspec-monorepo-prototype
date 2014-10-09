@@ -43,28 +43,14 @@ module RSpec
 
   extend RSpec::Core::Warnings
 
-  # Used to ensure examples get reloaded and user configuration gets reset to
-  # defaults between multiple runs in the same process.
+  # Used to ensure examples get reloaded between multiple runs in
+  # the same process.
   #
   # Users must invoke this if they want to have the configuration reset when
-  # they use the runner multiple times within the same process. Users must deal
-  # themselves with re-configuration of RSpec before run.
+  # they use runner multiple times within the same process.
   def self.reset
     @world = nil
     @configuration = nil
-  end
-
-  # Used to ensure examples get reloaded between multiple runs in the same
-  # process and ensures user configuration is persisted.
-  #
-  # Users must invoke this if they want to clear all examples but preserve
-  # current configuration when they use the runner multiple times within the
-  # same process.
-  def self.clear_examples
-    world.reset
-    configuration.reporter.reset
-    configuration.start_time = ::RSpec::Core::Time.now
-    configuration.reset_filters
   end
 
   # Returns the global [Configuration](RSpec/Core/Configuration) object. While you
