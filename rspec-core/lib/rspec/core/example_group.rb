@@ -17,13 +17,13 @@ module RSpec
     #
     # Example group bodies (e.g. `describe` or `context` blocks) are evaluated
     # in the context of a new subclass of ExampleGroup. Individual examples are
-    # evaluated in the context of an instance of the specific ExampleGroup subclass
-    # to which they belong.
+    # evaluated in the context of an instance of the specific ExampleGroup
+    # subclass to which they belong.
     #
     # Besides the class methods defined here, there are other interesting macros
-    # defined in {Hooks}, {MemoizedHelpers::ClassMethods} and {SharedExampleGroup}.
-    # There are additional instance methods available to your examples defined in
-    # {MemoizedHelpers} and {Pending}.
+    # defined in {Hooks}, {MemoizedHelpers::ClassMethods} and
+    # {SharedExampleGroup}. There are additional instance methods available to
+    # your examples defined in {MemoizedHelpers} and {Pending}.
     class ExampleGroup
       extend Hooks
 
@@ -109,10 +109,20 @@ module RSpec
       def self.define_example_method(name, extra_options={})
         define_singleton_method(name) do |*all_args, &block|
           desc, *args = *all_args
-
           options = Metadata.build_hash_from(args)
           options.update(:skip => RSpec::Core::Pending::NOT_YET_IMPLEMENTED) unless block
           options.update(extra_options)
+
+          # Metadata inheritance normally happens in `Example#initialize`,
+          # but for `:pending` specifically we need it earlier.
+          pending_metadata = options[:pending] || metadata[:pending]
+
+          if pending_metadata
+            options, block = ExampleGroup.pending_metadata_and_block_for(
+              options.merge(:pending => pending_metadata),
+              block
+            )
+          end
 
           examples << RSpec::Core::Example.new(self, desc, options, block)
           examples.last
@@ -170,7 +180,8 @@ module RSpec
       # @macro [attach] alias_example_group_to
       #   @!scope class
       #   @param name [String] The example group doc string
-      #   @param metadata [Hash] Additional metadata to attach to the example group
+      #   @param metadata [Hash] Additional metadata to attach to the example
+      #     group
       #   @yield The example group definition
       #
       #   Generates a subclass of this example group which inherits
@@ -230,8 +241,8 @@ module RSpec
 
       define_example_group_method :example_group
 
-      # An alias of `example_group`. Generally used when grouping
-      # examples by a thing you are describing (e.g. an object, class or method).
+      # An alias of `example_group`. Generally used when grouping examples by a
+      # thing you are describing (e.g. an object, class or method).
       # @see example_group
       define_example_group_method :describe
 
@@ -287,7 +298,8 @@ module RSpec
 
       # Includes shared content mapped to `name` directly in the group in which
       # it is declared, as opposed to `it_behaves_like`, which creates a nested
-      # group. If given a block, that block is also eval'd in the current context.
+      # group. If given a block, that block is also eval'd in the current
+      # context.
       #
       # @see SharedExampleGroup
       def self.include_context(name, *args, &block)
@@ -296,7 +308,8 @@ module RSpec
 
       # Includes shared content mapped to `name` directly in the group in which
       # it is declared, as opposed to `it_behaves_like`, which creates a nested
-      # group. If given a block, that block is also eval'd in the current context.
+      # group. If given a block, that block is also eval'd in the current
+      # context.
       #
       # @see SharedExampleGroup
       def self.include_examples(name, *args, &block)
@@ -338,10 +351,11 @@ module RSpec
         # Ruby 1.9 has a bug that can lead to infinite recursion and a
         # SystemStackError if you include a module in a superclass after
         # including it in a subclass: https://gist.github.com/845896
-        # To prevent this, we must include any modules in RSpec::Core::ExampleGroup
-        # before users create example groups and have a chance to include
-        # the same module in a subclass of RSpec::Core::ExampleGroup.
-        # So we need to configure example groups here.
+        # To prevent this, we must include any modules in
+        # RSpec::Core::ExampleGroup before users create example groups and have
+        # a chance to include the same module in a subclass of
+        # RSpec::Core::ExampleGroup. So we need to configure example groups
+        # here.
         ensure_example_groups_are_configured
 
         description = args.shift
@@ -537,6 +551,30 @@ module RSpec
         ivars.each { |name, value| instance.instance_variable_set(name, value) }
       end
 
+      # @private
+      def self.pending_metadata_and_block_for(options, block)
+        if String === options[:pending]
+          reason = options[:pending]
+        else
+          options[:pending] = true
+          reason = RSpec::Core::Pending::NO_REASON_GIVEN
+        end
+
+        # Assign :caller so that the callback's source_location isn't used
+        # as the example location.
+        options[:caller] ||= Metadata.backtrace_from(block)
+
+        # This will fail if no block is provided, which is effectively the
+        # same as failing the example so it will be marked correctly as
+        # pending.
+        callback = Proc.new do
+          pending(reason)
+          instance_exec(&block)
+        end
+
+        return options, callback
+      end
+
       if RUBY_VERSION.to_f < 1.9
         # @private
         def self.instance_variables_for_example(group)
@@ -570,7 +608,8 @@ module RSpec
 
   # @private
   #
-  # Namespace for the example group subclasses generated by top-level `describe`.
+  # Namespace for the example group subclasses generated by top-level
+  # `describe`.
   module ExampleGroups
     extend Support::RecursiveConstMethods
 
@@ -618,7 +657,8 @@ module RSpec
     def self.disambiguate(name, const_scope)
       return name unless const_defined_on?(const_scope, name)
 
-      # Add a trailing number if needed to disambiguate from an existing constant.
+      # Add a trailing number if needed to disambiguate from an existing
+      # constant.
       name << "_2"
       name.next! while const_defined_on?(const_scope, name)
       name
