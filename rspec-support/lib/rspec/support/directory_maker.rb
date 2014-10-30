@@ -1,4 +1,4 @@
-RSpec::Support.require_rspec_support 'ruby_features'
+RSpec::Support.require_rspec_support 'os'
 
 module RSpec
   module Support
