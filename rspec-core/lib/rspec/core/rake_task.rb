@@ -1,6 +1,6 @@
 require 'rake'
 require 'rake/tasklib'
-require 'rspec/support/ruby_features'
+require 'rspec/support/os'
 
 module RSpec
   module Core
