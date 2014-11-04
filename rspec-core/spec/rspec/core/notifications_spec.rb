@@ -83,9 +83,7 @@ RSpec.describe "FailedExampleNotification" do
     end
 
     it 'returns failures_lines without color when they are part of a shared example group' do
-      example.metadata[:shared_group_inclusion_backtrace] <<
-        RSpec::Core::SharedExampleGroupInclusionStackFrame.new("foo", "bar")
-
+      allow(example_group).to receive(:metadata) { {:shared_group_name => 'double shared group'} }
       lines = notification.message_lines
       expect(lines[0]).to match %r{\AFailure\/Error}
       expect(lines[1]).to match %r{\A\s*Test exception\z}

@@ -203,9 +203,7 @@ module FormatterSupport
                         :full_description  => "Example",
                         :execution_result  => result,
                         :location          => "",
-                        :metadata          => {
-                          :shared_group_inclusion_backtrace => []
-                        }
+                        :metadata          => {}
                        )
       end
   end
