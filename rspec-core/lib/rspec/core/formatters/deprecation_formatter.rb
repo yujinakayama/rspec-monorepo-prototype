@@ -210,8 +210,7 @@ module RSpec
           end
 
           def summarize(summary_stream, deprecation_count)
-            path = @file.respond_to?(:path) ? @file.path : @file.inspect
-            summary_stream.puts "\n#{Helpers.pluralize(deprecation_count, 'deprecation')} logged to #{path}"
+            summary_stream.puts "\n#{Helpers.pluralize(deprecation_count, 'deprecation')} logged to #{@file.path}"
             puts RAISE_ERROR_CONFIG_NOTICE
           end
         end
