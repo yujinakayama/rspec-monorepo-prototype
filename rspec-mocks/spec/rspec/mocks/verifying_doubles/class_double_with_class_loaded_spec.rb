@@ -9,13 +9,6 @@ module RSpec
         RSpec::Mocks.configuration.verify_doubled_constant_names = true
       end
 
-      it 'includes the double name in errors for unexpected messages' do
-        o = class_double("LoadedClass")
-        expect {
-          o.defined_class_method
-        }.to fail_matching('Double "LoadedClass"')
-      end
-
       it 'only allows class methods that exist to be stubbed' do
         o = class_double('LoadedClass', :defined_class_method => 1)
         expect(o.defined_class_method).to eq(1)
@@ -105,14 +98,6 @@ module RSpec
 
         expect(o.defined_class_method).to eq(o)
         prevents { o.undefined_method }
-      end
-
-      it 'verifies arguments for null objects' do
-        o = class_double('LoadedClass').as_null_object
-
-        expect {
-          o.defined_class_method(:too, :many, :args)
-        }.to raise_error(ArgumentError, "Wrong number of arguments. Expected 0, got 3.")
       end
 
       it 'validates `with` args against the method signature when stubbing a method' do

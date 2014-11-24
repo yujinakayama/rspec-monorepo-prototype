@@ -78,10 +78,6 @@ module RSpec
       def visibility_for(method_name)
         method_reference[method_name].visibility
       end
-
-      def validate_arguments!(method_name, args)
-        @method_doubles[method_name].validate_arguments!(args)
-      end
     end
 
     # @private
@@ -134,6 +130,8 @@ module RSpec
         validate_arguments!(args)
         super
       end
+
+    private
 
       def validate_arguments!(actual_args)
         @method_reference.with_signature do |signature|

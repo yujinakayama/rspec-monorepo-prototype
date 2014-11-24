@@ -23,10 +23,6 @@ Bug Fixes:
   work properly when `SomeConst` has previously been stubbed.
   `(instance|class)_double("SomeClass")` already worked properly.
   (Myron Marston, #824)
-* Add a matcher description for `receive`, `receive_messages` and
-  `receive_message_chain`. (Myron Marston, #828)
-* Validate invocation args for null object verified doubles.
-  (Myron Marston, #829)
 
 ### 3.1.3 / 2014-10-08
 [Full Changelog](http://github.com/rspec/rspec-mocks/compare/v3.1.2...v3.1.3)

@@ -22,10 +22,6 @@ module RSpec
           "receive_message_chain"
         end
 
-        def description
-          "receive message chain #{formatted_chain}"
-        end
-
         def setup_allowance(subject, &block)
           chain = StubChain.stub_chain_on(subject, *@chain, &(@block || block))
           replay_customizations(chain)
@@ -63,16 +59,6 @@ module RSpec
           @recorded_customizations.each do |customization|
             customization.playback_onto(chain)
           end
-        end
-
-        def formatted_chain
-          @formatted_chain ||= @chain.map do |part|
-            if Hash === part
-              part.keys.first.to_s
-            else
-              part.to_s
-            end
-          end.join(".")
         end
       end
     end

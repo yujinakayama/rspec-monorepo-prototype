@@ -28,8 +28,6 @@ module RSpec
           else
             __mock_proxy.ensure_publicly_implemented(message, self)
           end
-
-          __mock_proxy.validate_arguments!(message, args)
         end
 
         super
@@ -49,8 +47,17 @@ module RSpec
         __send__(name, *args, &block)
       end
 
-      def initialize(*args)
-        super
+      def initialize(doubled_module, *args)
+        @doubled_module = doubled_module
+
+        possible_name = args.first
+        name = if String === possible_name || Symbol === possible_name
+                 args.shift
+               else
+                 @description
+               end
+
+        super(name, *args)
         @__sending_message = nil
       end
     end
@@ -65,12 +72,8 @@ module RSpec
       include VerifyingDouble
 
       def initialize(doubled_module, *args)
-        @doubled_module = doubled_module
-
-        super(
-          "#{doubled_module.description} (instance)",
-          *args
-        )
+        @description = "#{doubled_module.description} (instance)"
+        super
       end
 
       def __build_mock_proxy(order_group)
@@ -97,8 +100,8 @@ module RSpec
     private
 
       def initialize(doubled_module, *args)
-        @doubled_module = doubled_module
-        super(doubled_module.description, *args)
+        @description = doubled_module.description
+        super
       end
 
       def __build_mock_proxy(order_group)

@@ -9,13 +9,6 @@ module RSpec
         RSpec::Mocks.configuration.verify_doubled_constant_names = true
       end
 
-      it 'includes the double name in errors for unexpected messages' do
-        o = instance_double("LoadedClass")
-        expect {
-          o.defined_instance_method
-        }.to fail_matching('Double "LoadedClass (instance)"')
-      end
-
       it 'only allows instance methods that exist to be stubbed' do
         o = instance_double('LoadedClass', :defined_instance_method => 1)
         expect(o.defined_instance_method).to eq(1)
@@ -168,12 +161,6 @@ module RSpec
           prevents { o.undefined_method }
           prevents { o.send(:undefined_method) }
           prevents { o.__send__(:undefined_method) }
-        end
-
-        it 'verifies arguments' do
-          expect {
-            o.defined_instance_method(:too, :many, :args)
-          }.to raise_error(ArgumentError, "Wrong number of arguments. Expected 0, got 3.")
         end
 
         it "includes the double's name in a private method error" do
