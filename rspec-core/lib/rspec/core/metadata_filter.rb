@@ -8,8 +8,13 @@ module RSpec
     module MetadataFilter
       class << self
         # @private
-        def apply?(predicate, filters, metadata)
-          filters.__send__(predicate) { |k, v| filter_applies?(k, v, metadata) }
+        def any_apply?(filters, metadata)
+          filters.any? { |k, v| filter_applies?(k, v, metadata) }
+        end
+
+        # @private
+        def all_apply?(filters, metadata)
+          filters.all? { |k, v| filter_applies?(k, v, metadata) }
         end
 
         # @private

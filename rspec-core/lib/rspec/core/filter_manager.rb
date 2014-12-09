@@ -217,7 +217,7 @@ module RSpec
       end
 
       def include_example?(example)
-        @rules.empty? ? true : example.apply?(:any?, @rules)
+        @rules.empty? ? true : example.any_apply?(@rules)
       end
 
       def standalone?
@@ -252,7 +252,7 @@ module RSpec
       }.freeze
 
       def include_example?(example)
-        example.apply?(:any?, @rules) || example.apply?(:any?, CONDITIONAL_FILTERS)
+        example.any_apply?(@rules) || example.any_apply?(CONDITIONAL_FILTERS)
       end
     end
   end
