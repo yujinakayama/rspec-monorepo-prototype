@@ -536,8 +536,13 @@ module RSpec
       end
 
       # @private
-      def self.apply?(predicate, filters)
-        MetadataFilter.apply?(predicate, filters, metadata)
+      def self.any_apply?(filters)
+        MetadataFilter.any_apply?(filters, metadata)
+      end
+
+      # @private
+      def self.all_apply?(filters)
+        MetadataFilter.all_apply?(filters, metadata)
       end
 
       # @private
