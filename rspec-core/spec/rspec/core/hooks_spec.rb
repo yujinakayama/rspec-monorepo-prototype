@@ -7,14 +7,14 @@ module RSpec::Core
         []
       end
 
-      def register_hook(type, scope, *args, &block)
+      def register_hook(position, scope, *args, &block)
         block ||= Proc.new { }
-        __send__(type, scope, *args, &block)
-        hook_collection_for(type, scope).first
+        __send__(position, scope, *args, &block)
+        hook_collection_for(position, scope).first
       end
 
-      def hook_collection_for(type, scope)
-        hooks[type][scope].to_ary
+      def hook_collection_for(position, scope)
+        hooks.send(:all_hooks_for, position, scope)
       end
     end
 
