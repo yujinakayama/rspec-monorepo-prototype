@@ -16,12 +16,8 @@ Feature: run with `ruby` command
         it "is < 2" do
           expect(1).to be < 2
         end
-
-        it "has an intentional failure" do
-          expect(1).to be > 2
-        end
       end
       """
     When I run `ruby example_spec.rb`
-    Then the output should contain "2 examples, 1 failure"
-     And the output should contain "expect(1).to be > 2"
+    Then the output should contain "1 example, 0 failures"
+
