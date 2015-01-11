@@ -146,11 +146,10 @@ module RSpec
                                      file_path_and_line_number_from(caller)
                                    end
 
-          relative_file_path            = Metadata.relative_path(file_path)
-          metadata[:file_path]          = relative_file_path
-          metadata[:line_number]        = line_number.to_i
-          metadata[:location]           = "#{relative_file_path}:#{line_number}"
-          metadata[:absolute_file_path] = File.expand_path(relative_file_path)
+          file_path              = Metadata.relative_path(file_path)
+          metadata[:file_path]   = file_path
+          metadata[:line_number] = line_number.to_i
+          metadata[:location]    = "#{file_path}:#{line_number}"
         end
 
         def file_path_and_line_number_from(backtrace)
@@ -312,7 +311,6 @@ module RSpec
         :parent_example_group,
         :execution_result,
         :file_path,
-        :absolute_file_path,
         :full_description,
         :line_number,
         :location,
