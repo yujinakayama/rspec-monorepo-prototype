@@ -8,7 +8,7 @@ module RSpec
         case object_module_or_name
         when Module
           if anonymous_module?(object_module_or_name)
-            DirectModuleReference.new(object_module_or_name)
+            AnonymousModuleReference.new(object_module_or_name)
           else
             # Use a `NamedObjectReference` if it has a name because this
             # will use the original value of the constant in case it has
@@ -57,6 +57,10 @@ module RSpec
               "Can not perform constant replacement with an object."
       end
 
+      def target
+        @object.class
+      end
+
       def defined?
         true
       end
@@ -70,11 +74,15 @@ module RSpec
     # Represents a reference to that module.
     #
     # @private
-    class DirectModuleReference < DirectObjectReference
+    class AnonymousModuleReference < DirectObjectReference
       def const_to_replace
         @object.name
       end
       alias description const_to_replace
+
+      def target
+        @object
+      end
     end
 
     # Used when a string is passed to `class_double`, `instance_double`
@@ -96,6 +104,10 @@ module RSpec
         @const_name
       end
       alias description const_to_replace
+
+      def target
+        object
+      end
 
       def when_loaded
         yield object if object
