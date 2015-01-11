@@ -58,7 +58,7 @@ module RSpec
 
         def example_group_declaration_lines(locations, metadata)
           FlatMap.flat_map(Metadata.ascend(metadata)) do |meta|
-            locations[meta[:absolute_file_path]]
+            locations[File.expand_path(meta[:file_path])]
           end.uniq
         end
 
