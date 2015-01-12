@@ -32,25 +32,13 @@ module FormatterSupport
   if RUBY_VERSION.to_f < 1.9
     def expected_summary_output_for_example_specs
       <<-EOS.gsub(/^\s+\|/, '').chomp
-        |Pending: (Failures listed here are expected and do not affect your suite's status)
-        |
-        |  1) pending spec with no implementation is pending
-        |     # Not yet implemented
-        |     # ./spec/rspec/core/resources/formatter_specs.rb:4
-        |
-        |  2) pending command with block format with content that would fail is pending
-        |     # No reason given
-        |     Failure/Error: expect(1).to eq(2)
-        |
-        |       expected: 2
-        |            got: 1
-        |
-        |       (compared using ==)
-        |     # ./spec/rspec/core/resources/formatter_specs.rb:11
-        |     # ./spec/support/formatter_support.rb:13:in `run_example_specs_with_formatter'
-        |     # ./spec/support/sandboxing.rb:16
-        |     # ./spec/support/sandboxing.rb:14
-        |     # ./spec/support/sandboxing.rb:8
+        |Pending:
+        |  pending spec with no implementation is pending
+        |    # Not yet implemented
+        |    # ./spec/rspec/core/resources/formatter_specs.rb:4
+        |  pending command with block format with content that would fail is pending
+        |    # No reason given
+        |    # ./spec/rspec/core/resources/formatter_specs.rb:9
         |
         |Failures:
         |
@@ -97,25 +85,13 @@ module FormatterSupport
   else
     def expected_summary_output_for_example_specs
       <<-EOS.gsub(/^\s+\|/, '').chomp
-        |Pending: (Failures listed here are expected and do not affect your suite's status)
-        |
-        |  1) pending spec with no implementation is pending
-        |     # Not yet implemented
-        |     # ./spec/rspec/core/resources/formatter_specs.rb:4
-        |
-        |  2) pending command with block format with content that would fail is pending
-        |     # No reason given
-        |     Failure/Error: expect(1).to eq(2)
-        |
-        |       expected: 2
-        |            got: 1
-        |
-        |       (compared using ==)
-        |     # ./spec/rspec/core/resources/formatter_specs.rb:11:in `block (3 levels) in <top (required)>'
-        |     # ./spec/support/formatter_support.rb:13:in `run_example_specs_with_formatter'
-        |     # ./spec/support/sandboxing.rb:16:in `block (4 levels) in <top (required)>'
-        |     # ./spec/support/sandboxing.rb:14:in `block (3 levels) in <top (required)>'
-        |     # ./spec/support/sandboxing.rb:8:in `block (2 levels) in <top (required)>'
+        |Pending:
+        |  pending spec with no implementation is pending
+        |    # Not yet implemented
+        |    # ./spec/rspec/core/resources/formatter_specs.rb:4
+        |  pending command with block format with content that would fail is pending
+        |    # No reason given
+        |    # ./spec/rspec/core/resources/formatter_specs.rb:9
         |
         |Failures:
         |
@@ -209,9 +185,8 @@ module FormatterSupport
     @example ||=
       begin
         result = instance_double(RSpec::Core::Example::ExecutionResult,
-                                 :pending_fixed?   => false,
-                                 :example_skipped? => false,
-                                 :status           => :passed
+                                 :pending_fixed? => false,
+                                 :status         => :passed
                                 )
         allow(result).to receive(:exception) { exception }
         instance_double(RSpec::Core::Example,
