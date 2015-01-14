@@ -12,8 +12,6 @@ Enhancements:
   Baginski, #826)
 * Make `array_including` and `hash_including` argument matchers composable.
   (Sam Phippen, #819)
-* Make `allow_any_instance_of(...).to receive(...).and_wrap_original`
-  work. (Ryan Fitzgerald, #869)
 
 Bug Fixes:
 
@@ -51,8 +49,6 @@ Bug Fixes:
   external to RSpec monkeying with the method definition. This can
   happen, for example, when you `file.reopen(io)` after previously
   stubbing a method on the `file` object. (Myron Marston, #853)
-* Provide a clear error when received message args are mutated before
-  a `have_received(...).with(...)` expectation. (Myron Marston, #868)
 
 ### 3.1.3 / 2014-10-08
 [Full Changelog](http://github.com/rspec/rspec-mocks/compare/v3.1.2...v3.1.3)
