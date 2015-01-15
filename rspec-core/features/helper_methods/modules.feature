@@ -11,8 +11,6 @@ Feature: Define helper methods in a module
   given metadata will `include` or `extend` the module. You can also specify
   metadata using only symbols.
 
-  Note that examples that match a `config.include` module's metadata will also have the module included. RSpec treats every example as having a singleton example group (analogous to Ruby's singleton classes) containing just the one example.
-
   Background:
     Given a file named "helpers.rb" with:
       """ruby
@@ -80,10 +78,6 @@ Feature: Define helper methods in a module
       RSpec.describe "an example group without matching metadata" do
         it "does not have access to the helper methods defined in the module" do
           expect { help }.to raise_error(NameError)
-        end
-
-        it "does have access when the example has matching metadata", :foo => :bar do
-          expect(help).to be(:available)
         end
       end
       """

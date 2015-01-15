@@ -88,13 +88,6 @@ module RSpec
       #       end
       #     end
       #
-      # Note that filtered config `:context` hooks can still be applied
-      # to individual examples that have matching metadata. Just like
-      # Ruby's object model is that every object has a singleton class
-      # which has only a single instance, RSpec's model is that every
-      # example has a singleton example group containing just the one
-      # example.
-      #
       # ### Warning: `before(:suite, :with => :conditions)`
       #
       # The conditions hash is used to match against specific examples. Since
@@ -336,7 +329,7 @@ module RSpec
       # @private
       # Holds the various registered hooks.
       def hooks
-        @hooks ||= HookCollections.new(self, FilterableItemRepository::UpdateOptimized)
+        @hooks ||= HookCollections.new(self)
       end
 
     private
@@ -413,32 +406,22 @@ EOS
       # API, so that callers _tell_ this class what to do with the hooks, rather than
       # asking this class for a list of hooks, and then doing something with them.
       class HookCollections
-        def initialize(owner, filterable_item_repo_class)
-          @owner                      = owner
-          @filterable_item_repo_class = filterable_item_repo_class
-          @before_example_hooks       = nil
-          @after_example_hooks        = nil
-          @before_context_hooks       = nil
-          @after_context_hooks        = nil
-          @around_example_hooks       = nil
+        def initialize(owner)
+          @owner = owner
+          @before_example_hooks = nil
+          @after_example_hooks  = nil
+          @before_context_hooks = nil
+          @after_context_hooks  = nil
+          @around_example_hooks = nil
         end
 
         def register_globals(host, globals)
-          parent_groups = host.parent_groups
+          process(host, globals, :before, :example)
+          process(host, globals, :after,  :example)
+          process(host, globals, :around, :example)
 
-          process(host, parent_groups, globals, :before, :example, &:options)
-          process(host, parent_groups, globals, :after,  :example, &:options)
-          process(host, parent_groups, globals, :around, :example, &:options)
-
-          process(host, parent_groups, globals, :before, :context, &:options)
-          process(host, parent_groups, globals, :after,  :context, &:options)
-        end
-
-        def register_global_singleton_context_hooks(example, globals)
-          parent_groups = example.example_group.parent_groups
-
-          process(example, parent_groups, globals, :before, :context) { {} }
-          process(example, parent_groups, globals, :after,  :context) { {} }
+          process(host, globals, :before, :context)
+          process(host, globals, :after,  :context)
         end
 
         def register(prepend_or_append, position, *args, &block)
@@ -541,32 +524,32 @@ EOS
         def ensure_hooks_initialized_for(position, scope)
           if position == :before
             if scope == :example
-              @before_example_hooks ||= @filterable_item_repo_class.new(:all?)
+              @before_example_hooks ||= FilterableItemRepository.new(:all?)
             else
-              @before_context_hooks ||= @filterable_item_repo_class.new(:all?)
+              @before_context_hooks ||= FilterableItemRepository.new(:all?)
             end
           elsif position == :after
             if scope == :example
-              @after_example_hooks ||= @filterable_item_repo_class.new(:all?)
+              @after_example_hooks ||= FilterableItemRepository.new(:all?)
             else
-              @after_context_hooks ||= @filterable_item_repo_class.new(:all?)
+              @after_context_hooks ||= FilterableItemRepository.new(:all?)
             end
           else # around
-            @around_example_hooks ||= @filterable_item_repo_class.new(:all?)
+            @around_example_hooks ||= FilterableItemRepository.new(:all?)
           end
         end
 
-        def process(host, parent_groups, globals, position, scope)
+        def process(host, globals, position, scope)
           hooks_to_process = globals.processable_hooks_for(position, scope, host)
           return if hooks_to_process.empty?
 
-          hooks_to_process -= FlatMap.flat_map(parent_groups) do |group|
+          hooks_to_process -= FlatMap.flat_map(host.parent_groups) do |group|
             group.hooks.all_hooks_for(position, scope)
           end
           return if hooks_to_process.empty?
 
           repository = ensure_hooks_initialized_for(position, scope)
-          hooks_to_process.each { |hook| repository.append hook, (yield hook) }
+          hooks_to_process.each { |hook| repository.append hook, hook.options }
         end
 
         def scope_and_options_from(*args)
@@ -599,13 +582,13 @@ EOS
         end
 
         def run_example_hooks_for(example, position, each_method)
-          owner_parent_groups.__send__(each_method) do |group|
+          @owner.parent_groups.__send__(each_method) do |group|
             group.hooks.run_owned_hooks_for(position, :example, example)
           end
         end
 
         def run_around_example_hooks_for(example)
-          hooks = FlatMap.flat_map(owner_parent_groups) do |group|
+          hooks = FlatMap.flat_map(@owner.parent_groups) do |group|
             group.hooks.matching_hooks_for(:around, :example, example)
           end
 
@@ -615,16 +598,6 @@ EOS
           hooks.inject(initial_procsy) do |procsy, around_hook|
             procsy.wrap { around_hook.execute_with(example, procsy) }
           end.call
-        end
-
-        if respond_to?(:singleton_class) && singleton_class.ancestors.include?(singleton_class)
-          def owner_parent_groups
-            @owner.parent_groups
-          end
-        else # Ruby < 2.1 (see https://bugs.ruby-lang.org/issues/8035)
-          def owner_parent_groups
-            @owner_parent_groups ||= [@owner] + @owner.parent_groups
-          end
         end
       end
     end
