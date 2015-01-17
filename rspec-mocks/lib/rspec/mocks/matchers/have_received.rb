@@ -44,7 +44,7 @@ module RSpec
         end
 
         def description
-          (@expectation ||= expect).description_for("have received")
+          expect.description_for("have received")
         end
 
         CONSTRAINTS.each do |expectation|
@@ -75,9 +75,11 @@ module RSpec
         end
 
         def expect
-          expectation = mock_proxy.build_expectation(@method_name)
-          apply_constraints_to expectation
-          expectation
+          @expectation ||= begin
+            expectation = mock_proxy.build_expectation(@method_name)
+            apply_constraints_to expectation
+            expectation
+          end
         end
 
         def apply_constraints_to(expectation)

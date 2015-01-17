@@ -18,12 +18,11 @@ Feature: `pending` examples
     And the output should contain "1 example, 0 failures, 1 pending"
     And the output should contain:
       """
-      Pending: (Failures listed here are expected and do not affect your suite's status)
-
-        1) an example is implemented but waiting
-           # something else getting finished
+      Pending:
+        an example is implemented but waiting
+          # something else getting finished
+          # ./pending_without_block_spec.rb:2
       """
-
   Scenario: `pending` any arbitrary reason with a passing example
     Given a file named "pending_with_passing_example_spec.rb" with:
       """ruby
