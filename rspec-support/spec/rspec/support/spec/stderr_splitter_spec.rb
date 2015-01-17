@@ -1,7 +1,9 @@
 require 'rspec/support/spec/stderr_splitter'
 require 'tempfile'
+require 'rspec/support/spec/in_sub_process'
 
 describe 'RSpec::Support::StdErrSplitter' do
+  include RSpec::Support::InSubProcess
 
   let(:splitter) { RSpec::Support::StdErrSplitter.new stderr }
   let(:stderr)   { STDERR }
@@ -21,6 +23,9 @@ describe 'RSpec::Support::StdErrSplitter' do
 
   it 'conforms to the stderr interface' do
     stderr_methods = stderr.methods
+
+    # On 2.2, there's a weird issue where stderr sometimes responds to `birthtime` and sometimes doesn't...
+    stderr_methods -= [:birthtime] if RUBY_VERSION =~ /^2\.2/
 
     # No idea why, but on our AppVeyor windows builds it doesn't respond to these...
     stderr_methods -= [:close_on_exec?, :close_on_exec=] if RSpec::Support::OS.windows?
@@ -51,12 +56,14 @@ describe 'RSpec::Support::StdErrSplitter' do
   end
 
   it 'resets when reopened' do
-    warn 'a warning'
-    stderr.unstub(:write)
+    in_sub_process(false) do
+      warn 'a warning'
+      allow(stderr).to receive(:write).and_call_original
 
-    Tempfile.open('stderr') do |file|
-      splitter.reopen(file)
-      splitter.verify_example! self
+      Tempfile.open('stderr') do |file|
+        splitter.reopen(file)
+        expect { splitter.verify_example! self }.not_to raise_error
+      end
     end
   end
 
