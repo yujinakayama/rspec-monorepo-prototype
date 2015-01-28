@@ -40,6 +40,9 @@ Enhancements:
   allowing you to mix filtered and unfiltered files. (Myron Marston, #1839)
 * When dumping pending examples, include the failure details so that you
   don't have to un-pend the example to see it. (Myron Marston, #1844)
+* Make `-I` option support multiple values when separated by
+  `File::PATH_SEPARATOR`, such as `rspec -I foo:bar`. This matches
+  the behavior of Ruby's `-I` option. (Fumiaki Matsushima, #1855).
 
 Bug Fixes:
 
@@ -66,6 +69,8 @@ Bug Fixes:
   previously it was not being set but should have been. (Myron Marston, #1844)
 * Fix rake task to work when `rspec-core` is installed in a directory
   containing a space. (Guido Günther, #1845)
+* Fix regression in 3.1 that caused `describe Regexp` to raise errors.
+  (Durran Jordan, #1853)
 
 ### 3.1.8 Development
 
