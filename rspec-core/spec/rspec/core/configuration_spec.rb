@@ -1760,21 +1760,18 @@ module RSpec::Core
       end
     end
 
-    def example_numbered(num)
-      instance_double(Example, :id => "./foo_spec.rb[1:#{num}]")
-    end
-
     describe "#force" do
       context "for ordering options" do
-        let(:list) { 1.upto(4).map { |i| example_numbered(i) } }
+        let(:list) { [1, 2, 3, 4] }
         let(:ordering_strategy) { config.ordering_registry.fetch(:global) }
-        let(:shuffled) { Ordering::Random.new(config).order list }
+        let(:rng) { RSpec::Core::RandomNumberGenerator.new config.seed }
+        let(:shuffled) { Ordering::Random.new(config).shuffle list, rng }
 
         specify "CLI `--order defined` takes precedence over `config.order = rand`" do
           config.force :order => "defined"
           config.order = "rand"
 
-          expect(ordering_strategy.order(list)).to eq(list)
+          expect(ordering_strategy.order(list)).to eq([1, 2, 3, 4])
         end
 
         specify "CLI `--order rand:37` takes precedence over `config.order = defined`" do
@@ -1796,7 +1793,7 @@ module RSpec::Core
         specify "CLI `--order defined` takes precedence over `config.register_ordering(:global)`" do
           config.force :order => "defined"
           config.register_ordering(:global, &:reverse)
-          expect(ordering_strategy.order(list)).to eq(list)
+          expect(ordering_strategy.order(list)).to eq([1, 2, 3, 4])
         end
       end
 
@@ -1820,7 +1817,7 @@ module RSpec::Core
 
     describe "#seed_used?" do
       def use_seed_on(registry)
-        registry.fetch(:random).order([example_numbered(1), example_numbered(2)])
+        registry.fetch(:random).order([1, 2])
       end
 
       it 'returns false if neither ordering registry used the seed' do
