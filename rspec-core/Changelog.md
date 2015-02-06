@@ -1,5 +1,13 @@
-### 3.2.0 Development
-[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.1.7...master)
+### Development
+
+Enhancements:
+
+* Expose the reporter used to run examples via `RSpec::Core::Example#reporter`.
+  (Jon Rowe, #1866)
+* Make `RSpec::Core::Reporter#message` a public supported API. (Jon Rowe, #1866)
+
+### 3.2.0 / 2015-02-03
+[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.1.7...v3.2.0)
 
 Enhancements:
 
@@ -73,11 +81,6 @@ Bug Fixes:
   (Durran Jordan, #1853)
 * Fix regression in 3.x that caused the profile information to be printed
   after the summary. (Max Lincoln, #1857)
-
-### 3.1.8 Development
-
-Bug Fixes:
-
 * Apply `--seed` before loading `--require` files so that required files
   can access the provided seed. (Myron Marston, #1745)
 * Handle `RSpec::Core::Formatters::DeprecationFormatter::FileStream` being
