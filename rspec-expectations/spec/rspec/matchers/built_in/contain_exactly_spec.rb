@@ -1,4 +1,3 @@
-require 'rspec/support/spec/in_sub_process'
 require 'timeout'
 
 class UnsortableObject
@@ -279,8 +278,6 @@ RSpec.describe "expect(...).not_to contain_exactly(:with, :multiple, :args)" do
 end
 
 RSpec.describe "matching against things that aren't arrays" do
-  include RSpec::Support::InSubProcess
-
   it "fails with nil and the expected error message is given" do
     expect {
       expect(nil).to contain_exactly(1, 2, 3)
@@ -300,13 +297,10 @@ RSpec.describe "matching against things that aren't arrays" do
   end
 
   it 'works with other collection objects' do
-    in_sub_process do
-      require 'set'
-      expect(Set.new([3, 2, 1])).to contain_exactly(1, 2, 3)
-      expect {
-        expect(Set.new([3, 2, 1])).to contain_exactly(1, 2)
-      }.to fail_including("expected collection contained:  [1, 2]")
-    end
+    expect(Set.new([3, 2, 1])).to contain_exactly(1, 2, 3)
+    expect {
+      expect(Set.new([3, 2, 1])).to contain_exactly(1, 2)
+    }.to fail_including("expected collection contained:  [1, 2]")
   end
 
   it 'works with non-enumerables that implement `to_ary`' do
