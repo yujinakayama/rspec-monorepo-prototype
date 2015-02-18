@@ -35,8 +35,6 @@ RSpec.describe RSpec::Core::Formatters::JsonFormatter do
     this_file = relative_path(__FILE__)
 
     expected = {
-      :type => 'rspec-json',
-      :version => RSpec::Core::Version::STRING,
       :examples => [
         {
           :description => "succeeds",
@@ -91,10 +89,7 @@ RSpec.describe RSpec::Core::Formatters::JsonFormatter do
     it "outputs the results as a JSON string" do
       expect(output.string).to eq ""
       send_notification :close, null_notification
-      expect(output.string).to eq({
-        :type => 'rspec-json',
-        :version => RSpec::Core::Version::STRING
-      }.to_json)
+      expect(output.string).to eq("{}")
     end
   end
 
