@@ -16,15 +16,9 @@ module RSpec
         # locations is a hash of expanded paths to arrays of line
         # numbers to match against. e.g.
         #   { "path/to/file.rb" => [37, 42] }
-        add_path_to_arrays_filter(:locations, File.expand_path(file_path), line_numbers)
-      end
-
-      def add_ids(rerun_path, scoped_ids)
-        # ids is a hash of relative paths to arrays of ids
-        # to match against. e.g.
-        #   { "./path/to/file.rb" => ["1:1", "2:4"] }
-        rerun_path = Metadata.relative_path(File.expand_path rerun_path)
-        add_path_to_arrays_filter(:ids, rerun_path, scoped_ids)
+        locations = inclusions.delete(:locations) || Hash.new { |h, k| h[k] = [] }
+        locations[File.expand_path(file_path)].push(*line_numbers)
+        inclusions.add(:locations => locations)
       end
 
       def empty?
@@ -38,9 +32,7 @@ module RSpec
           examples.select { |e| include?(e) }
         else
           locations = inclusions.fetch(:locations) { Hash.new([]) }
-          ids       = inclusions.fetch(:ids)       { Hash.new([]) }
-
-          examples.select { |e| priority_include?(e, ids, locations) || (!exclude?(e) && include?(e)) }
+          examples.select { |e| priority_include?(e, locations) || (!exclude?(e) && include?(e)) }
         end
       end
 
@@ -70,12 +62,6 @@ module RSpec
 
     private
 
-      def add_path_to_arrays_filter(filter_key, path, values)
-        filter = inclusions.delete(filter_key) || Hash.new { |h, k| h[k] = [] }
-        filter[path].concat(values)
-        inclusions.add(filter_key => filter)
-      end
-
       def exclude?(example)
         exclusions.include_example?(example)
       end
@@ -96,8 +82,7 @@ module RSpec
       # and there is a `:slow => true` exclusion filter), but only for specs
       # defined in the same file as the location filters. Excluded specs in
       # other files should still be excluded.
-      def priority_include?(example, ids, locations)
-        return true if MetadataFilter.filter_applies?(:ids, ids, example.metadata)
+      def priority_include?(example, locations)
         return false if locations[example.metadata[:absolute_file_path]].empty?
         MetadataFilter.filter_applies?(:locations, locations, example.metadata)
       end
