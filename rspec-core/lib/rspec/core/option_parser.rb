@@ -21,7 +21,6 @@ module RSpec::Core
       options
     end
 
-    # rubocop:disable MethodLength
     def parser(options)
       OptionParser.new do |parser|
         parser.banner = "Usage: rspec [options] [files or directories]\n\n"
@@ -144,15 +143,11 @@ module RSpec::Core
 
   **** Filtering/tags ****
 
-    In addition to the following options for selecting specific files, groups, or
-    examples, you can select individual examples by appending the line number(s) to
+    In addition to the following options for selecting specific files, groups,
+    or examples, you can select a single example by appending the line number to
     the filename:
 
-      rspec path/to/a_spec.rb:37:87
-
-    You can also pass example ids enclosed in square brackets:
-
-      rspec path/to/a_spec.rb[1:5,1:6] # run the 5th and 6th examples/groups defined in the 1st group
+      rspec path/to/a_spec.rb:37
 
 FILTERING
 
@@ -229,6 +224,5 @@ FILTERING
 
       end
     end
-    # rubocop:enable MethodLength
   end
 end
