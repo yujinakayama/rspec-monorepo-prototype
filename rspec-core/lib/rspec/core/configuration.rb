@@ -155,6 +155,11 @@ module RSpec
       end
 
       # @macro add_setting
+      # Sets a file path to use for persisting example statuses. Necessary for the
+      # `--only-failures` and `--next-failures` CLI options.
+      add_setting :example_status_persistence_file_path
+
+      # @macro add_setting
       # Clean up and exit after the first failure (default: `false`).
       add_setting :fail_fast
 
