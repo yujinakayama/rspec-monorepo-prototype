@@ -19,4 +19,3 @@ Gemfile-custom
 .idea
 bundle
 .rspec-local
-examples.txt

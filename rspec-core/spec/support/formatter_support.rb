@@ -200,27 +200,34 @@ module FormatterSupport
       end
   end
 
-  def new_example(metadata = {})
-    metadata = metadata.dup
-    result = RSpec::Core::Example::ExecutionResult.new
-    result.started_at = ::Time.now
-    result.record_finished(metadata.delete(:status) { :passed }, ::Time.now)
-    result.exception = Exception.new if result.status == :failed
+  def example
+    @example ||=
+      begin
+        result = instance_double(RSpec::Core::Example::ExecutionResult,
+                                 :pending_fixed?   => false,
+                                 :example_skipped? => false,
+                                 :status           => :passed
+                                )
+        allow(result).to receive(:exception) { exception }
+        instance_double(RSpec::Core::Example,
+                        :description       => "Example",
+                        :full_description  => "Example",
+                        :execution_result  => result,
+                        :location          => "",
+                        :location_rerun_argument => "",
+                        :metadata          => {
+                          :shared_group_inclusion_backtrace => []
+                        }
+                       )
+      end
+  end
 
-    instance_double(RSpec::Core::Example,
-                     :description             => "Example",
-                     :full_description        => "Example",
-                     :execution_result        => result,
-                     :location                => "",
-                     :location_rerun_argument => "",
-                     :metadata                => {
-                       :shared_group_inclusion_backtrace => []
-                     }.merge(metadata)
-                   )
+  def exception
+    Exception.new
   end
 
   def examples(n)
-    Array.new(n) { new_example }
+    (1..n).map { example }
   end
 
   def group
@@ -235,7 +242,7 @@ module FormatterSupport
    ::RSpec::Core::Notifications::ExamplesNotification.new reporter
   end
 
-  def example_notification(specific_example = new_example)
+  def example_notification(specific_example = example)
    ::RSpec::Core::Notifications::ExampleNotification.for specific_example
   end
 
