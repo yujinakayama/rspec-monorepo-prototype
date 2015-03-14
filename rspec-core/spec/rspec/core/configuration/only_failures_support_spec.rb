@@ -31,20 +31,32 @@ module RSpec::Core
         it 'returns a memoized value' do
           expect(last_run_statuses).to be(last_run_statuses)
         end
+
+        specify 'the hash returns `unknown` for unknown example ids for consistency' do
+          expect(last_run_statuses["foo"]).to eq(Configuration::UNKNOWN_STATUS)
+          expect(last_run_statuses["bar"]).to eq(Configuration::UNKNOWN_STATUS)
+        end
       end
 
       context "when `example_status_persistence_file_path` is not configured" do
+        before do
+          config.example_status_persistence_file_path = nil
+        end
+
         it 'returns a memoized value' do
           expect(last_run_statuses).to be(last_run_statuses)
         end
 
         it 'returns a blank hash without attempting to load the persisted statuses' do
-          config.example_status_persistence_file_path = nil
-
           persister = class_double(ExampleStatusPersister).as_stubbed_const
           expect(persister).not_to receive(:load_from)
 
           expect(last_run_statuses).to eq({})
+        end
+
+        specify 'the hash returns `unknown` for all ids for consistency' do
+          expect(last_run_statuses["foo"]).to eq(Configuration::UNKNOWN_STATUS)
+          expect(last_run_statuses["bar"]).to eq(Configuration::UNKNOWN_STATUS)
         end
       end
 
@@ -132,9 +144,14 @@ module RSpec::Core
     end
 
     describe "#files_to_run, when `only_failures` is set" do
-      around { |ex| Dir.chdir("spec/rspec/core", &ex) }
+      around do |ex|
+        handle_current_dir_change do
+          Dir.chdir("spec/rspec/core", &ex)
+        end
+      end
+
       let(:default_path) { "resources" }
-      let(:files_with_failures) { ["resources/a_spec.rb"] }
+      let(:files_with_failures) { ["./resources/a_spec.rb"] }
       let(:files_loaded_via_default_path) do
         configuration = Configuration.new
         configuration.default_path = default_path
@@ -167,16 +184,14 @@ module RSpec::Core
       end
 
       context "and a path has been set" do
-        it "ignores the list of files with failures, loading the configured path instead" do
+        it "loads the intersection of files matching the path and files with failures" do
+          config.files_or_directories_to_run = ["resources"]
+          expect(config.files_to_run).to eq(files_with_failures)
+        end
+
+        it "loads all files matching the path when there are no intersecting files" do
           config.files_or_directories_to_run = ["resources/acceptance"]
           expect(config.files_to_run).to contain_files("resources/acceptance/foo_spec.rb")
-        end
-      end
-
-      context "and the default path has been explicitly set" do
-        it "ignores the list of files with failures, loading the configured path instead" do
-          config.files_or_directories_to_run = [default_path]
-          expect(config.files_to_run).to eq(files_loaded_via_default_path)
         end
       end
     end
