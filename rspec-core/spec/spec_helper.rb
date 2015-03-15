@@ -56,6 +56,8 @@ module EnvHelpers
 end
 
 RSpec.configure do |c|
+  c.example_status_persistence_file_path = "./spec/examples.txt"
+
   # structural
   c.alias_it_behaves_like_to 'it_has_behavior'
   c.include(RSpecHelpers)
