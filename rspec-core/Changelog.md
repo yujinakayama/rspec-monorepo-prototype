@@ -26,6 +26,9 @@ Enhancements:
   next failure, etc. (Myron Marston, #1888)
 * Warn when a helper method definition stomps an earlier definition
   in the same example group. (Fabio Napoleoni, #1903)
+* Make `--order random` ordering stable, so that when you rerun a
+  subset with a given seed, the examples will be order consistently
+  relative to each other. (Myron Marston, #1908)
 
 Bug Fixes:
 
@@ -34,9 +37,6 @@ Bug Fixes:
   Windows. (Myron Marston, #1887)
 * Fix `RSpec::Core::RakeTask#failure_message` so that it gets printed
   when the task failed. (Myron Marston, #1905)
-* Fix how the DSL methods are defined so that RSpec is compatible with
-  gems that define methods of the same name on `Kernel` (such as
-  the `its-it` gem). (Alex Kwiatkowski, Ryan Ong, #1907)
 
 ### 3.2.2 / 2015-03-11
 [Full Changelog](http://github.com/rspec/rspec-core/compare/v3.2.1...v3.2.2)
