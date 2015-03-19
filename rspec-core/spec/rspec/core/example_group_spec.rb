@@ -1306,59 +1306,6 @@ module RSpec::Core
 
     end
 
-    describe "when methods are redefined" do
-
-      context "in the same example group" do
-
-        it 'emits a warning when overriding methods using `let`' do
-          expect {
-            RSpec.describe do
-              let(:foo) { 'first value' }
-              let(:foo) { 'second value' }
-            end
-          }.to output(a_string_including("#foo", "is being redefined at #{__FILE__}:#{__LINE__ - 2}")).to_stderr
-        end
-
-        it 'emits a warning when overriding methods using `def`' do
-          expect {
-            RSpec.describe do
-              let(:foo) { 'first value' }
-              def foo; 'second value'; end
-            end
-          }.to output(a_string_including("#foo", "is being redefined at #{__FILE__}:#{__LINE__ - 2}")).to_stderr
-        end
-
-        it 'emits a warning when overriding methods using `define_method`' do
-          expect {
-            RSpec.describe do
-              let(:foo) { 'first value' }
-              define_method(:foo) { 'second value' }
-            end
-          }.to output(a_string_including("#foo", "is being redefined at #{__FILE__}:#{__LINE__ - 2}")).to_stderr
-        end
-
-      end
-
-      context "in nested example groups" do
-
-        it 'does not emit warnings' do
-          expect {
-            RSpec.describe do
-              let(:foo) { 'first value' }
-              context 'in sub context' do
-                let(:foo) { 'second value' }
-                context 'in sub sub context' do
-                  def foo; 'third value'; end
-                end
-              end
-            end
-          }.to avoid_outputting.to_stdout.and avoid_outputting.to_stderr
-        end
-
-      end
-
-    end
-
     describe "ivars are not shared across examples" do
       it "(first example)" do
         @a = 1
@@ -1419,7 +1366,8 @@ module RSpec::Core
         let(:group) { RSpec.describe }
 
         before do
-          RSpec.world.wants_to_quit = true
+          allow(RSpec.world).to receive(:wants_to_quit) { true }
+          allow(RSpec.world).to receive(:clear_remaining_example_groups)
         end
 
         it "returns without starting the group" do
@@ -1429,19 +1377,16 @@ module RSpec::Core
 
         context "at top level" do
           it "purges remaining groups" do
-            expect {
-              self.group.run(reporter)
-            }.to change { RSpec.world.example_groups }.from([self.group]).to([])
+            expect(RSpec.world).to receive(:clear_remaining_example_groups)
+            self.group.run(reporter)
           end
         end
 
         context "in a nested group" do
           it "does not purge remaining groups" do
             nested_group = self.group.describe
-
-            expect {
-              nested_group.run(reporter)
-            }.not_to change { RSpec.world.example_groups }.from([self.group])
+            expect(RSpec.world).not_to receive(:clear_remaining_example_groups)
+            nested_group.run(reporter)
           end
         end
       end

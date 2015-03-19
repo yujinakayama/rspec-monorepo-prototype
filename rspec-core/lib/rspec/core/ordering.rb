@@ -4,11 +4,9 @@ module RSpec
       # @private
       RandomNumberGenerator = ::Random
     else
-      # :nocov:
       RSpec::Support.require_rspec_core "backport_random"
       # @private
       RandomNumberGenerator = RSpec::Core::Backports::Random
-      # :nocov:
     end
 
     # @private
@@ -44,7 +42,6 @@ module RSpec
             list.shuffle(:random => rng)
           end
         else
-          # :nocov:
           def shuffle(list, rng)
             shuffled = list.dup
             shuffled.size.times do |i|
@@ -55,7 +52,6 @@ module RSpec
 
             shuffled
           end
-          # :nocov:
         end
       end
 

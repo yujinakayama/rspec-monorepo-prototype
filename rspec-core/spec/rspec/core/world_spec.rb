@@ -109,48 +109,8 @@ module RSpec::Core
     end
 
     describe "#announce_filters" do
-      let(:reporter) { instance_spy(Reporter) }
+      let(:reporter) { double('reporter').as_null_object }
       before { allow(world).to receive(:reporter) { reporter } }
-
-      context "when --only-failures is passed" do
-        before { configuration.force(:only_failures => true) }
-
-        context "and `example_status_persistence_file_path` is not configured" do
-          it 'aborts with a message explaining the config option must be set first' do
-            configuration.example_status_persistence_file_path = nil
-            world.announce_filters
-            expect(reporter).to have_received(:abort_with).with(/example_status_persistence_file_path/, 1)
-          end
-        end
-
-        context "and `example_status_persistence_file_path` is configured" do
-          it 'does not abort' do
-            configuration.example_status_persistence_file_path = "foo.txt"
-            world.announce_filters
-            expect(reporter).not_to have_received(:abort_with)
-          end
-        end
-      end
-
-      context "when --only-failures is not passed" do
-        before { expect(configuration.only_failures?).not_to eq true }
-
-        context "and `example_status_persistence_file_path` is not configured" do
-          it 'does not abort' do
-            configuration.example_status_persistence_file_path = nil
-            world.announce_filters
-            expect(reporter).not_to have_received(:abort_with)
-          end
-        end
-
-        context "and `example_status_persistence_file_path` is configured" do
-          it 'does not abort' do
-            configuration.example_status_persistence_file_path = "foo.txt"
-            world.announce_filters
-            expect(reporter).not_to have_received(:abort_with)
-          end
-        end
-      end
 
       context "with no examples" do
         before { allow(world).to receive(:example_count) { 0 } }

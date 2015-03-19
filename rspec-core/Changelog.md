@@ -1,5 +1,4 @@
 ### Development
-[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.2.2...master)
 
 Enhancements:
 
@@ -15,35 +14,12 @@ Enhancements:
   where the location isn't unique. (Myron Marston, #1884)
 * Use the example id in the rerun command printed for failed examples
   when the location is not unique. (Myron Marston, #1884)
-* Add `config.example_status_persistence_file_path` option, which is
-  used to persist the last run status of each example. (Myron Marston, #1888)
-* Add `:last_run_status` metadata to each example, which indicates what
-  happened the last time an example ran. (Myron Marston, #1888)
-* Add `--only-failures` CLI option which filters to only the examples
-  that failed the last time they ran. (Myron Marston, #1888)
-* Add `--next-failure` CLI option which allows you to repeatedly focus
-  on just one of the currently failing examples, then move on to the
-  next failure, etc. (Myron Marston, #1888)
-* Warn when a helper method definition stomps an earlier definition
-  in the same example group. (Fabio Napoleoni, #1903)
 
 Bug Fixes:
 
 * Handle invalid UTF-8 strings within exception methods. (Benjamin Fleischer, #1760)
 * Fix Rake Task quoting of file names with quotes to work properly on
   Windows. (Myron Marston, #1887)
-* Fix `RSpec::Core::RakeTask#failure_message` so that it gets printed
-  when the task failed. (Myron Marston, #1905)
-
-### 3.2.2 / 2015-03-11
-[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.2.1...v3.2.2)
-
-Bug Fixes:
-
-* Fix regression in 3.2.0 that allowed tag-filtered examples to
-  run even if there was a location filter applied to the spec
-  file that was intended to limit the file to other examples.
-  (#1894, Myron Marston)
 
 ### 3.2.1 / 2015-02-23
 [Full Changelog](http://github.com/rspec/rspec-core/compare/v3.2.0...v3.2.1)

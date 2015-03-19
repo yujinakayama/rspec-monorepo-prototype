@@ -154,33 +154,6 @@ module RSpec
         end
       end
 
-      # @macro define_reader
-      # The file path to use for persisting example statuses. Necessary for the
-      # `--only-failures` and `--next-failures` CLI options.
-      #
-      # @overload example_status_persistence_file_path
-      #   @return [String] the file path
-      # @overload example_status_persistence_file_path=(value)
-      #   @param value [String] the file path
-      define_reader :example_status_persistence_file_path
-
-      # Sets the file path to use for persisting example statuses. Necessary for the
-      # `--only-failures` and `--next-failures` CLI options.
-      def example_status_persistence_file_path=(value)
-        @example_status_persistence_file_path = value
-        clear_values_derived_from_example_status_persistence_file_path
-      end
-
-      # @macro define_reader
-      # Indicates if the `--only-failures` (or `--next-failure`) flag is being used.
-      define_reader :only_failures
-      alias_method :only_failures?, :only_failures
-
-      # @private
-      def only_failures_but_not_configured?
-        only_failures? && !example_status_persistence_file_path
-      end
-
       # @macro add_setting
       # Clean up and exit after the first failure (default: `false`).
       add_setting :fail_fast
@@ -369,9 +342,6 @@ module RSpec
       def force(hash)
         ordering_manager.force(hash)
         @preferred_options.merge!(hash)
-
-        return unless hash.key?(:example_status_persistence_file_path)
-        clear_values_derived_from_example_status_persistence_file_path
       end
 
       # @private
@@ -822,11 +792,7 @@ module RSpec
       # @private
       def files_or_directories_to_run=(*files)
         files = files.flatten
-
-        if (command == 'rspec' || Runner.running_in_drb?) && default_path && files.empty?
-          files << default_path
-        end
-
+        files << default_path if (command == 'rspec' || Runner.running_in_drb?) && default_path && files.empty?
         @files_or_directories_to_run = files
         @files_to_run = nil
       end
@@ -835,40 +801,6 @@ module RSpec
       # @return [Array] specified files about to run
       def files_to_run
         @files_to_run ||= get_files_to_run(@files_or_directories_to_run)
-      end
-
-      # @private
-      def last_run_statuses
-        @last_run_statuses ||= Hash.new(UNKNOWN_STATUS).tap do |statuses|
-          if (path = example_status_persistence_file_path)
-            begin
-              ExampleStatusPersister.load_from(path).inject(statuses) do |hash, example|
-                hash[example.fetch(:example_id)] = example.fetch(:status)
-                hash
-              end
-            rescue SystemCallError => e
-              RSpec.warning "Could not read from #{path.inspect} (configured as " \
-                            "`config.example_status_persistence_file_path`) due " \
-                            "to a system error: #{e.inspect}. Please check that " \
-                            "the config option is set to an accessible, valid " \
-                            "file path", :call_site => nil
-            end
-          end
-        end
-      end
-
-      # @private
-      UNKNOWN_STATUS = "unknown".freeze
-
-      # @private
-      FAILED_STATUS = "failed".freeze
-
-      # @private
-      def spec_files_with_failures
-        @spec_files_with_failures ||= last_run_statuses.inject(Set.new) do |files, (id, status)|
-          files << id.split(ON_SQUARE_BRACKETS).first if status == FAILED_STATUS
-          files
-        end.to_a
       end
 
       # Creates a method that delegates to `example` including the submitted
@@ -1261,8 +1193,7 @@ module RSpec
         def safe_extend(mod, host)
           host.extend(mod) unless host.singleton_class < mod
         end
-      else # for 1.8.7
-        # :nocov:
+      else
         # @private
         def safe_include(mod, host)
           host.__send__(:include, mod) unless host.included_modules.include?(mod)
@@ -1272,7 +1203,6 @@ module RSpec
         def safe_extend(mod, host)
           host.extend(mod) unless (class << host; self; end).included_modules.include?(mod)
         end
-        # :nocov:
       end
 
       # @private
@@ -1630,15 +1560,10 @@ module RSpec
       end
 
       def get_files_to_run(paths)
-        files = FlatMap.flat_map(paths_to_check(paths)) do |path|
+        FlatMap.flat_map(paths_to_check(paths)) do |path|
           path = path.gsub(File::ALT_SEPARATOR, File::SEPARATOR) if File::ALT_SEPARATOR
           File.directory?(path) ? gather_directories(path) : extract_location(path)
         end.sort.uniq
-
-        return files unless only_failures?
-        relative_files = files.map { |f| Metadata.relative_path(File.expand_path f) }
-        intersection = (relative_files & spec_files_with_failures.to_a)
-        intersection.empty? ? files : intersection
       end
 
       def paths_to_check(paths)
@@ -1667,7 +1592,6 @@ module RSpec
       end
 
       if RSpec::Support::OS.windows?
-        # :nocov:
         def absolute_pattern?(pattern)
           pattern =~ /\A[A-Z]:\\/ || windows_absolute_network_path?(pattern)
         end
@@ -1676,7 +1600,6 @@ module RSpec
           return false unless ::File::ALT_SEPARATOR
           pattern.start_with?(::File::ALT_SEPARATOR + ::File::ALT_SEPARATOR)
         end
-        # :nocov:
       else
         def absolute_pattern?(pattern)
           pattern.start_with?(File::Separator)
@@ -1754,11 +1677,6 @@ module RSpec
 
         instance_variable_set(:"@#{name}", value)
         @files_to_run = nil
-      end
-
-      def clear_values_derived_from_example_status_persistence_file_path
-        @last_run_statuses = nil
-        @spec_files_with_failures = nil
       end
     end
     # rubocop:enable Style/ClassLength

@@ -209,15 +209,13 @@ module RSpec::Core
         def encoded_string(string)
           RSpec::Support::EncodedString.new(string, Encoding.default_external)
         end
-      else # for 1.8.7
-        # :nocov:
+      else
         def encoding_of(_string)
         end
 
         def encoded_string(string)
           RSpec::Support::EncodedString.new(string)
         end
-        # :nocov:
       end
 
       def backtrace_formatter

@@ -11,7 +11,7 @@ module RSpecHelpers
     result
   end
 
-  def with_safe_set_to_level_that_triggers_security_errors
+  def safely
     Thread.new do
       ignoring_warnings { $SAFE = 3 }
       yield

@@ -1,5 +1,3 @@
-require 'rspec/core/project_initializer'
-
 module RSpec::Core
   RSpec.describe OptionParser do
     before do
@@ -59,33 +57,6 @@ module RSpec::Core
       useless_lines = /^\s*--?\w+\s*$\n/
 
       expect { generate_help_text }.to_not output(useless_lines).to_stdout
-    end
-
-    %w[ -v --version ].each do |option|
-      describe option do
-        it "prints the version and exits" do
-          parser = Parser.new
-          expect(parser).to receive(:exit)
-
-          expect {
-            parser.parse([option])
-          }.to output("#{RSpec::Core::Version::STRING}\n").to_stdout
-        end
-      end
-    end
-
-    describe "--init" do
-      it "initializes a project and exits" do
-        project_init = instance_double(ProjectInitializer)
-        allow(ProjectInitializer).to receive_messages(:new => project_init)
-
-        parser = Parser.new
-
-        expect(project_init).to receive(:run).ordered
-        expect(parser).to receive(:exit).ordered
-
-        parser.parse(["--init"])
-      end
     end
 
     describe "-I" do
@@ -149,24 +120,6 @@ module RSpec::Core
       it 'sets the deprecation stream' do
         options = Parser.parse(["--deprecation-out", "path/to/log"])
         expect(options).to include(:deprecation_stream => "path/to/log")
-      end
-    end
-
-    describe "--only-failures" do
-      it 'is equivalent to `--tag last_run_status:failed`' do
-        tag = Parser.parse(%w[ --tag last_run_status:failed ])
-        only_failures = Parser.parse(%w[ --only-failures ])
-
-        expect(only_failures).to include(tag)
-      end
-    end
-
-    describe "--next-failure" do
-      it 'is equivalent to `--tag last_run_status:failed --fail-fast --order defined`' do
-        long_form = Parser.parse(%w[ --tag last_run_status:failed --fail-fast --order defined ])
-        next_failure = Parser.parse(%w[ --next-failure ])
-
-        expect(next_failure).to include(long_form)
       end
     end
 

@@ -15,9 +15,7 @@ module RSpec
         end
         # I have no idea what line = line.sub(/\A([^:]+:\d+)$/, '\\1') is supposed to do
         it "gracefully returns nil if run in a secure thread" do
-          # Ensure our call to `File.expand_path` is not cached as that is the insecure operation.
-          Metadata.instance_eval { @relative_path_regex = nil }
-          with_safe_set_to_level_that_triggers_security_errors do
+          safely do
             value = Metadata.relative_path(".")
             # on some rubies, File.expand_path is not a security error, so accept "." as well
             expect([nil, "."]).to include(value)
@@ -167,22 +165,6 @@ module RSpec
             example = group.example("example", &block)
             expect(example.metadata[:block]).to equal(block)
           end
-        end
-      end
-
-      describe ":last_run_status" do
-        it 'assigns it by looking up configuration.last_run_statuses[id]' do
-          looked_up_ids = []
-          last_run_statuses = Hash.new do |hash, id|
-            looked_up_ids << id
-            "some_status"
-          end
-
-          allow(RSpec.configuration).to receive(:last_run_statuses).and_return(last_run_statuses)
-          example = RSpec.describe.example
-
-          expect(example.metadata[:last_run_status]).to eq("some_status")
-          expect(looked_up_ids).to eq [example.id]
         end
       end
 

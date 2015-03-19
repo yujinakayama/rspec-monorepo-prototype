@@ -154,7 +154,7 @@ module RSpec::Core
                                                                    @pending_examples, @load_time)
       notify :seed, Notifications::SeedNotification.new(@configuration.seed, seed_used?)
     ensure
-      close
+      notify :close, Notifications::NullNotification
     end
 
     # @private
@@ -170,18 +170,7 @@ module RSpec::Core
       end
     end
 
-    # @private
-    def abort_with(msg, exit_status)
-      message(msg)
-      close
-      exit!(exit_status)
-    end
-
   private
-
-    def close
-      notify :close, Notifications::NullNotification
-    end
 
     def mute_profile_output?
       # Don't print out profiled info if there are failures and `--fail-fast` is

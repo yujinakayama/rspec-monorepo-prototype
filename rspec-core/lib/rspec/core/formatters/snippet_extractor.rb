@@ -7,30 +7,26 @@ module RSpec
       # and applies synax highlighting and line numbers using html.
       class SnippetExtractor
         # @private
-        module NullConverter
-          def self.convert(code)
+        class NullConverter
+          def convert(code)
             %Q(#{code}\n<span class="comment"># Install the coderay gem to get syntax highlighting</span>)
           end
         end
 
         # @private
-        module CoderayConverter
-          def self.convert(code)
+        class CoderayConverter
+          def convert(code)
             CodeRay.scan(code, :ruby).html(:line_numbers => false)
           end
         end
 
-        # rubocop:disable Style/ClassVars
-        @@converter = NullConverter
         begin
           require 'coderay'
-          @@converter = CoderayConverter
-          # rubocop:disable Lint/HandleExceptions
+          # rubocop:disable Style/ClassVars
+          @@converter = CoderayConverter.new
         rescue LoadError
-          # it'll fall back to the NullConverter assigned above
-          # rubocop:enable Lint/HandleExceptions
+          @@converter = NullConverter.new
         end
-
         # rubocop:enable Style/ClassVars
 
         # @api private
@@ -47,7 +43,6 @@ module RSpec
           highlighted = @@converter.convert(raw_code)
           post_process(highlighted, line)
         end
-        # rubocop:enable Style/ClassVars
 
         # @api private
         #

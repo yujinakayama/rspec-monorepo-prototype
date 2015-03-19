@@ -112,7 +112,6 @@ module RSpec
       #
       # Notify reporter of filters.
       def announce_filters
-        fail_if_config_and_cli_options_invalid
         filter_announcements = []
 
         announce_inclusion_filter filter_announcements
@@ -137,7 +136,13 @@ module RSpec
         example_groups.clear
         if filter_manager.empty?
           reporter.message("No examples found.")
-        elsif exclusion_filter.empty? || inclusion_filter.empty?
+        elsif exclusion_filter.empty?
+          message = everything_filtered_message
+          if @configuration.run_all_when_everything_filtered?
+            message << "; ignoring #{inclusion_filter.description}"
+          end
+          reporter.message(message)
+        elsif inclusion_filter.empty?
           reporter.message(everything_filtered_message)
         end
       end
@@ -169,16 +174,6 @@ module RSpec
 
       def declaration_line_numbers
         @declaration_line_numbers ||= FlatMap.flat_map(example_groups, &:declaration_line_numbers)
-      end
-
-      def fail_if_config_and_cli_options_invalid
-        return unless @configuration.only_failures_but_not_configured?
-
-        reporter.abort_with(
-          "\nTo use `--only-failures`, you must first set " \
-          "`config.example_status_persistence_file_path`.",
-          1 # exit code
-        )
       end
     end
   end
