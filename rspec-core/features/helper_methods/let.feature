@@ -7,6 +7,9 @@ Feature: let and let!
   the method it defines is invoked. You can use `let!` to force the method's
   invocation before each example.
 
+  By default, `let` is threadsafe, but you can configure it not to be
+  by disabling `config.threadsafe`, which makes `let` perform a bit faster.
+
   Scenario: Use `let` to define memoized helper method
     Given a file named "let_spec.rb" with:
       """ruby
