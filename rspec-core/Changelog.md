@@ -30,6 +30,10 @@ Enhancements:
 * Set example group constant earlier so errors when evaluating the context
   include the example group name (Myron Marson, #1911)
 * Make `let` and `subject` threadsafe. (Josh Cheek, #1858)
+* Add version information into the JSON formatter. (Mark Swinson, #1883)
+* Add `--bisect` CLI option, which will repeatedly run your suite in
+  order to isolate the failures to the smallest reproducible case.
+  (Myron Marston, #1917)
 
 Bug Fixes:
 
@@ -43,6 +47,9 @@ Bug Fixes:
   the `its-it` gem). (Alex Kwiatkowski, Ryan Ong, #1907)
 * Make `let` work properly when defined in a shared context that is applied
   to an individual example via metadata. (Myron Marston, #1912)
+* Fix `before(:context) { skip }` so that it does not wrongly cause the
+  spec suite to exit with a non-zero status when no examples failed.
+  (Myron Marston, #1926)
 
 ### 3.2.2 / 2015-03-11
 [Full Changelog](http://github.com/rspec/rspec-core/compare/v3.2.1...v3.2.2)

@@ -31,7 +31,20 @@ Dir['./spec/support/**/*.rb'].map do |file|
   require file.gsub("./spec/support", "support")
 end
 
-module EnvHelpers
+  class RaiseOnFailuresReporter < RSpec::Core::NullReporter
+    def self.example_failed(example)
+      raise example.exception
+    end
+  end
+
+module CommonHelpers
+  def describe_successfully(&describe_body)
+    example_group    = RSpec.describe(&describe_body)
+    ran_successfully = example_group.run RaiseOnFailuresReporter
+    expect(ran_successfully).to eq true
+    example_group
+  end
+
   def with_env_vars(vars)
     original = ENV.to_hash
     vars.each { |k, v| ENV[k] = v }
@@ -76,7 +89,16 @@ RSpec.configure do |c|
   # runtime options
   c.raise_errors_for_deprecations!
   c.color = true
-  c.include EnvHelpers
+  c.include CommonHelpers
+
+  c.expect_with :rspec do |expectations|
+    expectations.include_chain_clauses_in_custom_matcher_descriptions = true
+  end
+
+  c.around(:example, :simulate_shell_allowing_unquoted_ids) do |ex|
+    with_env_vars('SHELL' => '/usr/local/bin/bash', &ex)
+  end
+
   c.filter_run_excluding :ruby => lambda {|version|
     case version.to_s
     when "!jruby"

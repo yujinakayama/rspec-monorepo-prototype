@@ -12,7 +12,9 @@ module RSpec
 
         def initialize(output)
           super
-          @output_hash = {}
+          @output_hash = {
+            :version => RSpec::Core::Version::STRING
+          }
         end
 
         def message(notification)

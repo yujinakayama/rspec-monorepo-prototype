@@ -1,11 +1,14 @@
-### Development
+### 3.3 Development
+[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.2.1...master)
 
 Enhancements:
 
 * Expose `RSpec::Matchers::EnglishPhrasing` to make it easier to write
   nice failure messages in custom matchers. (Jared Beck, #736)
-* Make RSpecs fail matchers (for checking examples fail) publically available
-  for use by extension/plugin authors. (Charlie Rudolph, #729)
+* Add `RSpec::Matchers::FailMatchers`, a mixin which provides
+  `fail`, `fail_with` and `fail_including` matchers for use in
+  specifying that an expectation fails for use by
+  extension/plugin authors. (Charlie Rudolph, #729)
 * Avoid loading `tempfile` (and its dependencies) unless
   it is absolutely needed. (Myron Marston, #735)
 * Improve failure output when attempting to use `be_true` or `be_false`.
@@ -18,6 +21,12 @@ Bug Fixes:
 
 * Make `contain_exactly` / `match_array` work with strict test doubles
   that have not defined `<=>`. (Myron Marston, #758)
+
+### 3.2.1 / 2015-04-06
+[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.2.0...v3.2.1)
+
+Bug Fixes:
+
 * Prevent `Range`s from being enumerated when generating matcher
   descriptions. (Jon Rowe, #755)
 * Ensure exception messages are compared as strings in the `raise_error`
