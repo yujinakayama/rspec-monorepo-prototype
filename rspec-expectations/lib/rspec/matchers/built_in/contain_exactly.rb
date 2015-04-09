@@ -52,7 +52,7 @@ module RSpec
         def convert_actual_to_an_array
           if actual.respond_to?(:to_ary)
             @actual = actual.to_ary
-          elsif should_enumerate?(actual) && actual.respond_to?(:to_a)
+          elsif enumerable?(actual) && actual.respond_to?(:to_a)
             @actual = actual.to_a
           else
             return false
@@ -60,9 +60,7 @@ module RSpec
         end
 
         def safe_sort(array)
-          array.sort
-        rescue Exception
-          array
+          array.sort rescue array
         end
 
         def missing_items
