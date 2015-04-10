@@ -16,11 +16,17 @@ Enhancements:
 * Define `RSpec::Matchers#respond_to_missing?` so that
   `RSpec::Matchers#respond_to?` and `RSpec::Matchers#method` handle
   dynamic predicate matchers. (Andrei Botalov, #751)
+* Use custom Time/DateTime/BigDecimal formatting for all matchers
+  so they are consistently represented in failure messages.
+  (Gavin Miller, #740)
 
 Bug Fixes:
 
 * Make `contain_exactly` / `match_array` work with strict test doubles
   that have not defined `<=>`. (Myron Marston, #758)
+* Fix `include` matcher so that it omits the diff when it would
+  confusingly highlight items that are actually included but are not
+  an exact match in a line-by-line diff. (Tim Wade, #763)
 
 ### 3.2.1 / 2015-04-06
 [Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.2.0...v3.2.1)
