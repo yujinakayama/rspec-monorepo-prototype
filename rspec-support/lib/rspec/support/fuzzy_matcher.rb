@@ -12,7 +12,7 @@ module RSpec
           return arrays_match?(expected, actual.to_a)
         end
 
-        return true if expected == actual
+        return true if actual == expected
 
         begin
           expected === actual
