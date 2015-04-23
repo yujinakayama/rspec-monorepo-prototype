@@ -120,11 +120,7 @@ module RSpec
 
       def env_options
         return {} unless ENV['SPEC_OPTS']
-
-        parse_args_ignoring_files_or_dirs_to_run(
-          Shellwords.split(ENV["SPEC_OPTS"]),
-          "ENV['SPEC_OPTS']"
-        )
+        parse_args_ignoring_files_or_dirs_to_run(Shellwords.split(ENV["SPEC_OPTS"]))
       end
 
       def command_line_options
@@ -148,12 +144,11 @@ module RSpec
       end
 
       def options_from(path)
-        args = args_from_options_file(path)
-        parse_args_ignoring_files_or_dirs_to_run(args, path)
+        parse_args_ignoring_files_or_dirs_to_run(args_from_options_file(path))
       end
 
-      def parse_args_ignoring_files_or_dirs_to_run(args, source)
-        options = Parser.parse(args, source)
+      def parse_args_ignoring_files_or_dirs_to_run(args)
+        options = Parser.parse(args)
         options.delete(:files_or_directories_to_run)
         options
       end
@@ -173,11 +168,11 @@ module RSpec
       end
 
       def project_options_file
-        "./.rspec"
+        ".rspec"
       end
 
       def local_options_file
-        "./.rspec-local"
+        ".rspec-local"
       end
 
       def global_options_file
