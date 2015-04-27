@@ -5,11 +5,7 @@ module RSpec
       # Provides the implementation for `satisfy`.
       # Not intended to be instantiated directly.
       class Satisfy < BaseMatcher
-        # @private
-        attr_reader :description
-
-        def initialize(description="satisfy block", &block)
-          @description = description
+        def initialize(&block)
           @block = block
         end
 
@@ -23,13 +19,19 @@ module RSpec
         # @api private
         # @return [String]
         def failure_message
-          "expected #{actual_formatted} to #{description}"
+          "expected #{actual_formatted} to satisfy block"
         end
 
         # @api private
         # @return [String]
         def failure_message_when_negated
-          "expected #{actual_formatted} not to #{description}"
+          "expected #{actual_formatted} not to satisfy block"
+        end
+
+        # @api private
+        # @return [String]
+        def description
+          "satisfy block"
         end
       end
     end

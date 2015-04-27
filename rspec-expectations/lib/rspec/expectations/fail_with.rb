@@ -24,7 +24,7 @@ module RSpec
 
         message = ::RSpec::Matchers::ExpectedsForMultipleDiffs.from(expected).message_with_diff(message, differ, actual)
 
-        RSpec::Support.notify_failure(RSpec::Expectations::ExpectationNotMetError.new message)
+        raise RSpec::Expectations::ExpectationNotMetError, message
       end
     end
   end

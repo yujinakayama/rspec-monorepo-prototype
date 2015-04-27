@@ -19,11 +19,9 @@ module RSpec
           super || base_matcher.respond_to?(name, include_all)
         end
       else
-        # :nocov:
         def respond_to?(name, include_all=false)
           super || base_matcher.respond_to?(name, include_all)
         end
-        # :nocov:
       end
 
       def initialize_copy(other)

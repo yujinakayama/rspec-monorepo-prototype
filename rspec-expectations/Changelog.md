@@ -27,13 +27,6 @@ Enhancements:
   expectations that may be subject to false positives. (Jon Rowe, #775)
 * Improve failure message for `include(a, b, c)` so that if `a` and `b`
   are included the failure message only mentions `c`. (Chris Arcand, #780)
-* Allow `satisfy` matcher to take an optional description argument
-  that will be used in the `description`, `failure_message` and
-  `failure_message_when_negated` in place of the undescriptive
-  "sastify block". (Chris Arcand, #783)
-* Add new `aggregate_failures` API that allows multiple independent
-  expectations to all fail and be listed in the failure output, rather
-  than the example aborting on the first failure. (Myron Marston, #776)
 
 Bug Fixes:
 

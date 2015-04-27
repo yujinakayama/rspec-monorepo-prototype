@@ -10,12 +10,12 @@ module RSpec
     context "once required", :slow do
       include MinitestIntegration
 
-      it "includes itself in Minitest::Test, and sets up our exceptions to be counted as assertion failures" do
+      it "includes itself in Minitest::Test" do
         with_minitest_loaded do
           minitest_case = MiniTest::Test.allocate
-          expect(minitest_case).to respond_to(*sample_matchers)
-
-          expect(RSpec::Expectations::ExpectationNotMetError).to be ::Minitest::Assertion
+          sample_matchers.each do |sample_matcher|
+              expect(minitest_case).to respond_to(sample_matcher)
+          end
         end
       end
 

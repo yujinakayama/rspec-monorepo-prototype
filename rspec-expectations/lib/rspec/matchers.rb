@@ -277,42 +277,6 @@ module RSpec
       alias_matcher(negated_name, base_name, :klass => AliasedNegatedMatcher, &description_override)
     end
 
-    # Allows multiple expectations in the provided block to fail, and then
-    # aggregates them into a single exception, rather than aborting on the
-    # first expectation failure like normal. This allows you to see all
-    # failures from an entire set of expectations without splitting each
-    # off into its own example (which may slow things down if the example
-    # setup is expensive).
-    #
-    # @param label [String] label for this aggregation block, which will be
-    #   included in the aggregated exception message.
-    # @param metadata [Hash] additional metadata about this failure aggregation
-    #   block. If multiple expectations fail, it will be exposed from the
-    #   {Expectations::MultipleExpectationsNotMetError} exception. Mostly
-    #   intended for internal RSpec use but you can use it as well.
-    # @yield Block containing as many expectation as you want. The block is
-    #   simply yielded to, so you can trust that anything that works outside
-    #   the block should work within it.
-    # @raise [Expectations::MultipleExpectationsNotMetError] raised when
-    #   multiple expectations fail.
-    # @raise [Expectations::ExpectationNotMetError] raised when a single
-    #   expectation fails.
-    # @raise [Exception] other sorts of exceptions will be raised as normal.
-    #
-    # @example
-    #   aggregate_failures("verifying response") do
-    #     expect(response.status).to eq(200)
-    #     expect(response.headers).to include("Content-Type" => "text/plain")
-    #     expect(response.body).to include("Success")
-    #   end
-    #
-    # @note The implementation of this feature uses a thread-local variable,
-    #   which means that if you have an expectation failure in another thread,
-    #   it'll abort like normal.
-    def aggregate_failures(label=nil, metadata={}, &block)
-      Expectations::FailureAggregator.new(label, metadata).aggregate(&block)
-    end
-
     # Passes if actual is truthy (anything but false or nil)
     def be_truthy
       BuiltIn::BeTruthy.new
@@ -803,13 +767,10 @@ module RSpec
     # If you do find yourself in such a situation, you could always write
     # a custom matcher, which would likely make your specs more expressive.
     #
-    # @param description [String] optional description to be used for this matcher.
-    #
     # @example
     #   expect(5).to satisfy { |n| n > 3 }
-    #   expect(5).to satisfy("be greater than 3") { |n| n > 3 }
-    def satisfy(description="satisfy block", &block)
-      BuiltIn::Satisfy.new(description, &block)
+    def satisfy(&block)
+      BuiltIn::Satisfy.new(&block)
     end
     alias_matcher :an_object_satisfying, :satisfy
     alias_matcher :satisfying,           :satisfy
@@ -972,13 +933,11 @@ module RSpec
         method =~ DYNAMIC_MATCHER_REGEX || super
       end
     else # for 1.8.7
-      # :nocov:
       def respond_to?(method, *)
         method = method.to_s
         method =~ DYNAMIC_MATCHER_REGEX || super
       end
       public :respond_to?
-      # :nocov:
     end
 
     # @api private
