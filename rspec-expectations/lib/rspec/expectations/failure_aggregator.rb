@@ -9,13 +9,26 @@ module RSpec
           begin
             yield
           rescue ExpectationNotMetError => e
+            # Normally, expectation failures will be notified via the `call` method, below,
+            # but since the failure notifier uses a thread local variable, failing expectations
+            # in another thread will still raise. We handle that here and categorize it as part
+            # of `failures` rather than letting it fall through and be categorized as part of
+            # `other_errors`.
             failures << e
           rescue Exception => e
+            # While it is normally a bad practice to rescue `Exception`, it's important we do
+            # so here. It's low risk (`notify_aggregated_failures` below will re-raise the exception,
+            # or raise a `MultipleExpectationsNotMetError` that includes the exception), and it's
+            # essential that the user is notified of expectation failures that may have already
+            # occurred in the `aggregate_failures` block. Those expectation failures may provide
+            # important diagnostics for understanding why this exception occurred, and if we simply
+            # allowed this exception to be raised as-is, it would (wrongly) suggest to the user
+            # that the expectation passed when it did not, which would be quite confusing.
             other_errors << e
           end
         end
 
-        raise_aggregated_failures
+        notify_aggregated_failures
       end
 
       def failures
@@ -40,13 +53,13 @@ module RSpec
         @metadata    = metadata
       end
 
-      def raise_aggregated_failures
+      def notify_aggregated_failures
         all_errors = failures + other_errors
 
         case all_errors.size
         when 0 then return nil
-        when 1 then raise all_errors.first
-        else raise MultipleExpectationsNotMetError.new(self)
+        when 1 then RSpec::Support.notify_failure all_errors.first
+        else RSpec::Support.notify_failure MultipleExpectationsNotMetError.new(self)
         end
       end
     end
