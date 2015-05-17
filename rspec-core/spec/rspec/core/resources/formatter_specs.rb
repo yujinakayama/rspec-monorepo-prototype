@@ -1,12 +1,5 @@
 # Deliberately named _specs.rb to avoid being loaded except when specified
 
-RSpec.shared_examples_for "shared" do
-  it "is marked as pending but passes" do
-    pending
-    expect(1).to eq(1)
-  end
-end
-
 RSpec.describe "pending spec with no implementation" do
   it "is pending"
 end
@@ -19,7 +12,12 @@ RSpec.describe "pending command with block format" do
     end
   end
 
-  it_behaves_like "shared"
+  context "with content that would pass" do
+    it "fails" do
+      pending
+      expect(1).to eq(1)
+    end
+  end
 end
 
 RSpec.describe "passing spec" do

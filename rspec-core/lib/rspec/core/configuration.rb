@@ -367,8 +367,6 @@ module RSpec
         @libs = []
         @derived_metadata_blocks = FilterableItemRepository::QueryOptimized.new(:any?)
         @threadsafe = true
-
-        define_built_in_hooks
       end
 
       # @private
@@ -1732,12 +1730,6 @@ module RSpec
 
       def value_for(key)
         @preferred_options.fetch(key) { yield }
-      end
-
-      def define_built_in_hooks
-        around(:example, :aggregate_failures => true) do |ex|
-          aggregate_failures(nil, :from_around_hook => true, &ex)
-        end
       end
 
       def assert_no_example_groups_defined(config_option)
