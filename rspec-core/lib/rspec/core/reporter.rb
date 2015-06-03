@@ -28,13 +28,6 @@ module RSpec::Core
       @examples = []
       @failed_examples = []
       @pending_examples = []
-      @profiler = Profiler.new if defined?(@profiler)
-    end
-
-    # @private
-    def setup_profiler
-      @profiler = Profiler.new
-      register_listener @profiler, *Profiler::NOTIFICATIONS
     end
 
     # Registers a listener to a list of notifications. The reporter will send
@@ -156,8 +149,7 @@ module RSpec::Core
         notify :deprecation_summary, Notifications::NullNotification
         unless mute_profile_output?
           notify :dump_profile, Notifications::ProfileNotification.new(@duration, @examples,
-                                                                       @configuration.profile_examples,
-                                                                       @profiler.example_groups)
+                                                                       @configuration.profile_examples)
         end
         notify :dump_summary, Notifications::SummaryNotification.new(@duration, @examples, @failed_examples,
                                                                      @pending_examples, @load_time)
