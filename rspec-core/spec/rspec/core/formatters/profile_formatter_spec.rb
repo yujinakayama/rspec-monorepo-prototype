@@ -4,7 +4,6 @@ RSpec.describe RSpec::Core::Formatters::ProfileFormatter do
   include FormatterSupport
 
   def profile *groups
-    setup_profiler
     groups.each { |group| group.run(reporter) }
     examples = groups.map(&:examples).flatten
     total_time = examples.map { |e| e.execution_result.run_time }.inject(&:+)

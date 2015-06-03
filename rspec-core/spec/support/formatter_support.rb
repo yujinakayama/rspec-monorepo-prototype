@@ -185,11 +185,6 @@ module FormatterSupport
     @reporter = config.reporter
   end
 
-  def setup_profiler
-    config.profile_examples = true
-    reporter.setup_profiler
-  end
-
   def formatter_output
     @formatter_output ||= StringIO.new
   end
@@ -225,7 +220,6 @@ module FormatterSupport
     instance_double(RSpec::Core::Example,
                      :description             => "Example",
                      :full_description        => "Example",
-                     :example_group           => group,
                      :execution_result        => result,
                      :location                => "",
                      :location_rerun_argument => "",
@@ -240,9 +234,7 @@ module FormatterSupport
   end
 
   def group
-    group = class_double "RSpec::Core::ExampleGroup", :description => "Group"
-    allow(group).to receive(:parent_groups) { [group] }
-    group
+    class_double "RSpec::Core::ExampleGroup", :description => "Group"
   end
 
   def start_notification(count)
@@ -257,8 +249,8 @@ module FormatterSupport
    ::RSpec::Core::Notifications::ExampleNotification.for specific_example
   end
 
-  def group_notification group_to_notify = group
-   ::RSpec::Core::Notifications::GroupNotification.new group_to_notify
+  def group_notification
+   ::RSpec::Core::Notifications::GroupNotification.new group
   end
 
   def message_notification(message)
@@ -282,7 +274,7 @@ module FormatterSupport
   end
 
   def profile_notification(duration, examples, number)
-    ::RSpec::Core::Notifications::ProfileNotification.new duration, examples, number, reporter.instance_variable_get('@profiler').example_groups
+    ::RSpec::Core::Notifications::ProfileNotification.new duration, examples, number
   end
 
 end
