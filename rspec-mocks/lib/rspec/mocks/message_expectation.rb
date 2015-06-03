@@ -378,6 +378,7 @@ module RSpec
           # Initialized to nil so that we don't allocate an array for every
           # mock or stub. See also comment in `and_yield`.
           @args_to_yield = nil
+          @failed_fast = nil
           @eval_context = nil
           @yield_receiver_to_implementation_block = false
 
@@ -477,17 +478,13 @@ module RSpec
             @error_generator.raise_expectation_error(
               @message, @expected_received_count, @argument_list_matcher,
               @actual_received_count, expectation_count_type, expected_args,
-              @expected_from, exception_source_id
+              @expected_from
             )
           else
             @error_generator.raise_similar_message_args_error(
               self, @similar_messages, @expected_from
             )
           end
-        end
-
-        def raise_unexpected_message_args_error(args_for_multiple_calls)
-          @error_generator.raise_unexpected_message_args_error(self, args_for_multiple_calls, exception_source_id)
         end
 
         def expectation_count_type
@@ -530,21 +527,18 @@ module RSpec
 
       private
 
-        def exception_source_id
-          @exception_source_id ||= "#{self.class.name} #{__id__}"
-        end
-
         def invoke_incrementing_actual_calls_by(increment, allowed_to_fail, parent_stub, *args, &block)
           args.unshift(orig_object) if yield_receiver_to_implementation_block?
 
           if negative? || (allowed_to_fail && (@exactly || @at_most) && (@actual_received_count == @expected_received_count))
+            @failed_fast = true
             # args are the args we actually received, @argument_list_matcher is the
             # list of args we were expecting
             @error_generator.raise_expectation_error(
               @message, @expected_received_count,
               @argument_list_matcher,
               @actual_received_count + increment,
-              expectation_count_type, args, nil, exception_source_id
+              expectation_count_type, args
             )
           end
 
@@ -567,6 +561,10 @@ module RSpec
           return unless has_been_invoked?
 
           error_generator.raise_already_invoked_error(message, calling_customization)
+        end
+
+        def failed_fast?
+          @failed_fast
         end
 
         def set_expected_received_count(relativity, n)
