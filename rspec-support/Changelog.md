@@ -1,3 +1,11 @@
+### Development
+
+Enhancements:
+
+* Improve formatting of `SimpleDelegator` objects in failure messages and
+  diffs. (Andrew Horner, #215)
+
+
 ### 3.3.0 / 2015-06-12
 [Full Changelog](http://github.com/rspec/rspec-support/compare/v3.2.2...v3.3.0)
 

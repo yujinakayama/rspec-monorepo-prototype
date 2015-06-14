@@ -279,12 +279,12 @@ EOD
         it "outputs unified diff message of two hashes with hashes inside them" do
           expected_diff = %Q{
 @@ -1,2 +1,2 @@
--"b" => {"key_1"=>#{formatted_time}, "key_2"=>"value"},
-+"c" => {"key_1"=>#{formatted_time}, "key_2"=>"value"},
+-"b" => {"key_1"=>#{formatted_time}},
++"c" => {"key_1"=>#{formatted_time}},
 }
 
-          left_side_hash = {'c' => {'key_1' => time, 'key_2' => 'value'}}
-          right_side_hash = {'b' => {'key_1' => time, 'key_2' => 'value'}}
+          left_side_hash = {'c' => {'key_1' => time}}
+          right_side_hash = {'b' => {'key_1' => time}}
           diff = differ.diff(left_side_hash, right_side_hash)
           expect(diff).to be_diffed_as(expected_diff)
         end
@@ -391,6 +391,26 @@ EOD
         it "returns a String if a diff is performed" do
           diff = differ.diff "a\n", "b\n"
           expect(diff).to be_a(String)
+        end
+
+        it "includes object delegation information in the diff output" do
+          in_sub_process_if_possible do
+            require "delegate"
+
+            object = Object.new
+            delegator = SimpleDelegator.new(object)
+
+            expected_diff = dedent(<<-EOS)
+              |
+              |@@ -1,2 +1,2 @@
+              |-[#<SimpleDelegator(#{object.inspect})>]
+              |+[#{object.inspect}]
+              |
+            EOS
+
+            diff = differ.diff [object], [delegator]
+            expect(diff).to eq(expected_diff)
+          end
         end
 
         context "with :object_preparer option set" do
