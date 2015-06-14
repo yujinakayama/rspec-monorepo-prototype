@@ -214,11 +214,6 @@ module RSpec::Core
           options = Parser.parse([option, 'spec/**/*.spec'])
           expect(options[:pattern]).to eq('spec/**/*.spec')
         end
-
-        it 'combines multiple patterns' do
-          options = Parser.parse([option, 'spec/**/*.spec', option, 'tests/**/*.spec'])
-          expect(options[:pattern]).to eq('spec/**/*.spec,tests/**/*.spec')
-        end
       end
     end
 

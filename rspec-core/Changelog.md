@@ -1,26 +1,3 @@
-### 3.4.0 Development
-[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.3.1...master)
-
-Enhancements:
-
-* Combine multiple `--pattern` arguments making them equivalent to
-  `--pattern=1,2,...,n`. (Jon Rowe, #2002)
-* Improve `inspect` and `to_s` output for `RSpec::Core::Example`
-  objects, replacing Ruby's excessively verbose output. (Gavin Miller, #1922)
-* Add `silence_filter_announcements` configuration option.
-  (David Raffensperger, #2007)
-* Add optional `example_finished` notification to the reporter protocol for
-  when you don't care about the example outcome. (Jon Rowe, #2013)
-
-### 3.3.1 / 2015-06-18
-[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.3.0...v3.3.1)
-
-Bug Fixes:
-
-* Correctly run `before(:suite)` (and friends) in the context of an example
-  group instance, thus making the expected RSpec environment available.
-  (Jon Rowe, #1986)
-
 ### 3.3.0 / 2015-06-12
 [Full Changelog](http://github.com/rspec/rspec-core/compare/v3.2.3...v3.3.0)
 

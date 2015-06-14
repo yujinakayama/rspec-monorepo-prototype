@@ -170,12 +170,6 @@ module RSpec
         @reporter = RSpec::Core::NullReporter
       end
 
-      # Provide a human-readable representation of this class
-      def inspect
-        "#<#{self.class.name} #{description.inspect}>"
-      end
-      alias to_s inspect
-
       # @return [RSpec::Core::Reporter] the current reporter for the example
       attr_reader :reporter
 
@@ -262,15 +256,13 @@ module RSpec
         attr_reader :example
 
         Example.public_instance_methods(false).each do |name|
-          name_sym = name.to_sym
-          next if name_sym == :run || name_sym == :inspect || name_sym == :to_s
+          next if name.to_sym == :run || name.to_sym == :inspect
 
           define_method(name) { |*a, &b| @example.__send__(name, *a, &b) }
         end
 
         Proc.public_instance_methods(false).each do |name|
-          name_sym = name.to_sym
-          next if name_sym == :call || name_sym == :inspect || name_sym == :to_s || name_sym == :to_proc
+          next if name.to_sym == :call || name.to_sym == :inspect || name.to_sym == :to_proc
 
           define_method(name) { |*a, &b| @proc.__send__(name, *a, &b) }
         end
@@ -406,7 +398,6 @@ module RSpec
       def finish(reporter)
         pending_message = execution_result.pending_message
 
-        reporter.example_finished(self)
         if @exception
           record_finished :failed
           execution_result.exception = @exception
@@ -567,7 +558,6 @@ module RSpec
     class SuiteHookContext < Example
       def initialize
         super(AnonymousExampleGroup, "", {})
-        @example_group_instance = AnonymousExampleGroup.new
       end
 
       # rubocop:disable Style/AccessorMethodName

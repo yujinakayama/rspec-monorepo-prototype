@@ -8,7 +8,7 @@ module RSpec::Core
         :close, :deprecation, :deprecation_summary, :dump_failures, :dump_pending,
         :dump_profile, :dump_summary, :example_failed, :example_group_finished,
         :example_group_started, :example_passed, :example_pending, :example_started,
-        :message, :seed, :start, :start_dump, :stop, :example_finished
+        :message, :seed, :start, :start_dump, :stop
       ])
 
     def initialize(configuration)
@@ -122,11 +122,6 @@ module RSpec::Core
     def example_started(example)
       @examples << example
       notify :example_started, Notifications::ExampleNotification.for(example)
-    end
-
-    # @private
-    def example_finished(example)
-      notify :example_finished, Notifications::ExampleNotification.for(example)
     end
 
     # @private
