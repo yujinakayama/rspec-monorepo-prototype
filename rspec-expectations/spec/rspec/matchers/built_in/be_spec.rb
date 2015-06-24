@@ -460,23 +460,12 @@ end
 RSpec.describe "expect(...).to be <" do
   it "passes when < operator returns true" do
     expect(3).to be < 4
-    expect('a').to be < 'b'
   end
 
   it "fails when < operator returns false" do
     expect {
       expect(3).to be < 3
     }.to fail_with("expected: < 3\n     got:   3")
-
-    expect {
-      expect('a').to be < 'a'
-    }.to fail_with(%(expected: < "a"\n     got:   "a"))
-  end
-
-  it "fails when < operator raises ArgumentErrorr" do
-    expect {
-      expect('a').to be < 1
-    }.to fail_with(%(expected: < 1\n     got:   "a"))
   end
 
   it "describes itself" do
@@ -493,24 +482,12 @@ RSpec.describe "expect(...).to be <=" do
   it "passes when <= operator returns true" do
     expect(3).to be <= 4
     expect(4).to be <= 4
-    expect('a').to be <= 'b'
-    expect('a').to be <= 'a'
   end
 
   it "fails when <= operator returns false" do
     expect {
       expect(3).to be <= 2
     }.to fail_with("expected: <= 2\n     got:    3")
-
-    expect {
-      expect('c').to be <= 'a'
-    }.to fail_with(%(expected: <= "a"\n     got:    "c"))
-  end
-
-  it "fails when < operator raises ArgumentErrorr" do
-    expect {
-      expect('a').to be <= 1
-    }.to fail_with(%(expected: <= 1\n     got:    "a"))
   end
 end
 
@@ -524,16 +501,6 @@ RSpec.describe "expect(...).to be >=" do
     expect {
       expect(3).to be >= 4
     }.to fail_with("expected: >= 4\n     got:    3")
-
-    expect {
-      expect('a').to be >= 'c'
-    }.to fail_with(%(expected: >= "c"\n     got:    "a"))
-  end
-
-  it "fails when < operator raises ArgumentErrorr" do
-    expect {
-      expect('a').to be >= 1
-    }.to fail_with(%(expected: >= 1\n     got:    "a"))
   end
 end
 
@@ -546,16 +513,6 @@ RSpec.describe "expect(...).to be >" do
     expect {
       expect(3).to be > 4
     }.to fail_with("expected: > 4\n     got:   3")
-
-    expect {
-      expect('a').to be > 'a'
-    }.to fail_with(%(expected: > "a"\n     got:   "a"))
-  end
-
-  it "fails when < operator raises ArgumentErrorr" do
-    expect {
-      expect('a').to be > 1
-    }.to fail_with(%(expected: > 1\n     got:   "a"))
   end
 end
 
@@ -568,16 +525,6 @@ RSpec.describe "expect(...).to be ==" do
     expect {
       expect(3).to be == 4
     }.to fail_with("expected: == 4\n     got:    3")
-
-    expect {
-      expect('a').to be == 'c'
-    }.to fail_with(%(expected: == "c"\n     got:    "a"))
-  end
-
-  it "fails when < operator raises ArgumentErrorr" do
-    expect {
-      expect('a').to be == 1
-    }.to fail_with(%(expected: == 1\n     got:    "a"))
   end
 
   it 'works when the target overrides `#send`' do
