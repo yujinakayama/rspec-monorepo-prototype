@@ -57,12 +57,4 @@ RSpec.describe "a failing spec with odd backtraces" do
 
     raise e
   end
-
-  context "with a `nil` backtrace" do
-    it "raises" do
-      raise "boom"
-    end
-
-    after { |ex| ex.exception.set_backtrace(nil) }
-  end
 end
