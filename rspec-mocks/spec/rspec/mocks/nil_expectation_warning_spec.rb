@@ -2,33 +2,27 @@ module RSpec
   module Mocks
     RSpec.describe "an expectation set on nil" do
       it "issues a warning with file and line number information" do
-        expect {
-          expect(nil).to receive(:foo)
-        }.to output(a_string_including(
-          "An expectation of `:foo` was set on `nil`",
-          "#{__FILE__}:#{__LINE__ - 3}"
-        )).to_stderr
+        expected_warning = "WARNING: An expectation of :foo was set on nil. " \
+          "To allow expectations on nil & suppress this message, set allow_expectations_on_nil to true. " \
+          "To disallow expectations on nil, set allow_expectations_on_nil to false. Called from #{__FILE__}:#{__LINE__+3}(:in .+)?."
+        expect(Kernel).to receive(:warn).with(/#{expected_warning}/)
 
+        expect(nil).to receive(:foo)
         nil.foo
       end
 
       it "issues a warning when the expectation is negative" do
-        expect {
-          expect(nil).not_to receive(:foo)
-        }.to output(a_string_including(
-          "An expectation of `:foo` was set on `nil`",
-          "#{__FILE__}:#{__LINE__ - 3}"
-        )).to_stderr
+        expect(Kernel).to receive(:warn)
+
+        expect(nil).not_to receive(:foo)
       end
 
       it 'does not issue a warning when expectations are set to be allowed' do
         allow_message_expectations_on_nil
+        expect(Kernel).not_to receive(:warn)
 
-        expect {
-          expect(nil).to receive(:foo)
-          expect(nil).to_not receive(:bar)
-        }.not_to output.to_stderr
-
+        expect(nil).to receive(:foo)
+        expect(nil).to_not receive(:bar)
         nil.foo
       end
 
@@ -37,12 +31,10 @@ module RSpec
 
         it 'does not issue a warning when expectations are set to be allowed' do
           RSpec::Mocks.configuration.allow_message_expectations_on_nil = true
+          expect(Kernel).not_to receive(:warn)
 
-          expect {
-            expect(nil).to receive(:foo)
-            expect(nil).not_to receive(:bar)
-          }.not_to output.to_stderr
-
+          expect(nil).to receive(:foo)
+          expect(nil).not_to receive(:bar)
           nil.foo
         end
       end
@@ -71,14 +63,8 @@ module RSpec
         allow_message_expectations_on_nil
         RSpec::Mocks.teardown
         RSpec::Mocks.setup
-
-        expect {
-          expect(nil).to receive(:foo)
-        }.to output(a_string_including(
-          "An expectation of `:foo` was set on `nil`",
-          "#{__FILE__}:#{__LINE__ - 3}"
-        )).to_stderr
-
+        expect(Kernel).to receive(:warn)
+        expect(nil).to receive(:foo)
         nil.foo
       end
 
