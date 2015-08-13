@@ -1,4 +1,4 @@
-# This file was generated on 2015-08-01T02:04:28-04:00 from the rspec-dev repo.
+# This file was generated on 2015-05-05T17:56:26+10:00 from the rspec-dev repo.
 # DO NOT modify it by hand as your changes will get lost the next time it is generated.
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -67,68 +67,14 @@ function run_specs_one_by_one {
 
 function run_spec_suite_for {
   if [ ! -f ../$1/$SPECS_HAVE_RUN_FILE ]; then # don't rerun specs that have already run
-    if [ -d ../$1 ]; then
-      echo "Running specs for $1"
-      pushd ../$1
-      unset BUNDLE_GEMFILE
-      bundle_install_flags=`cat .travis.yml | grep bundler_args | tr -d '"' | grep -o " .*"`
-      travis_retry eval "bundle install $bundle_install_flags"
-      run_specs_and_record_done
-      popd
-    else
-      echo ""
-      echo "WARNING: The ../$1 directory does not exist. Usually the"
-      echo "travis build cds into that directory and run the specs to"
-      echo "ensure the specs still pass with your latest changes, but"
-      echo "we are going to skip that step."
-      echo ""
-    fi;
+    echo "Running specs for $1"
+    pushd ../$1
+    unset BUNDLE_GEMFILE
+    bundle_install_flags=`cat .travis.yml | grep bundler_args | tr -d '"' | grep -o " .*"`
+    travis_retry eval "bundle install $bundle_install_flags"
+    run_specs_and_record_done
+    popd
   fi;
-}
-
-function check_binstubs {
-  echo "Checking required binstubs"
-
-  local success=0
-  local binstubs=""
-  local gems=""
-
-  if [ ! -x ./bin/rspec ]; then
-    binstubs="$binstubs bin/rspec"
-    gems="$gems rspec-core"
-    success=1
-  fi
-
-  if [ ! -x ./bin/rake ]; then
-    binstubs="$binstubs bin/rake"
-    gems="$gems rake"
-    success=1
-  fi
-
-  if [ -d features ]; then
-    if [ ! -x ./bin/cucumber ]; then
-      binstubs="$binstubs bin/cucumber"
-      gems="$gems cucumber"
-      success=1
-    fi
-  fi
-
-  if [ $success -eq 1 ]; then
-    echo
-    echo "Missing binstubs:$binstubs"
-    echo "Install missing binstubs using one of the following:"
-    echo
-    echo "  # Create the missing binstubs"
-    echo "  $ bundle binstubs$gems"
-    echo
-    echo "  # To binstub all gems"
-    echo "  $ bundle install --binstubs"
-    echo
-    echo "  # To binstub all gems and avoid loading bundler"
-    echo "  $ bundle install --binstubs --standalone"
-  fi
-
-  return $success
 }
 
 function check_documentation_coverage {
@@ -173,6 +119,7 @@ function check_style_and_lint {
 }
 
 function run_all_spec_suites {
+  fold "one-by-one specs" run_specs_one_by_one
   fold "rspec-core specs" run_spec_suite_for "rspec-core"
   fold "rspec-expectations specs" run_spec_suite_for "rspec-expectations"
   fold "rspec-mocks specs" run_spec_suite_for "rspec-mocks"
