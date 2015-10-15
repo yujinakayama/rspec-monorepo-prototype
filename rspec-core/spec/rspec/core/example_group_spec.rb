@@ -1796,7 +1796,9 @@ module RSpec::Core
 
       group.add_example group.examples.first
       expect(group.examples.length).to eq(2)
-      expect(original_ids).to_not eq(group_ids(group))
+
+      new_ids = group_ids group
+      new_ids.each_with_index { |id, idx| expect(id).to_not eq(original_ids[idx]) }
     end
 
     it 'allows removing examples' do
@@ -1811,7 +1813,9 @@ module RSpec::Core
 
       group.remove_example group.examples.first
       expect(group.examples.length).to eq(0)
-      expect(original_ids).to_not eq(group_ids(group))
+
+      new_ids = group_ids group
+      new_ids.each_with_index { |id, idx| expect(id).to_not eq(original_ids[idx]) }
     end
   end
 end
