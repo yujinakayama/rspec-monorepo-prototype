@@ -69,7 +69,12 @@ module RSpec
       end
 
       def default_error_message(expectation, expected_args, actual_args)
-        "#{intro} received #{expectation.message.inspect} #{unexpected_arguments_message(expected_args, actual_args)}"
+        [
+          intro,
+          "received",
+          expectation.message.inspect,
+          unexpected_arguments_message(expected_args, actual_args),
+        ].join(" ")
       end
 
       # rubocop:disable Style/ParameterLists
