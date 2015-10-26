@@ -124,6 +124,24 @@ module RSpec
         id.match(/\A(.*?)(?:\[([\d\s:,]+)\])?\z/).captures
       end
 
+      # Duplicates the example and overrides metadata with the provided
+      # hash.
+      #
+      # @param metadata_overrides [Hash] the hash to override the example metadata
+      # @return [Example] a duplicate of the example with modified metadata
+      def duplicate_with(metadata_overrides={})
+        new_metadata = metadata.clone.merge(metadata_overrides)
+
+        RSpec::Core::Metadata::RESERVED_KEYS.each do |reserved_key|
+          new_metadata.delete reserved_key
+        end
+
+        # don't clone the example group because the new example
+        # must belong to the same example group (not a clone).
+        Example.new(example_group, description.clone,
+                    new_metadata, new_metadata[:block])
+      end
+
       # @attr_reader
       #
       # Returns the first exception raised in the context of running this

@@ -38,6 +38,8 @@ Enhancements:
   line from backtrace" messages. (Myron Marston, #2088)
 * Add support for `:extra_failure_lines` example metadata that will
   be appended to the failure output. (bootstraponline, #2092).
+* Add `RSpec::Core::Example#duplicate_with` to produce new examples
+  with cloned metadata. (bootstraponline, #2098)
 
 Bug Fixes:
 
@@ -47,6 +49,8 @@ Bug Fixes:
 * Fix regression in 3.3 that caused spec file names with square brackets in
   them (such as `1[]_spec.rb`) to not be loaded properly. (Myron Marston, #2041)
 * Fix output encoding issue caused by ASCII literal on 1.9.3 (Jon Rowe, #2072)
+* Fix requires in `rspec/core/rake_task.rb` to avoid double requires
+  seen by some users. (Myron Marston, #2101)
 
 ### 3.3.2 / 2015-07-15
 [Full Changelog](http://github.com/rspec/rspec-core/compare/v3.3.1...v3.3.2)
