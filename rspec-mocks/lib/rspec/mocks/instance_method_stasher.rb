@@ -31,6 +31,7 @@ module RSpec
         def stashed_method_name
           "obfuscated_by_rspec_mocks__#{@method}"
         end
+        private :stashed_method_name
 
         # @private
         def restore

@@ -3,7 +3,7 @@ module RSpec
     # @private
     class MethodDouble
       # @private
-      attr_reader :method_name, :object, :expectations, :stubs, :method_stasher
+      attr_reader :method_name, :object, :expectations, :stubs
 
       # @private
       def initialize(object, method_name, proxy)
