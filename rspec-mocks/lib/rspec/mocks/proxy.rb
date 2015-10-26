@@ -228,11 +228,6 @@ module RSpec
         end
       end
 
-      # @private
-      def method_double_if_exists_for_message(message)
-        method_double_for(message) if @method_doubles.key?(message.to_sym)
-      end
-
     private
 
       def method_double_for(message)
