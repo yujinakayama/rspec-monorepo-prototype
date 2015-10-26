@@ -94,16 +94,7 @@ module RSpec
           # write `method_missing` in such a way that it handles a dynamic message
           # with private or protected visibility. Ruby doesn't provide you with
           # the caller info.
-          proxy = RSpec::Mocks.space.proxy_for(object)
-          respond_to = proxy.method_double_if_exists_for_message(:respond_to?)
-
-          if proxy && respond_to
-            object_responds_to_method_name = respond_to.original_method.call(method_name)
-          else
-            object_responds_to_method_name = object.respond_to?(method_name)
-          end
-
-          return :public if vis.nil? && object_responds_to_method_name
+          return :public if vis.nil? && object.respond_to?(method_name, false)
         end
       end
     end
