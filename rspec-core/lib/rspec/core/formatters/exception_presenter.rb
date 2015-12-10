@@ -92,11 +92,9 @@ module RSpec
 
       private
 
-        def final_exception(exception, previous=[])
-          cause = exception.cause
-          if cause && !previous.include?(cause)
-            previous << cause
-            final_exception(cause, previous)
+        def final_exception(exception)
+          if exception.cause
+            final_exception(exception.cause)
           else
             exception
           end
