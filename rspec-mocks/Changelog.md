@@ -1,6 +1,15 @@
 ### Development
 [Full Changelog](http://github.com/rspec/rspec-mocks/compare/v3.4.1...master)
 
+Bug Fixes:
+
+* Allow `any_instance_of(...).to receive(...)` to use `and_yield` multiple
+  times. (Kilian Cirera Sant, #1054)
+* Allow matchers which inherit from `rspec-mocks` matchers to be used for
+  `allow`. (Andrew Kozin, #1056)
+* Prevent stubbing `respond_to?` on partial doubles from causing infinite
+  recursion. (Jon Rowe, #1013)
+
 ### 3.4.1 / 2016-01-10
 [Full Changelog](http://github.com/rspec/rspec-mocks/compare/v3.4.0...v3.4.1)
 
