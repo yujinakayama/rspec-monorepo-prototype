@@ -33,8 +33,6 @@ module RSpec
       include Pending
       extend SharedExampleGroup
 
-      # Define a singleton method for the singleton class (remove the method if
-      # it's already been defined).
       # @private
       def self.idempotently_define_singleton_method(name, &definition)
         (class << self; self; end).module_exec do
