@@ -11,8 +11,6 @@ Feature: Any Instance
 
   These methods add the appropriate stub or expectation to all instances of `Widget`.
 
-  You can also [configure the responses](../configuring-responses) in the same manner.
-
   This feature is sometimes useful when working with legacy code, though in general we
   discourage its use for a number of reasons:
 
