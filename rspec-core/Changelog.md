@@ -1,14 +1,3 @@
-### Development
-[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.5.1...master)
-
-### 3.5.1 / 2016-07-06
-[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.5.0...v3.5.1)
-
-Bug Fixes:
-
-* Ensure that config hooks that are added to existing example groups are
-  added only once. (Eugene Kenny, #2280)
-
 ### 3.5.0 / 2016-07-01
 [Full Changelog](http://github.com/rspec/rspec-core/compare/v3.5.0.beta4...v3.5.0)
 

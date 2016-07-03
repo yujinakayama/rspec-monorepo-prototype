@@ -1749,7 +1749,7 @@ module RSpec
         handle_suite_hook(scope, meta) do
           @before_suite_hooks << Hooks::BeforeHook.new(block, {})
         end || begin
-          add_hook_to_existing_matching_groups(meta, scope) { |g| g.before(scope, *meta, &block) }
+          on_existing_matching_groups({}) { |g| g.before(scope, *meta, &block) }
           super(scope, *meta, &block)
         end
       end
@@ -1772,7 +1772,7 @@ module RSpec
         handle_suite_hook(scope, meta) do
           @before_suite_hooks.unshift Hooks::BeforeHook.new(block, {})
         end || begin
-          add_hook_to_existing_matching_groups(meta, scope) { |g| g.prepend_before(scope, *meta, &block) }
+          on_existing_matching_groups({}) { |g| g.prepend_before(scope, *meta, &block) }
           super(scope, *meta, &block)
         end
       end
@@ -1790,7 +1790,7 @@ module RSpec
         handle_suite_hook(scope, meta) do
           @after_suite_hooks.unshift Hooks::AfterHook.new(block, {})
         end || begin
-          add_hook_to_existing_matching_groups(meta, scope) { |g| g.after(scope, *meta, &block) }
+          on_existing_matching_groups({}) { |g| g.after(scope, *meta, &block) }
           super(scope, *meta, &block)
         end
       end
@@ -1813,7 +1813,7 @@ module RSpec
         handle_suite_hook(scope, meta) do
           @after_suite_hooks << Hooks::AfterHook.new(block, {})
         end || begin
-          add_hook_to_existing_matching_groups(meta, scope) { |g| g.append_after(scope, *meta, &block) }
+          on_existing_matching_groups({}) { |g| g.append_after(scope, *meta, &block) }
           super(scope, *meta, &block)
         end
       end
@@ -1822,7 +1822,8 @@ module RSpec
       #
       # See {Hooks#around} for full `around` hook docs.
       def around(scope=nil, *meta, &block)
-        add_hook_to_existing_matching_groups(meta, scope) { |g| g.around(scope, *meta, &block) }
+        on_existing_matching_groups({}) { |g| g.around(scope, *meta, &block) }
+
         super(scope, *meta, &block)
       end
 
@@ -2026,30 +2027,10 @@ module RSpec
         end
       end
 
-      def add_hook_to_existing_matching_groups(meta, scope, &block)
-        # For example hooks, we have to apply it to each of the top level
-        # groups, even if the groups do not match. When we apply it, we
-        # apply it with the metadata, so it will only apply to examples
-        # in the group that match the metadata.
-        # #2280 for background and discussion.
-        if scope == :example || scope == :each || scope.nil?
-          world.example_groups.each(&block)
-        else
-          meta = Metadata.build_hash_from(meta.dup)
-          on_existing_matching_groups(meta, &block)
-        end
-      end
-
       def on_existing_matching_groups(meta)
-        world.traverse_example_group_trees_until do |group|
-          metadata_applies_to_group?(meta, group).tap do |applies|
-            yield group if applies
-          end
+        world.all_example_groups.each do |group|
+          yield group if meta.empty? || MetadataFilter.apply?(:any?, meta, group.metadata)
         end
-      end
-
-      def metadata_applies_to_group?(meta, group)
-        meta.empty? || MetadataFilter.apply?(:any?, meta, group.metadata)
       end
 
       if RSpec::Support::RubyFeatures.module_prepends_supported?
