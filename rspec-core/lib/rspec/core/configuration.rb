@@ -850,22 +850,19 @@ module RSpec
       end
 
       # @overload add_formatter(formatter)
-      # @overload add_formatter(formatter, output)
       #
-      # @param formatter [Class, String] formatter to use. Can be any of the
-      #   string values supported from the CLI (`p`/`progress`,
-      #   `d`/`doc`/`documentation`, `h`/`html`, or `j`/`json`) or any
-      #   class that implements the formatter protocol and has registered
-      #   itself with RSpec as a formatter.
-      # @param output [String, IO] where the formatter will write its output.
-      #   Can be an IO object or a string path to a file. If not provided,
-      #   the configured `output_stream` (`$stdout`, by default) will be used.
+      # Adds a formatter to the formatters collection. `formatter` can be a
+      # string representing any of the built-in formatters (see
+      # `built_in_formatter`), or a custom formatter class.
       #
-      # Adds a formatter to the set RSpec will use for this run.
+      # ### Note
       #
-      # @see RSpec::Core::Formatters::Protocol
-      def add_formatter(formatter, output=output_stream)
-        formatter_loader.add(formatter, output)
+      # For internal purposes, `add_formatter` also accepts the name of a class
+      # and paths to use for output streams, but you should consider that a
+      # private api that may change at any time without notice.
+      def add_formatter(formatter_to_use, *paths)
+        paths << output_stream if paths.empty?
+        formatter_loader.add formatter_to_use, *paths
       end
       alias_method :formatter=, :add_formatter
 

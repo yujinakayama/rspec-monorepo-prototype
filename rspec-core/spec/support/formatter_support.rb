@@ -213,8 +213,7 @@ module FormatterSupport
   end
 
   def setup_reporter(*streams)
-    streams << config.output_stream if streams.empty?
-    config.formatter_loader.add described_class, *streams
+    config.add_formatter described_class, *streams
     @formatter = config.formatters.first
     @reporter = config.reporter
   end
