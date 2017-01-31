@@ -69,7 +69,7 @@ module RSpec
   # same process.
   def self.clear_examples
     world.reset
-    configuration.reset_reporter
+    configuration.reporter.reset
     configuration.start_time = ::RSpec::Core::Time.now
     configuration.reset_filters
   end

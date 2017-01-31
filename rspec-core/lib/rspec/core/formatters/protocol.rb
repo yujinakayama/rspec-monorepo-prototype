@@ -171,9 +171,8 @@ module RSpec
         # @api public
         # @group Suite Notifications
         #
-        # Invoked at the end of a suite run. Allows the formatter to do any
-        # tidying up, but be aware that formatter output streams may be used
-        # elsewhere so don't actually close them.
+        # Invoked at the very end, `close` allows the formatter to clean
+        # up resources, e.g. open streams, etc.
         #
         # @param notification [Notifications::NullNotification]
       end

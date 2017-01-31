@@ -40,6 +40,7 @@ module RSpec
       def reset
         RSpec::ExampleGroups.remove_all_constants
         example_groups.clear
+        @shared_example_group_registry = nil
       end
 
       # @private

@@ -57,9 +57,8 @@ module RSpec
 
         # @api public
         #
-        # Invoked at the end of a suite run. Allows the formatter to do any
-        # tidying up, but be aware that formatter output streams may be used
-        # elsewhere so don't actually close them.
+        # Invoked at the very end, `close` allows the formatter to clean
+        # up resources, e.g. open streams, etc.
         #
         # @param _notification [NullNotification] (Ignored)
         def close(_notification)
@@ -69,6 +68,7 @@ module RSpec
           output.puts
 
           output.flush
+          output.close unless output == $stdout
         end
       end
     end
