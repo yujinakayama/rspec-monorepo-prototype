@@ -3,9 +3,7 @@
 RSpec::Expectations lets you express expected outcomes on an object in an
 example.
 
-```ruby
-expect(account.balance).to eq(Money.new(37.42, :USD))
-```
+    expect(account.balance).to eq(Money.new(37.42, :USD))
 
 ## Install
 
