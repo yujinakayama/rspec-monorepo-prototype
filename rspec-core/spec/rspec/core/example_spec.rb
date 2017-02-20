@@ -574,85 +574,52 @@ RSpec.describe RSpec::Core::Example, :parent_metadata => 'sample' do
 
       reporter.register_listener(listener, :example_finished)
 
-      RSpec.describe(&block).run(reporter)
+      RSpec.describe do
+        it(&block)
+      end.run(reporter)
 
       reported_execution_result
     end
 
-    shared_examples "when skipped or failed" do
-      it "fills in the execution result details before reporting a failed example as finished" do
-        execution_result = capture_reported_execution_result_for_example do
-          expect(1).to eq 2
-        end
-
-        expect(execution_result).to have_attributes(
-          :status => :failed,
-          :exception => RSpec::Expectations::ExpectationNotMetError,
-          :finished_at => a_value_within(1).of(Time.now),
-          :run_time => a_value >= 0
-        )
+    it "fills in the execution result details before reporting a passed example as finished" do
+      execution_result = capture_reported_execution_result_for_example do
+        expect(1).to eq 1
       end
 
-      it "fills in the execution result details before reporting a skipped example as finished" do
-        execution_result = capture_reported_execution_result_for_example do
-          skip "because"
-          expect(1).to eq 2
-        end
-
-        expect(execution_result).to have_attributes(
-          :status => :pending,
-          :pending_message => "because",
-          :finished_at => a_value_within(1).of(Time.now),
-          :run_time => a_value >= 0
-        )
-      end
+      expect(execution_result).to have_attributes(
+        :status => :passed,
+        :exception => nil,
+        :finished_at => a_value_within(1).of(Time.now),
+        :run_time => a_value >= 0
+      )
     end
 
-    context "from an example" do
-      def capture_reported_execution_result_for_example(&block)
-        super { it(&block) }
+    it "fills in the execution result details before reporting a failed example as finished" do
+      execution_result = capture_reported_execution_result_for_example do
+        expect(1).to eq 2
       end
 
-      it "fills in the execution result details before reporting a passed example as finished" do
-        execution_result = capture_reported_execution_result_for_example do
-          expect(1).to eq 1
-        end
-
-        expect(execution_result).to have_attributes(
-          :status => :passed,
-          :exception => nil,
-          :finished_at => a_value_within(1).of(Time.now),
-          :run_time => a_value >= 0
-        )
-      end
-
-      it "fills in the execution result details before reporting a pending example as finished" do
-        execution_result = capture_reported_execution_result_for_example do
-          pending "because"
-          expect(1).to eq 2
-        end
-
-        expect(execution_result).to have_attributes(
-          :status => :pending,
-          :pending_message => "because",
-          :pending_exception => RSpec::Expectations::ExpectationNotMetError,
-          :finished_at => a_value_within(1).of(Time.now),
-          :run_time => a_value >= 0
-        )
-      end
-
-      include_examples "when skipped or failed"
+      expect(execution_result).to have_attributes(
+        :status => :failed,
+        :exception => RSpec::Expectations::ExpectationNotMetError,
+        :finished_at => a_value_within(1).of(Time.now),
+        :run_time => a_value >= 0
+      )
     end
 
-    context "from a context hook" do
-      def capture_reported_execution_result_for_example(&block)
-        super do
-          before(:context, &block)
-          it { will_never_run }
-        end
+    it "fills in the execution result details before reporting a pending example as finished" do
+      execution_result = capture_reported_execution_result_for_example do
+        pending "because"
+        expect(1).to eq 2
       end
 
-      include_examples "when skipped or failed"
+      expect(execution_result).to have_attributes(
+        :status => :pending,
+        :pending_message => "because",
+        :pending_exception => RSpec::Expectations::ExpectationNotMetError,
+        :finished_at => a_value_within(1).of(Time.now),
+        :run_time => a_value >= 0
+      )
     end
   end
 
@@ -683,7 +650,7 @@ RSpec.describe RSpec::Core::Example, :parent_metadata => 'sample' do
         expect(blah).to be(:success)
       end
 
-      it 'sets the backtrace to the example definition so it can be located by the user', :pending => RSpec::Support::Ruby.jruby_9000? do
+      it 'sets the backtrace to the example definition so it can be located by the user' do
         file = RSpec::Core::Metadata.relative_path(__FILE__)
         expected = [file, __LINE__ + 2].map(&:to_s)
         group = RSpec.describe do

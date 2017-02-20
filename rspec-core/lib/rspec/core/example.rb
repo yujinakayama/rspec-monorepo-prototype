@@ -260,7 +260,11 @@ module RSpec
                         'Expected example to fail since it is pending, but it passed.',
                         [location]
                 end
-              rescue Pending::SkipDeclaredInExample
+              rescue Pending::SkipDeclaredInExample => _
+                # The "=> _" is normally useless but on JRuby it is a workaround
+                # for a bug that prevents us from getting backtraces:
+                # https://github.com/jruby/jruby/issues/4467
+                #
                 # no-op, required metadata has already been set by the `skip`
                 # method.
               rescue AllExceptionsExcludingDangerousOnesOnRubiesThatAllowIt => e
@@ -465,22 +469,22 @@ module RSpec
 
         if @exception
           execution_result.exception = @exception
-          record_finished :failed, reporter
+          record_finished :failed
           reporter.example_failed self
           false
         elsif pending_message
           execution_result.pending_message = pending_message
-          record_finished :pending, reporter
+          record_finished :pending
           reporter.example_pending self
           true
         else
-          record_finished :passed, reporter
+          record_finished :passed
           reporter.example_passed self
           true
         end
       end
 
-      def record_finished(status, reporter)
+      def record_finished(status)
         execution_result.record_finished(status, clock.now)
         reporter.example_finished(self)
       end
