@@ -1,6 +1,6 @@
-require 'rspec/core/formatters/syntax_highlighter'
+require 'rspec/core/source/syntax_highlighter'
 
-module RSpec::Core::Formatters
+class RSpec::Core::Source
   RSpec.describe SyntaxHighlighter do
     let(:config)      { RSpec::Core::Configuration.new.tap { |config| config.color_mode = :on } }
     let(:highlighter) { SyntaxHighlighter.new(config)  }

@@ -1,6 +1,6 @@
 module RSpec
   module Core
-    module Formatters
+    class Source
       # @private
       # Provides terminal syntax highlighting of code snippets
       # when coderay is available.
