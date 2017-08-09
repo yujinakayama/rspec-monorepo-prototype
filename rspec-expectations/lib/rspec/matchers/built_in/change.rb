@@ -334,7 +334,7 @@ module RSpec
         def value_representation
           @value_representation ||=
             if @message
-              "##{@message}"
+              inspect_message_with_receiver(@message, @receiver)
             elsif (value_block_snippet = extract_value_block_snippet)
               "`#{value_block_snippet}`"
             else
@@ -368,6 +368,19 @@ module RSpec
             val.dup
           else
             val
+          end
+        end
+
+        def inspect_message_with_receiver(message, receiver)
+          case receiver
+          when Module
+            "`#{receiver}.#{message}`"
+          when NilClass
+            "`nil##{message}`"
+          else
+            singleton_class = class << receiver; self; end
+            klass = singleton_class.ancestors.find { |ancestor| !ancestor.equal?(singleton_class) }
+            "`#{klass}##{message}`"
           end
         end
 
