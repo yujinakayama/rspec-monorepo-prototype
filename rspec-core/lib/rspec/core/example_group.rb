@@ -3,6 +3,7 @@ RSpec::Support.require_rspec_support 'recursive_const_methods'
 module RSpec
   module Core
     # rubocop:disable Metrics/ClassLength
+
     # ExampleGroup and {Example} are the main structural elements of
     # rspec-core. Consider this example:
     #
@@ -106,6 +107,7 @@ module RSpec
       # @private
       # @macro [attach] define_example_method
       #   @!scope class
+      #   @method $1
       #   @overload $1
       #   @overload $1(&example_implementation)
       #     @param example_implementation [Block] The implementation of the example.

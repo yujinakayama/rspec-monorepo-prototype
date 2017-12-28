@@ -321,9 +321,9 @@ module RSpec
       # (default `false`).
       add_setting :silence_filter_announcements
 
-      # Deprecated. This config option was added in RSpec 2 to pave the way
-      # for this being the default behavior in RSpec 3. Now this option is
-      # a no-op.
+      # @deprecated This config option was added in RSpec 2 to pave the way
+      #   for this being the default behavior in RSpec 3. Now this option is
+      #   a no-op.
       def treat_symbols_as_metadata_keys_with_true_values=(_value)
         RSpec.deprecate(
           "RSpec::Core::Configuration#treat_symbols_as_metadata_keys_with_true_values=",
@@ -413,6 +413,8 @@ module RSpec
 
       # rubocop:disable Metrics/AbcSize
       # rubocop:disable Metrics/MethodLength
+
+      # Build an object to store runtime configuration options and set defaults
       def initialize
         # rubocop:disable Style/GlobalVars
         @start_time = $_rspec_core_load_started_at || ::RSpec::Core::Time.now

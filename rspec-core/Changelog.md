@@ -1,5 +1,13 @@
 ### Development
-[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.6.0...master)
+[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.7.0...master)
+
+Enhancements:
+
+* Improve shell escaping used by `RSpec::Core::RakeTask` and `--bisect` so
+  that it works on `Pathname` objects. (Andrew Vit, #2479)
+
+### 3.7.0 / 2017-10-17
+[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.6.0...v3.7.0)
 
 Enhancements:
 
@@ -8,6 +16,8 @@ Enhancements:
   on Ruby 2.3+. (Pat Allan, #2425, #2427, #2437)
 * Do not run `:context` hooks for example groups that have been skipped.
   (Devon Estes, #2442)
+* Add `errors_outside_of_examples_count` to the JSON formatter.
+  (Takeshi Arabiki, #2448)
 
 Bug Fixes:
 

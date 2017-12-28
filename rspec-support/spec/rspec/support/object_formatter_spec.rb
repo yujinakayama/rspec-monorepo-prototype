@@ -32,6 +32,18 @@ module RSpec
         end
       end
 
+      unless RUBY_VERSION == '1.8.7' # We can't count on the ordering of the hash on 1.8.7...
+        context 'with a hash object' do
+          let(:input) { { :c => "ccc", :a => "aaa", "b" => 'bbb' } }
+          let(:expected) { '{:a=>"aaa", "b"=>"bbb", :c=>"ccc"}' }
+
+          it 'sorts keys to ensure objects are always displayed the same way' do
+            formatted = ObjectFormatter.format(input)
+            expect(formatted).to eq expected
+          end
+        end
+      end
+
       context 'with Time objects' do
         let(:time) { Time.utc(1969, 12, 31, 19, 01, 40, 101) }
         let(:formatted_time) { ObjectFormatter.format(time) }
@@ -93,6 +105,11 @@ module RSpec
           it 'includes a conventional representation of the decimal' do
             in_sub_process_if_possible do
               require 'bigdecimal'
+              # Suppress warning on JRuby 1.7:
+              #   file:/Users/me/.rbenv/versions/jruby-1.7.26/lib/jruby.jar!/jruby/bigdecimal.rb:1
+              #   warning: loading in progress, circular require considered harmful - bigdecimal.jar
+              $stderr.reset!
+
               expect(formatted_decimal).to include('3.3 (#<BigDecimal')
             end
           end
@@ -136,6 +153,11 @@ module RSpec
           it 'formats the underlying object normally' do
             with_delegate_loaded do
               require 'bigdecimal'
+              # Suppress warning on JRuby 1.7:
+              #   file:/Users/me/.rbenv/versions/jruby-1.7.26/lib/jruby.jar!/jruby/bigdecimal.rb:1
+              #   warning: loading in progress, circular require considered harmful - bigdecimal.jar
+              $stderr.reset!
+
               expect(ObjectFormatter.format(delegator)).to eq "#<SimpleDelegator(#{formatted_decimal})>"
             end
           end
@@ -168,7 +190,7 @@ module RSpec
         end
       end
 
-      context 'with an object that does not respond to #inspect such as BasicObject' do
+      context 'with an object that does not respond to #class and #inspect such as BasicObject' do
         subject(:output) do
           ObjectFormatter.format(input)
         end
@@ -187,7 +209,7 @@ module RSpec
               'BasicObject'
             end
 
-            undef inspect, respond_to?
+            undef class, inspect, respond_to?
           end
         end
 

@@ -1,10 +1,20 @@
 ### Development
-[Full Changelog](http://github.com/rspec/rspec-support/compare/v3.6.0...master)
+[Full Changelog](http://github.com/rspec/rspec-support/compare/v3.7.0...master)
+
+Bug Fixes:
+
+* Order hash keys before diffing to improve diff accuracy when using mocked calls.
+  (James Crisp, #334)
+
+### 3.7.0 / 2017-05-04
+[Full Changelog](http://github.com/rspec/rspec-support/compare/v3.6.0...v3.7.0)
 
 Enhancements:
 
 * Improve compatibility with `--enable-frozen-string-literal` option
   on Ruby 2.3+. (Pat Allan, #320)
+* Add `Support.class_of` for extracting class of any object.
+  (Yuji Nakayama, #325)
 
 Bug Fixes:
 

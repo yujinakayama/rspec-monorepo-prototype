@@ -1,4 +1,4 @@
-# This file was generated on 2017-07-15T20:27:05+07:00 from the rspec-dev repo.
+# This file was generated on 2017-11-21T14:21:55+11:00 from the rspec-dev repo.
 # DO NOT modify it by hand as your changes will get lost the next time it is generated.
 
 language: ruby
@@ -8,6 +8,7 @@ cache:
   directories:
     - ../bundle
 before_install:
+  - unset _JAVA_OPTIONS
   - "script/clone_all_rspec_repos"
   # Note this doesn't work on JRUBY 2.0.0 mode so we don't do it, the excluded versions are broken on Ruby 2.3
   - if [ "jruby" != "$TRAVIS_RUBY_VERSION"  ]; then gem install bundler --version "1.11.2"; fi
@@ -21,23 +22,25 @@ rvm:
   - 2.0.0
   - 2.1
   - 2.2.7
-  - 2.3.4
-  - 2.4.1
+  - 2.3.5
+  - 2.4.2
   - ruby-head
   - ree
-  - rbx
-  - jruby
+  - rbx-3
+  - jruby-9.1.7.0 # pin JRuby to this until travis/rvm can install later versions
   - jruby-head
-  - jruby-18mode
-  - jruby-9.1.2.0
+  - jruby-1.7
+env:
+  - JRUBY_OPTS='--dev'
 matrix:
+  include:
+    - rvm: jruby-1.7
+      env: JRUBY_OPTS='--dev --1.8'
   allow_failures:
     - rvm: jruby-head
     - rvm: ruby-head
-    - rvm: rbx
+    - rvm: rbx-3
   fast_finish: true
-env:
-  - JRUBY_OPTS='--dev'
 branches:
   only:
     - master
