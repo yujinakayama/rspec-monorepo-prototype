@@ -8,7 +8,8 @@ module RSpec
       class BisectProgressFormatter < BaseTextFormatter
         def bisect_starting(notification)
           @round_count = 0
-          output.puts bisect_started_message(notification)
+          options = notification.original_cli_args.join(' ')
+          output.puts "Bisect started using options: #{options.inspect}"
           output.print "Running suite to find failures..."
         end
 
@@ -75,13 +76,6 @@ module RSpec
           output.puts "\n\nBisect aborted!"
           output.puts "\nThe most minimal reproduction command discovered so far is:\n  #{notification.repro}"
         end
-
-      private
-
-        def bisect_started_message(notification)
-          options = notification.original_cli_args.join(' ')
-          "Bisect started using options: #{options.inspect}"
-        end
       end
 
       # @private
@@ -131,10 +125,6 @@ module RSpec
           organized_ids = Formatters::Helpers.organize_ids(ids)
           formatted_ids = organized_ids.map { |id| "    - #{id}" }.join("\n")
           "#{description} (#{ids.size}):\n#{formatted_ids}"
-        end
-
-        def bisect_started_message(notification)
-          "#{super} and bisect runner: #{notification.bisect_runner}"
         end
       end
     end

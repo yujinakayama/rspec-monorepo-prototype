@@ -77,11 +77,13 @@ module RSpec::Core
     end
 
     describe Invocations::Bisect do
-      let(:original_cli_args) { %w[--bisect --seed 1234] }
-      let(:configuration_options) { ConfigurationOptions.new(original_cli_args) }
+      let(:bisect) { nil }
+      let(:options) { { :bisect => bisect } }
+      let(:args) { double(:args) }
       let(:success) { true }
 
       before do
+        allow(configuration_options).to receive_messages(:args => args, :options => options)
         allow(RSpec::Core::Bisect::Coordinator).to receive(:bisect_with).and_return(success)
       end
 
@@ -89,8 +91,7 @@ module RSpec::Core
         run_invocation
 
         expect(RSpec::Core::Bisect::Coordinator).to have_received(:bisect_with).with(
-          an_instance_of(Runner),
-          configuration_options.args,
+          args,
           an_instance_of(Formatters::BisectProgressFormatter)
         )
       end
@@ -114,14 +115,13 @@ module RSpec::Core
       end
 
       context "and the verbose option is specified" do
-        let(:original_cli_args) { %w[--bisect=verbose --seed 1234] }
+        let(:bisect) { "verbose" }
 
         it "starts the bisection coordinator with the debug formatter" do
           run_invocation
 
           expect(RSpec::Core::Bisect::Coordinator).to have_received(:bisect_with).with(
-            an_instance_of(Runner),
-            configuration_options.args,
+            args,
             an_instance_of(Formatters::BisectDebugFormatter)
           )
         end
