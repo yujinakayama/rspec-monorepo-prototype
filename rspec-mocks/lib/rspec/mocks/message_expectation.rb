@@ -581,7 +581,6 @@ module RSpec
         end
 
         def set_expected_received_count(relativity, n)
-          raise "`count` is not supported with negative message expectations" if negative?
           @at_least = (relativity == :at_least)
           @at_most  = (relativity == :at_most)
           @exactly  = (relativity == :exactly)
