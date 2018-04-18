@@ -33,18 +33,6 @@ module RSpec
           optional_max_arg_count <= max_non_kw_args
       end
 
-      def classify_arity(arity=@method.arity)
-        if arity < 0
-          # `~` inverts the one's complement and gives us the
-          # number of required args
-          @min_non_kw_args = ~arity
-          @max_non_kw_args = INFINITY
-        else
-          @min_non_kw_args = arity
-          @max_non_kw_args = arity
-        end
-      end
-
       if RubyFeatures.optional_and_splat_args_supported?
         def description
           @description ||= begin
@@ -149,58 +137,36 @@ module RSpec
           false
         end
 
-        alias_method :classify_parameters, :classify_arity
+        def classify_parameters
+          arity = @method.arity
+          if arity < 0
+            # `~` inverts the one's complement and gives us the
+            # number of required args
+            @min_non_kw_args = ~arity
+            @max_non_kw_args = INFINITY
+          else
+            @min_non_kw_args = arity
+            @max_non_kw_args = arity
+          end
+        end
       end
 
       INFINITY = 1 / 0.0
     end
 
-    if RSpec::Support::Ruby.jruby?
-      # JRuby has only partial support for UnboundMethod#parameters, so we fall back on using #arity
-      # https://github.com/jruby/jruby/issues/2816 and https://github.com/jruby/jruby/issues/2817
-      if RubyFeatures.optional_and_splat_args_supported? &&
-         Java::JavaLang::String.instance_method(:char_at).parameters == []
+    # Some versions of JRuby have a nasty bug we have to work around :(.
+    # https://github.com/jruby/jruby/issues/2816
+    if RSpec::Support::Ruby.jruby? &&
+       RubyFeatures.optional_and_splat_args_supported? &&
+       Class.new { attr_writer :foo }.instance_method(:foo=).parameters == []
 
-        class MethodSignature < remove_const(:MethodSignature)
-        private
+      class MethodSignature < remove_const(:MethodSignature)
+      private
 
-          def classify_parameters
-            super
-            if (arity = @method.arity) != 0 && @method.parameters.empty?
-              classify_arity(arity)
-            end
-          end
-        end
-      end
-
-      # JRuby used to always report -1 arity for Java proxy methods.
-      # The workaround essentially makes use of Java's introspection to figure
-      # out matching methods (which could be more than one partly because Java
-      # supports multiple overloads, and partly because JRuby introduces
-      # aliases to make method names look more Rubyesque). If there is only a
-      # single match, we can use that methods arity directly instead of the
-      # default -1 arity.
-      #
-      # This workaround only works for Java proxy methods, and in order to
-      # support regular methods and blocks, we need to be careful about calling
-      # owner and java_class as they might not be available
-      if Java::JavaLang::String.instance_method(:char_at).arity == -1
-        class MethodSignature < remove_const(:MethodSignature)
-        private
-
-          def classify_parameters
-            super
-            return unless @method.arity == -1
-            return unless @method.respond_to?(:owner)
-            return unless @method.owner.respond_to?(:java_class)
-            java_instance_methods = @method.owner.java_class.java_instance_methods
-            compatible_overloads = java_instance_methods.select do |java_method|
-              @method == @method.owner.instance_method(java_method.name)
-            end
-            if compatible_overloads.size == 1
-              classify_arity(compatible_overloads.first.arity)
-            end
-          end
+        def classify_parameters
+          super
+          return unless @method.parameters == [] && @method.arity == 1
+          @max_non_kw_args = @min_non_kw_args = 1
         end
       end
     end
