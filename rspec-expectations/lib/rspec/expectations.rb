@@ -76,7 +76,6 @@ module RSpec
     class MultipleExpectationsNotMetError < ExpectationNotMetError
     end
 
-    autoload :BlockSnippetExtractor, "rspec/expectations/block_snippet_extractor"
-    autoload :FailureAggregator,     "rspec/expectations/failure_aggregator"
+    autoload :FailureAggregator, "rspec/expectations/failure_aggregator"
   end
 end

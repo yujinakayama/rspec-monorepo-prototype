@@ -309,14 +309,6 @@ RSpec.describe "yield_with_args matcher" do
       expect { |b| _yield_with_args(1, &b) }.to yield_with_args
     end
 
-    it 'passes if the matchers match at yield time only' do
-      expect { |b|
-        val = []
-        _yield_with_args(val, &b)
-        val << 1
-      }.to yield_with_args(be_empty)
-    end
-
     it 'fails if the block does not yield' do
       expect {
         expect { |b| _dont_yield(&b) }.to yield_with_args
@@ -327,20 +319,6 @@ RSpec.describe "yield_with_args matcher" do
       expect {
         expect { |b| _yield_with_no_args(&b) }.to yield_with_args
       }.to fail_with(/expected given block to yield with arguments, but yielded with no arguments/)
-    end
-
-    it 'fails if the matchers match at return time only' do
-      expect {
-        expect { |b|
-          val = [1]
-          _yield_with_args(val, &b)
-          val.clear
-        }.to yield_with_args(be_empty)
-      }.to fail_with(dedent <<-EOS)
-        |expected given block to yield with arguments, but yielded with unexpected arguments
-        |expected: [(be empty)]
-        |     got: [[1]]
-      EOS
     end
 
     it 'raises an error if it yields multiple times' do
@@ -357,34 +335,12 @@ RSpec.describe "yield_with_args matcher" do
       }.to fail_with(/expected given block not to yield with arguments, but did/)
     end
 
-    it 'fails if the matchers match at yield time only' do
-      expect {
-        expect { |b|
-          val = []
-          _yield_with_args(val, &b)
-          val << 1
-        }.not_to yield_with_args(be_empty)
-      }.to fail_with(dedent <<-EOS)
-        |expected given block not to yield with arguments, but yielded with expected arguments
-        |expected not: [(be empty)]
-        |         got: [[]]
-      EOS
-    end
-
     it 'passes if the block does not yield' do
       expect { |b| _dont_yield(&b) }.not_to yield_with_args
     end
 
     it 'passes if the block yields with no arguments' do
       expect { |b| _yield_with_no_args(&b) }.not_to yield_with_args
-    end
-
-    it 'passes if the matchers match at return time only' do
-      expect { |b|
-        val = [1]
-        _yield_with_args(val, &b)
-        val.clear
-      }.not_to yield_with_args(be_empty)
     end
 
     it 'fails if the expect block does not accept an argument', :if => (RUBY_VERSION.to_f > 1.8) do
@@ -525,18 +481,18 @@ RSpec.describe "yield_with_args matcher" do
     end
   end
 
-  describe "expect {...}.to yield_with_args(String, Integer)" do
+  describe "expect {...}.to yield_with_args(String, Fixnum)" do
     it "passes if the block yields objects of the given classes" do
-      expect { |b| _yield_with_args("string", 15, &b) }.to yield_with_args(String, Integer)
+      expect { |b| _yield_with_args("string", 15, &b) }.to yield_with_args(String, Fixnum)
     end
 
     it "passes if the block yields the given classes" do
-      expect { |b| _yield_with_args(String, Integer, &b) }.to yield_with_args(String, Integer)
+      expect { |b| _yield_with_args(String, Fixnum, &b) }.to yield_with_args(String, Fixnum)
     end
 
     it "fails if the block yields objects of different classes" do
       expect {
-        expect { |b| _yield_with_args(15, "string", &b) }.to yield_with_args(String, Integer)
+        expect { |b| _yield_with_args(15, "string", &b) }.to yield_with_args(String, Fixnum)
       }.to fail_with(/expected given block to yield with arguments, but yielded with unexpected arguments/)
     end
   end
@@ -548,7 +504,7 @@ RSpec.describe "yield_successive_args matcher" do
 
   it_behaves_like "an RSpec matcher",
       :valid_value => lambda { |b| [1, 2].each(&b) },
-      :invalid_value => lambda { |b| [3, 4].each(&b) } do
+      :invalid_value => lambda { |b| _dont_yield(&b) } do
     let(:matcher) { yield_successive_args(1, 2) }
   end
 
@@ -563,42 +519,9 @@ RSpec.describe "yield_successive_args matcher" do
     expect(val).to be_nil
   end
 
-  it "works correctly when the method yields multiple args each time (passing case)" do
-    expect { |block|
-      ['football', 'barstool'].each_with_index(&block)
-    }.to yield_successive_args(
-      [/foo/,                         0],
-      [a_string_starting_with('bar'), 1]
-    )
-  end
-
-  it "works correctly when the method yields multiple args each time (failing case)" do
-    expect {
-      expect { |block|
-        ['football', 'barstool'].each_with_index(&block)
-      }.to yield_successive_args(
-        [/foo/,                         0],
-        [a_string_starting_with('abr'), 1]
-      )
-    }.to fail_with(dedent <<-EOS)
-      |expected given block to yield successively with arguments, but yielded with unexpected arguments
-      |expected: [[/foo/, 0], [(a string starting with "abr"), 1]]
-      |     got: [["football", 0], ["barstool", 1]]
-    EOS
-  end
-
   describe "expect {...}.to yield_successive_args([:a, 1], [:b, 2])" do
     it 'passes when the block successively yields the given args' do
       expect { |b| [ [:a, 1], [:b, 2] ].each(&b) }.to yield_successive_args([:a, 1], [:b, 2])
-    end
-
-    it 'passes if matched at yield time only' do
-      expect { |b|
-        [ [:a, 1], [:b, 2] ].each do |val|
-          _yield_with_args(val, &b)
-          val.clear
-        end
-      }.to yield_successive_args([:a, 1], [:b, 2])
     end
 
     it 'fails when the block does not yield that many times' do
@@ -611,22 +534,6 @@ RSpec.describe "yield_successive_args matcher" do
       expect {
         expect { |b| [ [:a, 1], [:b, 3] ].each(&b) }.to yield_successive_args([:a, 1], [:b, 2])
       }.to fail_with(/but yielded with unexpected arguments/)
-    end
-
-    it 'fails if matched at return time only' do
-      expect {
-        expect { |b|
-          [ [:a, 1], [:b, 2] ].each do |eventual|
-            initial = []
-            _yield_with_args(initial, &b)
-            initial.concat(eventual)
-          end
-        }.to yield_successive_args([:a, 1], [:b, 2])
-      }.to fail_with(dedent <<-EOS)
-        |expected given block to yield successively with arguments, but yielded with unexpected arguments
-        |expected: [[:a, 1], [:b, 2]]
-        |     got: [[], []]
-      EOS
     end
   end
 
@@ -704,23 +611,13 @@ RSpec.describe "yield_successive_args matcher" do
   end
 
   describe "expect {...}.not_to yield_successive_args(matcher, matcher)" do
-    it 'passes when the successively yielded args do not match the matchers' do
+    it 'passes when the successively yielded args match the matchers' do
       expect { |b|
         %w[ barn food ].each(&b)
       }.not_to yield_successive_args(a_string_matching(/foo/), a_string_matching(/bar/))
     end
 
-    it 'passes when the successively yielded args do not match the matchers (at yield time only)' do
-      expect { |b|
-        %w[ food barn ].each do |eventual|
-          initial = String.new
-          _yield_with_args(initial, &b)
-          initial << eventual
-        end
-      }.not_to yield_successive_args(a_string_matching(/foo/), a_string_matching(/bar/))
-    end
-
-    it 'fails when the successively yielded args match the matchers' do
+    it 'fails when the successively yielded args do not match the matchers' do
       expect {
         expect { |b|
           %w[ food barn ].each(&b)
@@ -731,36 +628,20 @@ RSpec.describe "yield_successive_args matcher" do
         |         got: ["food", "barn"]
       EOS
     end
-
-    it 'fails when the successively yielded args match the matchers (at yield time only)' do
-      values = %w[ food barn ].collect { |value| value.dup }
-      expect {
-        expect { |b|
-          values.each do |val|
-            _yield_with_args(val, &b)
-            val.sub!(/.+/, '')
-          end
-        }.not_to yield_successive_args(a_string_matching(/foo/), a_string_matching(/bar/))
-      }.to fail_with(dedent <<-EOS)
-        |expected given block not to yield successively with arguments, but yielded with expected arguments
-        |expected not: [(a string matching /foo/), (a string matching /bar/)]
-        |         got: ["food", "barn"]
-      EOS
-    end
   end
 
-  describe "expect {...}.to yield_successive_args(String, Integer)" do
+  describe "expect {...}.to yield_successive_args(String, Fixnum)" do
     it "passes if the block successively yields objects of the given classes" do
-      expect { |b| ["string", 15].each(&b) }.to yield_successive_args(String, Integer)
+      expect { |b| ["string", 15].each(&b) }.to yield_successive_args(String, Fixnum)
     end
 
     it "passes if the block yields the given classes" do
-      expect { |b| [String, Integer].each(&b) }.to yield_successive_args(String, Integer)
+      expect { |b| [String, Fixnum].each(&b) }.to yield_successive_args(String, Fixnum)
     end
 
     it "fails if the block yields objects of different classes" do
       expect {
-        expect { |b| [15, "string"].each(&b) }.to yield_successive_args(String, Integer)
+        expect { |b| [15, "string"].each(&b) }.to yield_successive_args(String, Fixnum)
       }.to fail_with(/expected given block to yield successively with arguments/)
     end
   end

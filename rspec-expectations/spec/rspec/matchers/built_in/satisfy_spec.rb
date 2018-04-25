@@ -14,44 +14,15 @@ RSpec.describe "expect(...).to satisfy { block }" do
     end
   end
 
-  context "when no custom description is provided" do
-    context 'in Ripper supported environment', :if => RSpec::Support::RubyFeatures.ripper_supported? do
-      it "fails with block snippet if block returns false" do
-        expect {
-          expect(false).to satisfy { |val| val }
-        }.to fail_with("expected false to satisfy expression `val`")
-
-        expect do
-          expect(false).to satisfy do |val|
-            val
-          end
-        end.to fail_with("expected false to satisfy expression `val`")
+  it "fails if block returns false" do
+    expect {
+      expect(false).to satisfy { |val| val }
+    }.to fail_with("expected false to satisfy block")
+    expect do
+      expect(false).to satisfy do |val|
+        val
       end
-
-      context 'when used with an alias name' do
-        alias_matcher :fulfill, :satisfy
-
-        it 'can extract the block snippet' do
-          expect {
-            expect(false).to fulfill { |val| val }
-          }.to fail_with("expected false to fulfill expression `val`")
-        end
-      end
-    end
-
-    context 'in Ripper unsupported environment', :unless => RSpec::Support::RubyFeatures.ripper_supported? do
-      it "fails without block snippet if block returns false" do
-        expect {
-          expect(false).to satisfy { |val| val }
-        }.to fail_with("expected false to satisfy block")
-
-        expect do
-          expect(false).to satisfy do |val|
-            val
-          end
-        end.to fail_with("expected false to satisfy block")
-      end
-    end
+    end.to fail_with("expected false to satisfy block")
   end
 
   context "when a custom description is provided" do
@@ -87,22 +58,10 @@ RSpec.describe "expect(...).not_to satisfy { block }" do
     end
   end
 
-  context "when no custom description is provided" do
-    context 'in Ripper supported environment', :if => RSpec::Support::RubyFeatures.ripper_supported? do
-      it "fails with block snippet if block returns true" do
-        expect {
-          expect(true).not_to satisfy { |val| val }
-        }.to fail_with("expected true not to satisfy expression `val`")
-      end
-    end
-
-    context 'in Ripper unsupported environment', :unless => RSpec::Support::RubyFeatures.ripper_supported? do
-      it "fails without block snippet if block returns true" do
-        expect {
-          expect(true).not_to satisfy { |val| val }
-        }.to fail_with("expected true not to satisfy block")
-      end
-    end
+  it "fails if block returns true" do
+    expect {
+      expect(true).not_to satisfy { |val| val }
+    }.to fail_with("expected true not to satisfy block")
   end
 
   context "when a custom description is provided" do

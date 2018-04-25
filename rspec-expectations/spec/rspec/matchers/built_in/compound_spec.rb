@@ -416,7 +416,7 @@ module RSpec::Matchers::BuiltIn
           end
 
           context "when only second matcher fails" do
-            subject { include("baz").and be_an(Integer) }
+            subject { include("baz").and be_a(Fixnum) }
 
             it 'fails with a message not containing a diff for first matcher' do
               expect {
@@ -784,7 +784,7 @@ module RSpec::Matchers::BuiltIn
       end
 
       context "when both matchers are not diffable" do
-        subject { be_a(String).or be_an(Integer) }
+        subject { be_a(String).or be_a(Fixnum) }
 
         it "is not diffable" do
           expect(subject).not_to be_diffable

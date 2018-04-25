@@ -77,11 +77,7 @@ module RSpec
           end
 
           def predicates
-            @predicates ||= [:exist?, :exists?].select { |p| actual.respond_to?(p) && !deprecated(p, actual) }
-          end
-
-          def deprecated(predicate, actual)
-            predicate == :exists? && File == actual
+            @predicates ||= [:exist?, :exists?].select { |p| actual.respond_to?(p) }
           end
         end
       end

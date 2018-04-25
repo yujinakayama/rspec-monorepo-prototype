@@ -21,7 +21,8 @@ module RSpec
       "#{last_expectation_handler.verb} #{last_description}"
     end
 
-    # @private
+  private
+
     def self.last_description
       last_matcher.respond_to?(:description) ? last_matcher.description : <<-MESSAGE
 When you call a matcher in an example without a String, like this:

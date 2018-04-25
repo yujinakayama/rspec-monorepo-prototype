@@ -1,55 +1,3 @@
-### 3.8 Development
-[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.7.0...master)
-
-Enhancements:
-
-* Improve failure message of `change(receiver, :message)` by including the
-  receiver as `SomeClass#some_message`. (Tomohiro Hashidate, #1005)
-* Improve `change` matcher so that it can correctly detect changes in
-  deeply nested mutable objects (such as arrays-of-hashes-of-arrays).
-  The improved logic uses the before/after `hash` value to see if the
-  object has been mutated, rather than shallow duping the object.
-  (Myron Marston, #1034)
-* Improve `include` matcher so that pseudo-hash objects (e.g. objects
-  that decorate a hash using a `SimpleDelegator` or similar) are treated
-  as a hash, as long as they implement `to_hash`. (Pablo Brasero, #1012)
-
-### 3.7.0 / 2017-10-17
-[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.6.0...v3.7.0)
-
-Enhancements:
-
-* Improve compatibility with `--enable-frozen-string-literal` option
-  on Ruby 2.3+. (Pat Allan, #997)
-
-### 3.6.0 / 2017-05-04
-[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.6.0.beta2...v3.6.0)
-
-Enhancements:
-
-* Treat NoMethodError as a failure for comparison matchers. (Jon Rowe, #972)
-* Allow for scoped aliased and negated matchers--just call
-  `alias_matcher` or `define_negated_matcher` from within an example
-  group. (Markus Reiter, #974)
-* Improve failure message of `change` matcher with block and `satisfy` matcher
-  by including the block snippet instead of just describing it as `result` or
-  `block` when Ripper is available. (Yuji Nakayama, #987)
-
-Bug Fixes:
-
-* Fix `yield_with_args` and `yield_successive_args` matchers so that
-  they compare expected to actual args at the time the args are yielded
-  instead of at the end, in case the method that is yielding mutates the
-  arguments after yielding. (Alyssa Ross, #965)
-
-### 3.6.0.beta2 / 2016-12-12
-[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.6.0.beta1...v3.6.0.beta2)
-
-Bug Fixes:
-
-* Using the exist matcher on `File` no longer produces a deprecation warning.
-  (Jon Rowe, #954)
-
 ### 3.6.0.beta1 / 2016-10-09
 [Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.5.0...v3.6.0.beta1)
 
@@ -136,7 +84,7 @@ Bug Fixes:
 
 * Fix failure message from dynamic predicate matchers when the object
   does not respond to the predicate so that it is inspected rather
-  than relying upon its `to_s` -- that way for `nil`, `"nil"` is
+  than relying upon it's `to_s` -- that way for `nil`, `"nil"` is
   printed rather than an empty string. (Myron Marston, #841)
 * Fix SystemStackError raised when diffing an Enumerable object
   whose `#each` includes the object itself. (Yuji Nakayama, #857)

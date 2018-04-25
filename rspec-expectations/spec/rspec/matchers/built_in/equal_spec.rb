@@ -14,7 +14,7 @@ module RSpec
       end
 
       it "does not match when !actual.equal?(expected)" do
-        expect("1").not_to equal("1".dup)
+        expect("1").not_to equal("1")
       end
 
       it "describes itself" do
@@ -33,7 +33,7 @@ module RSpec
 
       context "when the expected object's #equal? always returns true" do
         let(:strange_string) do
-          string = "foo".dup
+          string = "foo"
 
           def string.equal?(other)
             true
@@ -96,7 +96,7 @@ module RSpec
       end
 
       it "suggests the `eq` matcher on failure" do
-        expected, actual = "1", "1".dup
+        expected, actual = "1", "1"
         expect {
           expect(actual).to equal(expected)
         }.to fail_with <<-MESSAGE

@@ -1,4 +1,4 @@
-# This file was generated on 2018-04-05T18:41:16+10:00 from the rspec-dev repo.
+# This file was generated on 2016-07-14T09:50:14+10:00 from the rspec-dev repo.
 # DO NOT modify it by hand as your changes will get lost the next time it is generated.
 
 function is_mri {
@@ -63,11 +63,6 @@ function rspec_support_compatible {
   else
     return 1
   fi
-}
-
-function additional_specs_available {
-  type run_additional_specs > /dev/null 2>&1
-  return $?
 }
 
 function documentation_enforced {

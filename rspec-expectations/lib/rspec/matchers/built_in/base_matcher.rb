@@ -22,9 +22,6 @@ module RSpec
         # @private
         attr_reader :actual, :expected, :rescued_exception
 
-        # @private
-        attr_writer :matcher_name
-
         def initialize(expected=UNDEFINED)
           @expected = expected unless UNDEFINED.equal?(expected)
         end
@@ -99,15 +96,6 @@ module RSpec
         end
 
         # @private
-        def matcher_name
-          if defined?(@matcher_name)
-            @matcher_name
-          else
-            self.class.matcher_name
-          end
-        end
-
-        # @private
         # Borrowed from ActiveSupport.
         def self.underscore(camel_cased_word)
           word = camel_cased_word.to_s.dup
@@ -165,7 +153,7 @@ module RSpec
           # you often only need to override `description`.
           # @return [String]
           def failure_message
-            "expected #{description_of @actual} to #{description}".dup
+            "expected #{description_of @actual} to #{description}"
           end
 
           # @api private
@@ -174,7 +162,7 @@ module RSpec
           # you often only need to override `description`.
           # @return [String]
           def failure_message_when_negated
-            "expected #{description_of @actual} not to #{description}".dup
+            "expected #{description_of @actual} not to #{description}"
           end
 
           # @private

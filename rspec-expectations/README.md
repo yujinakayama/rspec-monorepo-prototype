@@ -3,9 +3,7 @@
 RSpec::Expectations lets you express expected outcomes on an object in an
 example.
 
-```ruby
-expect(account.balance).to eq(Money.new(37.42, :USD))
-```
+    expect(account.balance).to eq(Money.new(37.42, :USD))
 
 ## Install
 
@@ -20,7 +18,7 @@ RSpec repos as well. Add the following to your `Gemfile`:
 
 ```ruby
 %w[rspec-core rspec-expectations rspec-mocks rspec-support].each do |lib|
-  gem lib, :git => "https://github.com/rspec/#{lib}.git", :branch => 'master'
+  gem lib, :git => "git://github.com/rspec/#{lib}.git", :branch => 'master'
 end
 ```
 
@@ -152,7 +150,7 @@ expect { |b| 5.tap(&b) }.to yield_control # passes regardless of yielded args
 expect { |b| yield_if_true(true, &b) }.to yield_with_no_args # passes only if no args are yielded
 
 expect { |b| 5.tap(&b) }.to yield_with_args(5)
-expect { |b| 5.tap(&b) }.to yield_with_args(Integer)
+expect { |b| 5.tap(&b) }.to yield_with_args(Fixnum)
 expect { |b| "a string".tap(&b) }.to yield_with_args(/str/)
 
 expect { |b| [1, 2, 3].each(&b) }.to yield_successive_args(1, 2, 3)
@@ -265,7 +263,7 @@ expect(hash).to match(
   :a => {
     :b => a_collection_containing_exactly(
       a_string_starting_with("f"),
-      an_instance_of(Integer)
+      an_instance_of(Fixnum)
     ),
     :c => { :d => (a_value < 3) }
   }

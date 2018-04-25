@@ -479,16 +479,10 @@ RSpec.describe "expect(...).to be <" do
     }.to fail_with(%(expected: < "a"\n     got:   "a"))
   end
 
-  it "fails when < operator raises ArgumentError" do
+  it "fails when < operator raises ArgumentErrorr" do
     expect {
       expect('a').to be < 1
     }.to fail_with(%(expected: < 1\n     got:   "a"))
-  end
-
-  it 'fails when < operator is not defined' do
-    expect {
-      expect(nil).to be < 1
-    }.to fail_with(%(expected: < 1\n     got:   nil))
   end
 
   it "describes itself" do
@@ -519,16 +513,10 @@ RSpec.describe "expect(...).to be <=" do
     }.to fail_with(%(expected: <= "a"\n     got:    "c"))
   end
 
-  it "fails when <= operator raises ArgumentError" do
+  it "fails when < operator raises ArgumentErrorr" do
     expect {
       expect('a').to be <= 1
     }.to fail_with(%(expected: <= 1\n     got:    "a"))
-  end
-
-  it 'fails when <= operator is not defined' do
-    expect {
-      expect(nil).to be <= 1
-    }.to fail_with(%(expected: <= 1\n     got:    nil))
   end
 end
 
@@ -548,16 +536,10 @@ RSpec.describe "expect(...).to be >=" do
     }.to fail_with(%(expected: >= "c"\n     got:    "a"))
   end
 
-  it "fails when >= operator raises ArgumentError" do
+  it "fails when < operator raises ArgumentErrorr" do
     expect {
       expect('a').to be >= 1
     }.to fail_with(%(expected: >= 1\n     got:    "a"))
-  end
-
-  it 'fails when >= operator is not defined' do
-    expect {
-      expect(nil).to be >= 1
-    }.to fail_with(%(expected: >= 1\n     got:    nil))
   end
 end
 
@@ -576,16 +558,10 @@ RSpec.describe "expect(...).to be >" do
     }.to fail_with(%(expected: > "a"\n     got:   "a"))
   end
 
-  it "fails when > operator raises ArgumentError" do
+  it "fails when < operator raises ArgumentErrorr" do
     expect {
       expect('a').to be > 1
     }.to fail_with(%(expected: > 1\n     got:   "a"))
-  end
-
-  it 'fails when > operator is not defined' do
-    expect {
-      expect(nil).to be > 1
-    }.to fail_with(%(expected: > 1\n     got:   nil))
   end
 end
 
@@ -604,7 +580,7 @@ RSpec.describe "expect(...).to be ==" do
     }.to fail_with(%(expected: == "c"\n     got:    "a"))
   end
 
-  it "fails when == operator raises ArgumentError" do
+  it "fails when < operator raises ArgumentErrorr" do
     expect {
       expect('a').to be == 1
     }.to fail_with(%(expected: == 1\n     got:    "a"))
@@ -794,7 +770,7 @@ end
 
 RSpec.describe "be_an_instance_of" do
   it "passes when direct class matches" do
-    expect("string").to be_an_instance_of(String)
+    expect(5).to be_an_instance_of(Fixnum)
   end
 
   it "fails when class is higher up hierarchy" do
