@@ -4,8 +4,9 @@ require 'shellwords'
 module RSpec
   module Core
     # Responsible for utilizing externally provided configuration options,
-    # whether via the command line, `.rspec`, `~/.rspec`, `.rspec-local`
-    # or a custom options file.
+    # whether via the command line, `.rspec`, `~/.rspec`,
+    # `$XDG_CONFIG_HOME/rspec/options`, `.rspec-local` or a custom options
+    # file.
     class ConfigurationOptions
       # @param args [Array<String>] command line arguments
       def initialize(args)
@@ -118,7 +119,11 @@ module RSpec
       end
 
       def file_options
-        custom_options_file ? [custom_options] : [global_options, project_options, local_options]
+        if custom_options_file
+          [custom_options]
+        else
+          [global_xdg_options, global_options, project_options, local_options]
+        end
       end
 
       def env_options
@@ -148,6 +153,10 @@ module RSpec
 
       def global_options
         @global_options ||= options_from(global_options_file)
+      end
+
+      def global_xdg_options
+        @global_xdg_options ||= options_from(global_xdg_options_file)
       end
 
       def options_from(path)
@@ -192,6 +201,23 @@ module RSpec
       rescue ArgumentError
         # :nocov:
         RSpec.warning "Unable to find ~/.rspec because the HOME environment variable is not set"
+        nil
+        # :nocov:
+      end
+
+      def global_xdg_options_file
+        xdg_config_home = resolve_xdg_config_home
+        if xdg_config_home
+          File.join(xdg_config_home, "rspec", "options")
+        end
+      end
+
+      def resolve_xdg_config_home
+        File.expand_path(ENV.fetch("XDG_CONFIG_HOME", "~/.config"))
+      rescue ArgumentError
+        # :nocov:
+        # On Ruby 2.4, `File.expand("~")` works even if `ENV['HOME']` is not set.
+        # But on earlier versions, it fails.
         nil
         # :nocov:
       end
