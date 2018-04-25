@@ -8,7 +8,7 @@ RSpec.describe 'Spec file load errors' do
   let(:failure_exit_code) { rand(97) + 2 } # 2..99
 
   if RSpec::Support::Ruby.jruby_9000?
-    let(:spec_line_suffix) { ":in `<top>'" }
+    let(:spec_line_suffix) { ":in `<main>'" }
   elsif RSpec::Support::Ruby.jruby?
     let(:spec_line_suffix) { ":in `(root)'" }
   elsif RUBY_VERSION == "1.8.7"
@@ -29,6 +29,29 @@ RSpec.describe 'Spec file load errors' do
       c.backtrace_exclusion_patterns << %r{/rspec-core/spec/} << %r{rspec_with_simplecov}
       c.failure_exit_code = failure_exit_code
     end
+  end
+
+  it 'nicely handles load-time errors from --require files' do
+    write_file_formatted "helper_with_error.rb", "raise 'boom'"
+
+    run_command "--require ./helper_with_error"
+    expect(last_cmd_exit_status).to eq(failure_exit_code)
+    output = normalize_durations(last_cmd_stdout)
+    expect(output).to eq unindent(<<-EOS)
+
+      An error occurred while loading ./helper_with_error.
+      Failure/Error: raise 'boom'
+
+      RuntimeError:
+        boom
+      # ./helper_with_error.rb:1#{spec_line_suffix}
+      No examples found.
+
+
+      Finished in n.nnnn seconds (files took n.nnnn seconds to load)
+      0 examples, 0 failures, 1 error occurred outside of examples
+
+    EOS
   end
 
   it 'nicely handles load-time errors in user spec files' do
@@ -81,7 +104,8 @@ RSpec.describe 'Spec file load errors' do
 
 
       Finished in n.nnnn seconds (files took n.nnnn seconds to load)
-      0 examples, 0 failures
+      0 examples, 0 failures, 2 errors occurred outside of examples
+
     EOS
   end
 end

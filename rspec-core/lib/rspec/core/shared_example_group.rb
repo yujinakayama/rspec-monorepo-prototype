@@ -64,11 +64,6 @@ module RSpec
       #     group; any example group or example with matching metadata will
       #     automatically include this shared example group.
       #   @param block The block to be eval'd
-      # @overload shared_examples(metadata, &block)
-      #   @param metadata [Array<Symbol>, Hash] metadata to attach to this
-      #     group; any example group or example with matching metadata will
-      #     automatically include this shared example group.
-      #   @param block The block to be eval'd
       #
       # Stores the block for later use. The block will be evaluated
       # in the context of an example group via `include_examples`,
@@ -108,7 +103,6 @@ module RSpec
       # Shared examples top level DSL.
       module TopLevelDSL
         # @private
-        # rubocop:disable Lint/NestedMethodDefinition
         def self.definitions
           proc do
             def shared_examples(name, *args, &block)
@@ -118,7 +112,6 @@ module RSpec
             alias shared_examples_for shared_examples
           end
         end
-        # rubocop:enable Lint/NestedMethodDefinition
 
         # @private
         def self.exposed_globally?
@@ -153,6 +146,12 @@ module RSpec
       # @private
       class Registry
         def add(context, name, *metadata_args, &block)
+          unless block
+            RSpec.warning "Shared example group #{name} was defined without a "\
+                          "block and will have no effect. Please define a "\
+                          "block or remove the definition."
+          end
+
           if RSpec.configuration.shared_context_metadata_behavior == :trigger_inclusion
             return legacy_add(context, name, *metadata_args, &block)
           end
@@ -258,7 +257,7 @@ module RSpec
           # :nocov:
           def ensure_block_has_source_location(block)
             source_location = yield.split(':')
-            block.extend Module.new { define_method(:source_location) { source_location } }
+            block.extend(Module.new { define_method(:source_location) { source_location } })
           end
           # :nocov:
         end

@@ -1036,7 +1036,7 @@ module RSpec::Core
         expect(self.group.examples.first.execution_result.pending_message).to eq(RSpec::Core::Pending::NO_REASON_GIVEN)
       end
 
-      it 'sets the backtrace to the example definition so it can be located by the user', :pending => RSpec::Support::Ruby.jruby_9000? do
+      it 'sets the backtrace to the example definition so it can be located by the user' do
         file = RSpec::Core::Metadata.relative_path(__FILE__)
         expected = [file, __LINE__ + 2].map(&:to_s)
         group = RSpec.describe do
@@ -1678,6 +1678,16 @@ module RSpec::Core
           expect do
             self.group.send(name, "shared stuff")
           end.to raise_error(ArgumentError, /Could not find .* "shared stuff"/)
+        end
+
+        it "raises a helpful error message when shared content is accessed recursively" do
+          self.group.shared_examples "named otherwise" do
+            example("does something") {}
+            self.send(name, "named otherwise")
+          end
+          expect do
+            self.group.send(name, "named otherwise")
+          end.to raise_error(ArgumentError, /can't include shared examples recursively/)
         end
 
         it "leaves RSpec's thread metadata unchanged" do

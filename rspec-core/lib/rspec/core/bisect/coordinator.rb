@@ -1,62 +1,58 @@
-RSpec::Support.require_rspec_core "bisect/server"
-RSpec::Support.require_rspec_core "bisect/runner"
+RSpec::Support.require_rspec_core "bisect/shell_command"
 RSpec::Support.require_rspec_core "bisect/example_minimizer"
+RSpec::Support.require_rspec_core "bisect/utilities"
 RSpec::Support.require_rspec_core "formatters/bisect_progress_formatter"
 
 module RSpec
   module Core
     module Bisect
-      # @private
       # The main entry point into the bisect logic. Coordinates among:
-      #   - Bisect::Server: Receives suite results.
-      #   - Bisect::Runner: Runs a set of examples and directs the results
-      #     to the server.
+      #   - Bisect::ShellCommand: Generates shell commands to run spec subsets
       #   - Bisect::ExampleMinimizer: Contains the core bisect logic.
-      #   - Formatters::BisectProgressFormatter: provides progress updates
-      #     to the user.
+      #   - A bisect runner: runs a set of examples and returns the results.
+      #   - A bisect formatter: provides progress updates to the user.
+      # @private
       class Coordinator
-        def self.bisect_with(original_cli_args, configuration, formatter)
-          new(original_cli_args, configuration, formatter).bisect
+        def self.bisect_with(spec_runner, original_cli_args, formatter)
+          new(spec_runner, original_cli_args, formatter).bisect
         end
 
-        def initialize(original_cli_args, configuration, formatter)
-          @original_cli_args = original_cli_args
-          @configuration     = configuration
-          @formatter         = formatter
+        def initialize(spec_runner, original_cli_args, formatter)
+          @spec_runner   = spec_runner
+          @shell_command = ShellCommand.new(original_cli_args)
+          @notifier      = Bisect::Notifier.new(formatter)
         end
 
         def bisect
-          @configuration.add_formatter @formatter
+          repro = start_bisect_runner do |runner|
+            minimizer = ExampleMinimizer.new(@shell_command, runner, @notifier)
 
-          reporter.close_after do
-            repro = Server.run do |server|
-              runner    = Runner.new(server, @original_cli_args)
-              minimizer = ExampleMinimizer.new(runner, reporter)
-
-              gracefully_abort_on_sigint(minimizer)
-              minimizer.find_minimal_repro
-              minimizer.repro_command_for_currently_needed_ids
-            end
-
-            reporter.publish(:bisect_repro_command, :repro => repro)
+            gracefully_abort_on_sigint(minimizer)
+            minimizer.find_minimal_repro
+            minimizer.repro_command_for_currently_needed_ids
           end
+
+          @notifier.publish(:bisect_repro_command, :repro => repro)
 
           true
         rescue BisectFailedError => e
-          reporter.publish(:bisect_failed, :failure_explanation => e.message)
+          @notifier.publish(:bisect_failed, :failure_explanation => e.message)
           false
+        ensure
+          @notifier.publish(:close)
         end
 
       private
 
-        def reporter
-          @configuration.reporter
+        def start_bisect_runner(&block)
+          klass = @spec_runner.configuration.bisect_runner_class
+          klass.start(@shell_command, @spec_runner, &block)
         end
 
         def gracefully_abort_on_sigint(minimizer)
           trap('INT') do
             repro = minimizer.repro_command_for_currently_needed_ids
-            reporter.publish(:bisect_aborted, :repro => repro)
+            @notifier.publish(:bisect_aborted, :repro => repro)
             exit(1)
           end
         end

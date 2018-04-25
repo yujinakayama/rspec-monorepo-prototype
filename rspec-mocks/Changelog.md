@@ -1,3 +1,45 @@
+### 3.8 Development
+[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v3.7.0...master)
+
+Bug Fixes:
+
+* Issue error when encountering invalid "counted" negative message expectations.
+  (Sergiy Yarinovskiy, #1212)
+
+### 3.7.0 / 2017-10-17
+[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v3.6.0...v3.7.0)
+
+Enhancements:
+
+* Improve compatibility with `--enable-frozen-string-literal` option
+  on Ruby 2.3+. (Pat Allan, #1165)
+
+Bug Fixes:
+
+* Fix `hash_including` and `hash_excluding` so that they work against
+  subclasses of `Hash`. (Aaron Rosenberg, #1167)
+
+### 3.6.0 / 2017-05-04
+[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v3.6.0.beta2...v3.6.0)
+
+Bug Fixes:
+
+* Fix "instance variable @color not initialized" warning when using
+  rspec-mocks without rspec-core. (Myron Marston, #1142)
+* Restore aliased module methods properly when stubbing on 1.8.7.
+  (Samuel Giddins, #1144)
+* Allow a message chain expectation to be constrained by argument(s).
+  (Jon Rowe, #1156)
+
+### 3.6.0.beta2 / 2016-12-12
+[Full Changelog](http://github.com/rspec/rspec-mocks/compare/v3.6.0.beta1...v3.6.0.beta2)
+
+Enhancements:
+
+* Add new `without_partial_double_verification { }` API that lets you
+  temporarily turn off partial double verification for an example.
+  (Jon Rowe, #1104)
+
 ### 3.6.0.beta1 / 2016-10-09
 [Full Changelog](http://github.com/rspec/rspec-mocks/compare/v3.5.0...v3.6.0.beta1)
 
@@ -859,7 +901,8 @@ Bug fixes
 * Fix `should_receive` so that when it is called on an `as_null_object`
   double with no implementation, and there is a previous explicit stub
   for the same method, the explicit stub remains (rather than being
-  overriden with the null object implementation--`return self`). (Myron Marston)
+  overridden with the null object implementation--`return self`). (Myron
+  Marston)
 
 ### 2.11.0 / 2012-07-07
 [Full Changelog](http://github.com/rspec/rspec-mocks/compare/v2.10.1...v2.11.0)

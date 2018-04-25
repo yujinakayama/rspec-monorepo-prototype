@@ -57,10 +57,10 @@ module RSpec
 
       # @private
       def raise_missing_default_stub_error(expectation, args_for_multiple_calls)
-        message = error_message(expectation, args_for_multiple_calls)
-        message << "\n Please stub a default value first if message might be received with other args as well. \n"
-
-        __raise message
+        __raise(
+          error_message(expectation, args_for_multiple_calls) +
+          "\n Please stub a default value first if message might be received with other args as well. \n"
+        )
       end
 
       # @private
@@ -69,10 +69,10 @@ module RSpec
       end
 
       def default_error_message(expectation, expected_args, actual_args)
-        "#{intro} received #{expectation.message.inspect} #{unexpected_arguments_message(expected_args, actual_args)}"
+        "#{intro} received #{expectation.message.inspect} #{unexpected_arguments_message(expected_args, actual_args)}".dup
       end
 
-      # rubocop:disable Style/ParameterLists
+      # rubocop:disable Metrics/ParameterLists
       # @private
       def raise_expectation_error(message, expected_received_count, argument_list_matcher,
                                   actual_received_count, expectation_count_type, args,
@@ -81,20 +81,20 @@ module RSpec
         received_part = received_part_of_expectation_error(actual_received_count, args)
         __raise "(#{intro(:unwrapped)}).#{message}#{format_args(args)}\n    #{expected_part}\n    #{received_part}", backtrace_line, source_id
       end
-      # rubocop:enable Style/ParameterLists
+      # rubocop:enable Metrics/ParameterLists
 
       # @private
       def raise_unimplemented_error(doubled_module, method_name, object)
         message = case object
                   when InstanceVerifyingDouble
-                    "the %s class does not implement the instance method: %s" <<
+                    "the %s class does not implement the instance method: %s".dup <<
                       if ObjectMethodReference.for(doubled_module, method_name).implemented?
                         ". Perhaps you meant to use `class_double` instead?"
                       else
                         ""
                       end
                   when ClassVerifyingDouble
-                    "the %s class does not implement the class method: %s" <<
+                    "the %s class does not implement the class method: %s".dup <<
                       if InstanceMethodReference.for(doubled_module, method_name).implemented?
                         ". Perhaps you meant to use `instance_double` instead?"
                       else
@@ -214,8 +214,8 @@ module RSpec
 
       def expectation_on_nil_message(method_name)
         "An expectation of `:#{method_name}` was set on `nil`. " \
-        "To allow expectations on `nil` and suppress this message, set `config.allow_message_expectations_on_nil` to `true`. " \
-        "To disallow expectations on `nil`, set `config.allow_message_expectations_on_nil` to `false`"
+        "To allow expectations on `nil` and suppress this message, set `RSpec::Mocks.configuration.allow_message_expectations_on_nil` to `true`. " \
+        "To disallow expectations on `nil`, set `RSpec::Mocks.configuration.allow_message_expectations_on_nil` to `false`"
       end
 
       # @private

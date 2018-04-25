@@ -1,6 +1,6 @@
-require 'rspec/core/source/node'
+require 'rspec/support/source/node'
 
-class RSpec::Core::Source
+class RSpec::Support::Source
   RSpec.describe Node, :if => RSpec::Support::RubyFeatures.ripper_supported? do
     let(:root_node) do
       Node.new(sexp)
@@ -59,9 +59,9 @@ class RSpec::Core::Source
           root_node.find { |node| node.type == :args_add_block }
         end
 
-        it 'returns pseudo group node for the array' do
+        it 'returns pseudo expression sequence node for the array' do
           expect(target_node.args).to match([
-            an_object_having_attributes(:type => :group),
+            an_object_having_attributes(:type => :_expression_sequence),
             false
           ])
         end
@@ -77,7 +77,7 @@ class RSpec::Core::Source
         expect { |b| target_node.each_ancestor(&b) }.to yield_successive_args(
           an_object_having_attributes(:type => :method_add_arg),
           an_object_having_attributes(:type => :assign),
-          an_object_having_attributes(:type => :group),
+          an_object_having_attributes(:type => :_expression_sequence),
           an_object_having_attributes(:type => :program)
         )
       end
@@ -107,7 +107,7 @@ class RSpec::Core::Source
 
     describe '#inspect' do
       it 'returns a string including class name and node type' do
-        expect(root_node.inspect).to eq('#<RSpec::Core::Source::Node program>')
+        expect(root_node.inspect).to eq('#<RSpec::Support::Source::Node program>')
       end
     end
   end

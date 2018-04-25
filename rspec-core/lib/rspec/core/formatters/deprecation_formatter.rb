@@ -59,7 +59,10 @@ module RSpec
 
         DEPRECATION_STREAM_NOTICE = "Pass `--deprecation-out` or set " \
           "`config.deprecation_stream` to a file for full output."
+        TOO_MANY_WARNINGS_NOTICE  = "Too many similar deprecation messages " \
+          "reported, disregarding further reports. #{DEPRECATION_STREAM_NOTICE}"
 
+        # @private
         SpecifiedDeprecationMessage = Struct.new(:type) do
           def initialize(data)
             @message = data.message
@@ -71,16 +74,14 @@ module RSpec
           end
 
           def too_many_warnings_message
-            msg = "Too many similar deprecation messages reported, disregarding further reports. "
-            msg << DEPRECATION_STREAM_NOTICE
-            msg
+            TOO_MANY_WARNINGS_NOTICE
           end
 
           private
 
           def output_formatted(str)
             return str unless str.lines.count > 1
-            separator = "#{'-' * 80}"
+            separator = '-' * 80
             "#{separator}\n#{str.chomp}\n#{separator}"
           end
 
@@ -89,6 +90,7 @@ module RSpec
           end
         end
 
+        # @private
         GeneratedDeprecationMessage = Struct.new(:type) do
           def initialize(data)
             @data = data
@@ -96,16 +98,14 @@ module RSpec
           end
 
           def to_s
-            msg =  "#{@data.deprecated} is deprecated."
+            msg = String.new("#{@data.deprecated} is deprecated.")
             msg << " Use #{@data.replacement} instead." if @data.replacement
-            msg << " Called from #{@data.call_site}." if @data.call_site
+            msg << " Called from #{@data.call_site}."   if @data.call_site
             msg
           end
 
           def too_many_warnings_message
-            msg = "Too many uses of deprecated '#{type}'. "
-            msg << DEPRECATION_STREAM_NOTICE
-            msg
+            "Too many uses of deprecated '#{type}'. #{DEPRECATION_STREAM_NOTICE}"
           end
         end
 

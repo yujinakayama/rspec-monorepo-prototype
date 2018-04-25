@@ -6,19 +6,14 @@ module RSpec
       # @private
       # Produces progress output while bisecting.
       class BisectProgressFormatter < BaseTextFormatter
-        # We've named all events with a `bisect_` prefix to prevent naming collisions.
-        Formatters.register self, :bisect_starting, :bisect_original_run_complete,
-                            :bisect_round_started, :bisect_individual_run_complete,
-                            :bisect_complete, :bisect_repro_command,
-                            :bisect_failed, :bisect_aborted,
-                            :bisect_round_ignoring_ids, :bisect_round_detected_multiple_culprits,
-                            :bisect_dependency_check_started, :bisect_dependency_check_passed,
-                            :bisect_dependency_check_failed
+        def initialize(output, bisect_runner)
+          super(output)
+          @bisect_runner = bisect_runner
+        end
 
         def bisect_starting(notification)
           @round_count = 0
-          options = notification.original_cli_args.join(' ')
-          output.puts "Bisect started using options: #{options.inspect}"
+          output.puts bisect_started_message(notification)
           output.print "Running suite to find failures..."
         end
 
@@ -40,6 +35,16 @@ module RSpec
 
         def bisect_dependency_check_failed(_notification)
           output.puts " failure(s) do not require any non-failures to run first"
+
+          if @bisect_runner == :fork
+            output.puts
+            output.puts "=" * 80
+            output.puts "NOTE: this bisect run used `config.bisect_runner = :fork`, which generally"
+            output.puts "provides significantly faster bisection runs than the old shell-based runner,"
+            output.puts "but may inaccurately report that no non-failures are required. If this result"
+            output.puts "is unexpected, consider setting `config.bisect_runner = :shell` and trying again."
+            output.puts "=" * 80
+          end
         end
 
         def bisect_round_started(notification, include_trailing_space=true)
@@ -85,16 +90,20 @@ module RSpec
           output.puts "\n\nBisect aborted!"
           output.puts "\nThe most minimal reproduction command discovered so far is:\n  #{notification.repro}"
         end
+
+      private
+
+        def bisect_started_message(notification)
+          options = notification.original_cli_args.join(' ')
+          "Bisect started using options: #{options.inspect}"
+        end
       end
 
       # @private
-      # Produces detailed debug output while bisecting. Used when
-      # bisect is performed while the `DEBUG_RSPEC_BISECT` ENV var is used.
-      # Designed to provide details for us when we need to troubleshoot bisect bugs.
+      # Produces detailed debug output while bisecting. Used when bisect is
+      # performed with `--bisect=verbose`. Designed to provide details for
+      # us when we need to troubleshoot bisect bugs.
       class BisectDebugFormatter < BisectProgressFormatter
-        Formatters.register self, :bisect_original_run_complete, :bisect_individual_run_start,
-                            :bisect_individual_run_complete, :bisect_round_ignoring_ids
-
         def bisect_original_run_complete(notification)
           output.puts " (#{Helpers.format_duration(notification.duration)})"
 
@@ -137,6 +146,10 @@ module RSpec
           organized_ids = Formatters::Helpers.organize_ids(ids)
           formatted_ids = organized_ids.map { |id| "    - #{id}" }.join("\n")
           "#{description} (#{ids.size}):\n#{formatted_ids}"
+        end
+
+        def bisect_started_message(notification)
+          "#{super} and bisect runner: #{notification.bisect_runner.inspect}"
         end
       end
     end

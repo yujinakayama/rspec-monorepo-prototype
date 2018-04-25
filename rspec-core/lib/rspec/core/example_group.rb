@@ -3,6 +3,7 @@ RSpec::Support.require_rspec_support 'recursive_const_methods'
 module RSpec
   module Core
     # rubocop:disable Metrics/ClassLength
+
     # ExampleGroup and {Example} are the main structural elements of
     # rspec-core. Consider this example:
     #
@@ -106,6 +107,7 @@ module RSpec
       # @private
       # @macro [attach] define_example_method
       #   @!scope class
+      #   @method $1
       #   @overload $1
       #   @overload $1(&example_implementation)
       #     @param example_implementation [Block] The implementation of the example.
@@ -793,8 +795,12 @@ module RSpec
       # @private
       def self.with_frame(name, location)
         current_stack = shared_example_group_inclusions
-        current_stack << new(name, location)
-        yield
+        if current_stack.any? { |frame| frame.shared_group_name == name }
+          raise ArgumentError, "can't include shared examples recursively"
+        else
+          current_stack << new(name, location)
+          yield
+        end
       ensure
         current_stack.pop
       end
@@ -834,10 +840,10 @@ module RSpec
     end
 
     def self.base_name_for(group)
-      return "Anonymous" if group.description.empty?
+      return "Anonymous".dup if group.description.empty?
 
       # Convert to CamelCase.
-      name = ' ' << group.description
+      name = ' ' + group.description
       name.gsub!(/[^0-9a-zA-Z]+([0-9a-zA-Z])/) do
         match = ::Regexp.last_match[1]
         match.upcase!

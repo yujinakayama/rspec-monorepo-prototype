@@ -69,10 +69,14 @@ module RSpec
     end
 
     describe RubyFeatures do
-      specify "#module_refinedment_supported? reflects refinement support" do
+      specify "#module_refinement_supported? reflects refinement support" do
         if Ruby.mri? && RUBY_VERSION >= '2.1.0'
           expect(RubyFeatures.module_refinement_supported?).to eq true
         end
+      end
+
+      specify "#fork_supported? exists" do
+        RubyFeatures.fork_supported?
       end
 
       specify "#supports_exception_cause? exists" do
@@ -99,67 +103,49 @@ module RSpec
       end
 
       describe "#ripper_supported?" do
-        it 'does not load Ripper' do
-          expect { RubyFeatures.ripper_supported? }.not_to change { defined?(::Ripper) }
+        def ripper_is_implemented?
+          in_sub_process_if_possible do
+            begin
+              require 'ripper'
+              !!defined?(::Ripper)
+            rescue LoadError
+              false
+            end
+          end
         end
 
-        describe 'Ripper' do
-          let(:line_number) do
+        def ripper_works_correctly?
+          ripper_reports_correct_line_number? &&
+            ripper_can_parse_source_including_keywordish_symbol?
+        end
+
+        # https://github.com/jruby/jruby/issues/3386
+        def ripper_reports_correct_line_number?
+          in_sub_process_if_possible do
+            require 'ripper'
+            tokens = ::Ripper.lex('foo')
             token = tokens.first
             location = token.first
-            location.first
+            line_number = location.first
+            line_number == 1
           end
+        end
 
-          let(:tokens) do
+        # https://github.com/jruby/jruby/issues/4562
+        def ripper_can_parse_source_including_keywordish_symbol?
+          in_sub_process_if_possible do
             require 'ripper'
-            ::Ripper.lex('foo')
+            sexp = ::Ripper.sexp(':if')
+            !sexp.nil?
           end
+        end
 
-          if Ruby.mri?
-            context 'on MRI' do
-              context '1.8.x', :if => RUBY_VERSION.start_with?('1.8.') do
-                it 'is not supported' do
-                  expect { tokens }.to raise_error(LoadError)
-                end
-              end
+        it 'returns whether Ripper is correctly implemented in the current environment' do
+          expect(RubyFeatures.ripper_supported?).to eq(ripper_is_implemented? && ripper_works_correctly?)
+        end
 
-              context '1.9.x or later', :if => RUBY_VERSION >= '1.9' do
-                it 'is supported' do
-                  expect(line_number).to eq(1)
-                end
-              end
-            end
-          end
-
-          if Ruby.jruby?
-            context 'on JRuby' do
-              context '1.7.x', :if => JRUBY_VERSION.start_with?('1.7.') do
-                context 'in 1.8 mode', :if => RUBY_VERSION.start_with?('1.8.') do
-                  it 'is not supported' do
-                    expect { tokens }.to raise_error(NameError)
-                  end
-                end
-
-                context 'in non 1.8 mode', :unless => RUBY_VERSION.start_with?('1.8.') do
-                  it 'is supported' do
-                    expect(line_number).to eq(1)
-                  end
-                end
-              end
-
-              context '9.0.x.x', :if => JRUBY_VERSION.start_with?('9.0') do
-                it 'reports wrong line number' do
-                  expect(line_number).to eq(2)
-                end
-              end
-
-              context '9.1.x.x', :if => JRUBY_VERSION.start_with?('9.1') do
-                it 'is supported' do
-                  expect(line_number).to eq(1)
-                end
-              end
-            end
-          end
+        it 'does not load Ripper' do
+          expect { RubyFeatures.ripper_supported? }.not_to change { defined?(::Ripper) }
         end
       end
     end

@@ -1,7 +1,7 @@
-RSpec::Support.require_rspec_core "source/location"
+RSpec::Support.require_rspec_support 'source/location'
 
 module RSpec
-  module Core
+  module Support
     class Source
       # @private
       # A wrapper for Ripper token which is generated with `Ripper.lex`.
@@ -62,7 +62,7 @@ module RSpec
           closed_by_delimiter?(other) || closed_by_keyword?(other)
         end
 
-        private
+      private
 
         def opening_delimiter?
           CLOSING_TYPES_BY_OPENING_TYPE.key?(type)

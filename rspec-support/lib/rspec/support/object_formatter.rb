@@ -5,7 +5,7 @@ module RSpec
     # Provide additional output details beyond what `inspect` provides when
     # printing Time, DateTime, or BigDecimal
     # @api private
-    class ObjectFormatter # rubocop:disable Style/ClassLength
+    class ObjectFormatter # rubocop:disable Metrics/ClassLength
       ELLIPSIS = "..."
 
       attr_accessor :max_formatted_output_length
@@ -31,15 +31,15 @@ module RSpec
 
       def format(object)
         if max_formatted_output_length.nil?
-          return prepare_for_inspection(object).inspect
+          prepare_for_inspection(object).inspect
         else
           formatted_object = prepare_for_inspection(object).inspect
           if formatted_object.length < max_formatted_output_length
-            return formatted_object
+            formatted_object
           else
             beginning = truncate_string formatted_object, 0, max_formatted_output_length / 2
             ending = truncate_string formatted_object, -max_formatted_output_length / 2, -1
-            return beginning + ELLIPSIS + ending
+            beginning + ELLIPSIS + ending
           end
         end
       end
@@ -73,11 +73,19 @@ module RSpec
 
       def prepare_hash(input_hash)
         with_entering_structure(input_hash) do
-          input_hash.inject({}) do |output_hash, key_and_value|
+          sort_hash_keys(input_hash).inject({}) do |output_hash, key_and_value|
             key, value = key_and_value.map { |element| prepare_element(element) }
             output_hash[key] = value
             output_hash
           end
+        end
+      end
+
+      def sort_hash_keys(input_hash)
+        if input_hash.keys.all? { |k| k.is_a?(String) || k.is_a?(Symbol) }
+          Hash[input_hash.sort_by { |k, _v| k.to_s }]
+        else
+          input_hash
         end
       end
 
@@ -199,8 +207,7 @@ module RSpec
         end
 
         def klass
-          singleton_class = class << object; self; end
-          singleton_class.ancestors.find { |ancestor| !ancestor.equal?(singleton_class) }
+          Support.class_of(object)
         end
 
         # http://stackoverflow.com/a/2818916
@@ -243,7 +250,12 @@ module RSpec
         DescribableMatcherInspector,
         DelegatorInspector,
         InspectableObjectInspector
-      ]
+      ].tap do |classes|
+        # 2.4 has improved BigDecimal formatting so we do not need
+        # to provide our own.
+        # https://github.com/ruby/bigdecimal/pull/42
+        classes.delete(BigDecimalInspector) if RUBY_VERSION >= '2.4'
+      end
 
     private
 

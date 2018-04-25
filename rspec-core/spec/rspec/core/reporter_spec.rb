@@ -26,7 +26,6 @@ module RSpec::Core
       it "dumps the failure summary after the profile and deprecation summary so failures don't scroll off the screen and get missed" do
         config.profile_examples = 10
         formatter = instance_double("RSpec::Core::Formatter::ProgressFormatter")
-        reporter.setup_profiler
         reporter.register_listener(formatter, :dump_summary, :dump_profile, :deprecation_summary)
 
         expect(formatter).to receive(:deprecation_summary).ordered
@@ -36,6 +35,12 @@ module RSpec::Core
         reporter.finish
       end
 
+      it "allows the profiler to be used without being manually setup" do
+        config.profile_examples = true
+        expect {
+          reporter.finish
+        }.to_not raise_error
+      end
     end
 
     describe 'start' do
@@ -284,10 +289,6 @@ module RSpec::Core
 
     describe "#notify_non_example_exception" do
       it "sends a `message` notification that contains the formatted exception details" do
-        if RSpec::Support::Ruby.jruby_9000?
-          pending "RSpec gets `Unable to find matching line from backtrace` on JRuby 9000"
-        end
-
         formatter_out = StringIO.new
         formatter = Formatters::ProgressFormatter.new(formatter_out)
         reporter.register_listener formatter, :message

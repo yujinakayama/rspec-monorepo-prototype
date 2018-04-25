@@ -24,6 +24,13 @@ RSpec.describe RSpec::Mocks do
       /rbconfig/ # loaded by rspec-support
     ] do
 
+      if RSpec::Support::Ruby.jruby? && JRUBY_VERSION =~ /9\.1\.7\.0/
+        before(:example, :description => /spec files/) do
+          pending "JRuby 9.1.7.0 currently generates a circular warning which" \
+                  " is unrelated to our suite."
+        end
+      end
+
     if RUBY_VERSION == '1.9.2'
       before(:example, :description => /spec files/) do
         pending "Loading psych and syck on 1.9.2 (as our test suite does) triggers warnings"
@@ -45,7 +52,7 @@ RSpec.describe RSpec::Mocks do
 
   describe ".teardown" do
     it "resets method stubs" do
-      string = "foo"
+      string = "foo".dup
       allow(string).to receive(:bar)
       RSpec::Mocks.teardown
       expect { string.bar }.to raise_error(NoMethodError)
@@ -56,7 +63,7 @@ RSpec.describe RSpec::Mocks do
       RSpec::Mocks.teardown
       RSpec::Mocks.teardown
 
-      string = "foo"
+      string = "foo".dup
       expect { allow(string).to receive(:bar) }.to raise_error(RSpec::Mocks::OutsideOfExampleError)
 
       RSpec::Mocks.setup
@@ -132,13 +139,13 @@ RSpec.describe RSpec::Mocks do
         expect(defined?(ValueY)).to be_falsey
       end
 
-      it 'does not allow the stubbed constants to be used after the scope in before(:all)', :pending => RSpec::Support::Ruby.jruby_9000? do
+      it 'does not allow the stubbed constants to be used after the scope in before(:all)' do
         expect(@error).to be_a(NameError)
         expect(@error.message).to include("ValueX")
       end
     end
 
-    context "in a before(:all) with a unmet mock expectation" do
+    context "in a before(:all) with an unmet mock expectation" do
       before(:all) do
         capture_error do
           RSpec::Mocks.with_temporary_scope do
@@ -157,10 +164,10 @@ RSpec.describe RSpec::Mocks do
       before(:all) do
         RSpec::Mocks.with_temporary_scope do
           allow_any_instance_of(String).to receive(:sum_with) { |val, x| val + x }
-          @sum = "foo".sum_with("bar")
+          @sum = "foo".dup.sum_with("bar")
         end
 
-        capture_error { "you".sum_with("me") }
+        capture_error { "you".dup.sum_with("me") }
       end
 
       it 'allows the stub to be used' do

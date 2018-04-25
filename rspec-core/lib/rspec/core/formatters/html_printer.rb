@@ -59,7 +59,9 @@ module RSpec
         end
 
         def print_summary(duration, example_count, failure_count, pending_count)
-          totals =  "#{example_count} example#{'s' unless example_count == 1}, "
+          totals = String.new(
+            "#{example_count} example#{'s' unless example_count == 1}, "
+          )
           totals << "#{failure_count} failure#{'s' unless failure_count == 1}"
           totals << ", #{pending_count} pending" if pending_count > 0
 
@@ -113,7 +115,6 @@ module RSpec
           "style=\"margin-left: #{(number_of_parents - 1) * 15}px;\""
         end
 
-        # rubocop:disable LineLength
         REPORT_HEADER = <<-EOF
 <div class="rspec-report">
 
@@ -137,7 +138,6 @@ module RSpec
 
 <div class="results">
 EOF
-        # rubocop:enable LineLength
 
         GLOBAL_SCRIPTS = <<-EOF
 

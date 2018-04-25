@@ -322,7 +322,7 @@ module RSpec
       #     end
       #
       # The yielded example aliases `run` with `call`, which lets you treat it
-      # like a `Proc`. This is especially handy when working with libaries
+      # like a `Proc`. This is especially handy when working with libraries
       # that manage their own setup and teardown using a block or proc syntax,
       # e.g.
       #
@@ -338,8 +338,6 @@ module RSpec
       def hooks
         @hooks ||= HookCollections.new(self, FilterableItemRepository::UpdateOptimized)
       end
-
-    private
 
       # @private
       Hook = Struct.new(:block, :options)
@@ -456,7 +454,9 @@ module RSpec
           return if RSpec.configuration.dry_run?
 
           if scope == :context
-            run_owned_hooks_for(position, :context, example_or_group)
+            unless example_or_group.class.metadata[:skip]
+              run_owned_hooks_for(position, :context, example_or_group)
+            end
           else
             case position
             when :before then run_example_hooks_for(example_or_group, :before, :reverse_each)

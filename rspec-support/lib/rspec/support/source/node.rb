@@ -1,7 +1,7 @@
-RSpec::Support.require_rspec_core "source/location"
+RSpec::Support.require_rspec_support 'source/location'
 
 module RSpec
-  module Core
+  module Support
     class Source
       # @private
       # A wrapper for Ripper AST node which is generated with `Ripper.sexp`.
@@ -30,7 +30,7 @@ module RSpec
             elsif Location.location?(raw_arg)
               Location.new(*raw_arg)
             elsif raw_arg.is_a?(Array)
-              GroupNode.new(raw_arg, self)
+              ExpressionSequenceNode.new(raw_arg, self)
             else
               raw_arg
             end
@@ -45,13 +45,16 @@ module RSpec
           @location ||= args.find { |arg| arg.is_a?(Location) }
         end
 
-        def each(&block)
+        # We use a loop here (instead of recursion) to prevent SystemStackError
+        def each
           return to_enum(__method__) unless block_given?
 
-          yield self
+          node_queue = []
+          node_queue << self
 
-          children.each do |child|
-            child.each(&block)
+          while (current_node = node_queue.shift)
+            yield current_node
+            node_queue.concat(current_node.children)
           end
         end
 
@@ -77,9 +80,23 @@ module RSpec
       end
 
       # @private
-      class GroupNode < Node
+      # Basically `Ripper.sexp` generates arrays whose first element is a symbol (type of sexp),
+      # but it exceptionally generates typeless arrays for expression sequence:
+      #
+      # Ripper.sexp('foo; bar')
+      # => [
+      #      :program,
+      #      [ # Typeless array
+      #        [:vcall, [:@ident, "foo", [1, 0]]],
+      #        [:vcall, [:@ident, "bar", [1, 5]]]
+      #      ]
+      #    ]
+      #
+      # We wrap typeless arrays in this pseudo type node
+      # so that it can be handled in the same way as other type node.
+      class ExpressionSequenceNode < Node
         def type
-          :group
+          :_expression_sequence
         end
 
       private

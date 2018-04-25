@@ -87,7 +87,7 @@ module RSpec
       def inspect_output
         inspect_output = "\"#{description}\""
         unless metadata[:description].to_s.empty?
-          inspect_output << " (#{location})"
+          inspect_output += " (#{location})"
         end
         inspect_output
       end
@@ -260,7 +260,11 @@ module RSpec
                         'Expected example to fail since it is pending, but it passed.',
                         [location]
                 end
-              rescue Pending::SkipDeclaredInExample
+              rescue Pending::SkipDeclaredInExample => _
+                # The "=> _" is normally useless but on JRuby it is a workaround
+                # for a bug that prevents us from getting backtraces:
+                # https://github.com/jruby/jruby/issues/4467
+                #
                 # no-op, required metadata has already been set by the `skip`
                 # method.
               rescue AllExceptionsExcludingDangerousOnesOnRubiesThatAllowIt => e
@@ -389,7 +393,7 @@ module RSpec
         end
       end
 
-      # rubocop:disable Style/AccessorMethodName
+      # rubocop:disable Naming/AccessorMethodName
 
       # @private
       #
@@ -416,7 +420,7 @@ module RSpec
         self.display_exception = exception
       end
 
-      # rubocop:enable Style/AccessorMethodName
+      # rubocop:enable Naming/AccessorMethodName
 
       # @private
       #
@@ -465,22 +469,22 @@ module RSpec
 
         if @exception
           execution_result.exception = @exception
-          record_finished :failed
+          record_finished :failed, reporter
           reporter.example_failed self
           false
         elsif pending_message
           execution_result.pending_message = pending_message
-          record_finished :pending
+          record_finished :pending, reporter
           reporter.example_pending self
           true
         else
-          record_finished :passed
+          record_finished :passed, reporter
           reporter.example_passed self
           true
         end
       end
 
-      def record_finished(status)
+      def record_finished(status, reporter)
         execution_result.record_finished(status, clock.now)
         reporter.example_finished(self)
       end
@@ -519,7 +523,7 @@ module RSpec
       def assign_generated_description
         if metadata[:description].empty? && (description = generate_description)
           metadata[:description] = description
-          metadata[:full_description] << description
+          metadata[:full_description] += description
         end
       ensure
         RSpec::Matchers.clear_generated_description
@@ -638,12 +642,12 @@ module RSpec
         @reporter = reporter
       end
 
-      # rubocop:disable Style/AccessorMethodName
+      # rubocop:disable Naming/AccessorMethodName
       def set_exception(exception)
         reporter.notify_non_example_exception(exception, "An error occurred in #{description}.")
         RSpec.world.wants_to_quit = true
       end
-      # rubocop:enable Style/AccessorMethodName
+      # rubocop:enable Naming/AccessorMethodName
     end
   end
 end

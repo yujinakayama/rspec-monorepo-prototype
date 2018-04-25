@@ -8,7 +8,13 @@ RSpec.describe RSpec::Core::Formatters::BaseTextFormatter do
     let(:output_to_close) { File.new("./output_to_close", "w") }
     let(:formatter) { described_class.new(output_to_close) }
 
-    it 'does not close an already closed output stream' do
+    after do
+      # Windows appears to not let the `:isolated_directory` shared group
+      # cleanup if the file isn't closed.
+      output_to_close.close unless output_to_close.closed?
+    end
+
+    it 'does not error on an already closed output stream' do
       output_to_close.close
 
       expect { formatter.close(RSpec::Core::Notifications::NullNotification) }.not_to raise_error
@@ -16,11 +22,13 @@ RSpec.describe RSpec::Core::Formatters::BaseTextFormatter do
 
     it "flushes output before closing the stream so buffered bytes are not lost if we exit right away" do
       expect(output_to_close).to receive(:flush).ordered.and_call_original
-      # Windows appears to not let the `:isolated_directory` shared group cleanup if
-      # the file isn't closed, so we need to use `and_call_original` here.
-      expect(output_to_close).to receive(:close).ordered.and_call_original
 
       formatter.close(RSpec::Core::Notifications::NullNotification)
+    end
+
+    it "does not close the stream so that it can be reused within a process" do
+      formatter.close(RSpec::Core::Notifications::NullNotification)
+      expect(output_to_close.closed?).to be(false)
     end
   end
 
@@ -35,9 +43,19 @@ RSpec.describe RSpec::Core::Formatters::BaseTextFormatter do
       expect(formatter_output.string).to match("1 example, 1 failure, 1 pending")
     end
 
+    it "with 1s outputs singular (only pending)" do
+      send_notification :dump_summary, summary_notification(1, examples(1), examples(0), examples(1), 0)
+      expect(formatter_output.string).to match("1 example, 0 failures, 1 pending")
+    end
+
     it "with 2s outputs pluralized (including pending)" do
       send_notification :dump_summary, summary_notification(2, examples(2), examples(2), examples(2), 0)
       expect(formatter_output.string).to match("2 examples, 2 failures, 2 pending")
+    end
+
+    it 'with errors includes that count' do
+      send_notification :dump_summary, summary_notification(2, examples(2), examples(2), examples(2), 0, 3)
+      expect(formatter_output.string).to match("2 examples, 2 failures, 2 pending, 3 errors occurred outside of examples")
     end
 
     describe "rerun command for failed examples" do
@@ -172,7 +190,7 @@ RSpec.describe RSpec::Core::Formatters::BaseTextFormatter do
     if String.method_defined?(:encoding)
       context "with an exception that has a differently encoded message" do
         it "runs without encountering an encoding exception" do
-          group.example("Mixing encodings, e.g. UTF-8: © and Binary") { raise "Error: \xC2\xA9".force_encoding("ASCII-8BIT") }
+          group.example("Mixing encodings, e.g. UTF-8: © and Binary") { raise "Error: \xC2\xA9".dup.force_encoding("ASCII-8BIT") }
           run_all_and_dump_failures
           expect(formatter_output.string).to match(/RuntimeError:\n\s+Error: \?\?/m) # ?? because the characters dont encode properly
         end

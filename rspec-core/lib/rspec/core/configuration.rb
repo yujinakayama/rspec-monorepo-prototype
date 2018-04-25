@@ -1,6 +1,7 @@
 RSpec::Support.require_rspec_core "backtrace_formatter"
 RSpec::Support.require_rspec_core "ruby_project"
 RSpec::Support.require_rspec_core "formatters/deprecation_formatter"
+RSpec::Support.require_rspec_core "output_wrapper"
 
 module RSpec
   module Core
@@ -88,7 +89,6 @@ module RSpec
 
       # @macro [attach] add_setting
       #   @!attribute [rw] $1
-      #   @!method $1=(value)
       #
       # @macro [attach] define_reader
       #   @!attribute [r] $1
@@ -100,6 +100,7 @@ module RSpec
       #
       # @note Other scripts invoking `rspec` indirectly will ignore this
       #   setting.
+      # @return [String]
       add_read_only_setting :default_path
       def default_path=(path)
         project_source_dirs << path
@@ -109,6 +110,7 @@ module RSpec
       # @macro add_setting
       # Run examples over DRb (default: `false`). RSpec doesn't supply the DRb
       # server, but you can use tools like spork.
+      # @return [Boolean]
       add_setting :drb
 
       # @macro add_setting
@@ -121,6 +123,7 @@ module RSpec
 
       # Indicates if the DSL has been exposed off of modules and `main`.
       # Default: true
+      # @return [Boolean]
       def expose_dsl_globally?
         Core::DSL.exposed_globally?
       end
@@ -141,7 +144,7 @@ module RSpec
 
       # Determines where deprecation warnings are printed.
       # Defaults to `$stderr`.
-      # @return [IO, String] IO to write to or filename to write to
+      # @return [IO, String] IO or filename to write to
       define_reader :deprecation_stream
 
       # Determines where deprecation warnings are printed.
@@ -160,7 +163,7 @@ module RSpec
 
       # @macro define_reader
       # The file path to use for persisting example statuses. Necessary for the
-      # `--only-failures` and `--next-failures` CLI options.
+      # `--only-failures` and `--next-failure` CLI options.
       #
       # @overload example_status_persistence_file_path
       #   @return [String] the file path
@@ -169,7 +172,7 @@ module RSpec
       define_reader :example_status_persistence_file_path
 
       # Sets the file path to use for persisting example statuses. Necessary for the
-      # `--only-failures` and `--next-failures` CLI options.
+      # `--only-failures` and `--next-failure` CLI options.
       def example_status_persistence_file_path=(value)
         @example_status_persistence_file_path = value
         clear_values_derived_from_example_status_persistence_file_path
@@ -197,28 +200,33 @@ module RSpec
 
       # @macro add_setting
       # The exit code to return if there are any failures (default: 1).
+      # @return [Integer]
       add_setting :failure_exit_code
 
       # @macro add_setting
       # Whether or not to fail when there are no RSpec examples (default: false).
+      # @return [Boolean]
       add_setting :fail_if_no_examples
 
       # @macro define_reader
       # Indicates files configured to be required.
+      # @return [Array<String>]
       define_reader :requires
 
       # @macro define_reader
       # Returns dirs that have been prepended to the load path by the `-I`
       # command line option.
+      # @return [Array<String>]
       define_reader :libs
 
       # @macro add_setting
       # Determines where RSpec will send its output.
       # Default: `$stdout`.
+      # @return [IO, String]
       define_reader :output_stream
 
       # Set the output stream for reporter.
-      # @attr value [IO] value for output, defaults to $stdout
+      # @attr value [IO, String] IO to write to or filename to write to, defaults to $stdout
       def output_stream=(value)
         if @reporter && !value.equal?(@output_stream)
           warn "RSpec's reporter has already been initialized with " \
@@ -227,11 +235,13 @@ module RSpec
             "it to take effect. (Called from #{CallerFilter.first_non_rspec_line})"
         else
           @output_stream = value
+          output_wrapper.output = @output_stream
         end
       end
 
       # @macro define_reader
       # Load files matching this pattern (default: `'**{,/*/**}/*_spec.rb'`).
+      # @return [String]
       define_reader :pattern
 
       # Set pattern to match files to load.
@@ -242,6 +252,7 @@ module RSpec
 
       # @macro define_reader
       # Exclude files matching this pattern.
+      # @return [String]
       define_reader :exclude_pattern
 
       # Set pattern to match files to exclude.
@@ -263,6 +274,7 @@ module RSpec
       # @macro add_setting
       # Report the times for the slowest examples (default: `false`).
       # Use this to specify the number of examples to include in the profile.
+      # @return [Boolean]
       add_setting :profile_examples
 
       # @macro add_setting
@@ -273,55 +285,56 @@ module RSpec
       add_setting :run_all_when_everything_filtered
 
       # @macro add_setting
-      # Color to use to indicate success.
-      # @param color [Symbol] defaults to `:green` but can be set to one of the
-      #   following: `[:black, :white, :red, :green, :yellow, :blue, :magenta,
-      #   :cyan]`
+      # Color to use to indicate success.  Defaults to `:green` but can be set
+      # to one of the following: `[:black, :white, :red, :green, :yellow,
+      # :blue, :magenta, :cyan]`
+      # @return [Symbol]
       add_setting :success_color
 
       # @macro add_setting
-      # Color to use to print pending examples.
-      # @param color [Symbol] defaults to `:yellow` but can be set to one of the
-      #   following: `[:black, :white, :red, :green, :yellow, :blue, :magenta,
-      #   :cyan]`
+      # Color to use to print pending examples.  Defaults to `:yellow` but can
+      # be set to one of the following: `[:black, :white, :red, :green,
+      # :yellow, :blue, :magenta, :cyan]`
+      # @return [Symbol]
       add_setting :pending_color
 
       # @macro add_setting
-      # Color to use to indicate failure.
-      # @param color [Symbol] defaults to `:red` but can be set to one of the
-      #   following: `[:black, :white, :red, :green, :yellow, :blue, :magenta,
-      #   :cyan]`
+      # Color to use to indicate failure.  Defaults to `:red` but can be set to
+      # one of the following: `[:black, :white, :red, :green, :yellow, :blue,
+      # :magenta, :cyan]`
+      # @return [Symbol]
       add_setting :failure_color
 
       # @macro add_setting
-      # The default output color.
-      # @param color [Symbol] defaults to `:white` but can be set to one of the
-      #   following: `[:black, :white, :red, :green, :yellow, :blue, :magenta,
-      #   :cyan]`
+      # The default output color. Defaults to `:white` but can be set to one of
+      # the following: `[:black, :white, :red, :green, :yellow, :blue,
+      # :magenta, :cyan]`
+      # @return [Symbol]
       add_setting :default_color
 
       # @macro add_setting
-      # Color used when a pending example is fixed.
-      # @param color [Symbol] defaults to `:blue` but can be set to one of the
-      #   following: `[:black, :white, :red, :green, :yellow, :blue, :magenta,
-      #   :cyan]`
+      # Color used when a pending example is fixed. Defaults to `:blue` but can
+      # be set to one of the following: `[:black, :white, :red, :green,
+      # :yellow, :blue, :magenta, :cyan]`
+      # @return [Symbol]
       add_setting :fixed_color
 
       # @macro add_setting
-      # Color used to print details.
-      # @param color [Symbol] defaults to `:cyan` but can be set to one of the
-      #   following: `[:black, :white, :red, :green, :yellow, :blue, :magenta,
-      #   :cyan]`
+      # Color used to print details.  Defaults to `:cyan` but can be set to one
+      # of the following: `[:black, :white, :red, :green, :yellow, :blue,
+      # :magenta, :cyan]`
+      # @return [Symbol]
       add_setting :detail_color
 
       # @macro add_setting
       # Don't print filter info i.e. "Run options: include {:focus=>true}"
       # (default `false`).
+      # return [Boolean]
       add_setting :silence_filter_announcements
 
-      # Deprecated. This config option was added in RSpec 2 to pave the way
-      # for this being the default behavior in RSpec 3. Now this option is
-      # a no-op.
+      # @deprecated This config option was added in RSpec 2 to pave the way
+      #   for this being the default behavior in RSpec 3. Now this option is
+      #   a no-op.
       def treat_symbols_as_metadata_keys_with_true_values=(_value)
         RSpec.deprecate(
           "RSpec::Core::Configuration#treat_symbols_as_metadata_keys_with_true_values=",
@@ -385,17 +398,52 @@ module RSpec
       end
 
       # Record the start time of the spec suite to measure load time.
+      # return [Time]
       add_setting :start_time
 
       # @macro add_setting
       # Use threadsafe options where available.
       # Currently this will place a mutex around memoized values such as let blocks.
+      # return [Boolean]
       add_setting :threadsafe
 
       # @macro add_setting
       # Maximum count of failed source lines to display in the failure reports.
       # (default `10`).
+      # return [Integer]
       add_setting :max_displayed_failure_line_count
+
+      # Determines which bisect runner implementation gets used to run subsets
+      # of the suite during a bisection. Your choices are:
+      #
+      #   - `:shell`: Performs a spec run by shelling out, booting RSpec and your
+      #     application environment each time. This runner is the most widely
+      #     compatible runner, but is not as fast. On platforms that do not
+      #     support forking, this is the default.
+      #   - `:fork`: Pre-boots RSpec and your application environment in a parent
+      #     process, and then forks a child process for each spec run. This runner
+      #     tends to be significantly faster than the `:shell` runner but cannot
+      #     be used in some situations. On platforms that support forking, this
+      #     is the default. If you use this runner, you should ensure that all
+      #     of your one-time setup logic goes in a `before(:suite)` hook instead
+      #     of getting run at the top-level of a file loaded by `--require`.
+      #
+      # @note This option will only be used by `--bisect` if you set it in a file
+      #   loaded via `--require`.
+      #
+      # @return [Symbol]
+      attr_reader :bisect_runner
+      def bisect_runner=(value)
+        if @bisect_runner_class && value != @bisect_runner
+          raise "`config.bisect_runner = #{value.inspect}` can no longer take " \
+            "effect as the #{@bisect_runner.inspect} bisect runnner is already " \
+            "in use. This config setting must be set in a file loaded by a " \
+            "`--require` option (passed at the CLI or in a `.rspec` file) for " \
+            "it to have any effect."
+        end
+
+        @bisect_runner = value
+      end
 
       # @private
       # @deprecated Use {#color_mode} = :on, instead of {#color} with {#tty}
@@ -409,8 +457,9 @@ module RSpec
       # @private
       attr_reader :backtrace_formatter, :ordering_manager, :loaded_spec_files
 
-      # rubocop:disable Metrics/AbcSize
-      # rubocop:disable Metrics/MethodLength
+      # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+
+      # Build an object to store runtime configuration options and set defaults
       def initialize
         # rubocop:disable Style/GlobalVars
         @start_time = $_rspec_core_load_started_at || ::RSpec::Core::Time.now
@@ -419,6 +468,9 @@ module RSpec
         @include_modules = FilterableItemRepository::QueryOptimized.new(:any?)
         @extend_modules  = FilterableItemRepository::QueryOptimized.new(:any?)
         @prepend_modules = FilterableItemRepository::QueryOptimized.new(:any?)
+
+        @bisect_runner = RSpec::Support::RubyFeatures.fork_supported? ? :fork : :shell
+        @bisect_runner_class = nil
 
         @before_suite_hooks = []
         @after_suite_hooks  = []
@@ -463,8 +515,7 @@ module RSpec
 
         define_built_in_hooks
       end
-      # rubocop:enable Metrics/MethodLength
-      # rubocop:enable Metrics/AbcSize
+      # rubocop:enable Metrics/MethodLength, Metrics/AbcSize
 
       # @private
       #
@@ -480,8 +531,14 @@ module RSpec
       # @private
       def reset
         @spec_files_loaded = false
+        reset_reporter
+      end
+
+      # @private
+      def reset_reporter
         @reporter = nil
         @formatter_loader = nil
+        @output_wrapper = nil
       end
 
       # @private
@@ -539,6 +596,7 @@ module RSpec
       end
 
       # Returns the configured mock framework adapter module.
+      # @return [Symbol]
       def mock_framework
         if @mock_framework.nil?
           begin
@@ -566,12 +624,13 @@ module RSpec
       # To override this behaviour and display a full backtrace, use
       # `--backtrace` on the command line, in a `.rspec` file, or in the
       # `rspec_options` attribute of RSpec's rake task.
+      # @return [Array<Regexp>]
       def backtrace_exclusion_patterns
         @backtrace_formatter.exclusion_patterns
       end
 
       # Set regular expressions used to exclude lines in backtrace.
-      # @param patterns [Regexp] set the backtrace exlusion pattern
+      # @param patterns [Array<Regexp>] set backtrace_formatter exlusion_patterns
       def backtrace_exclusion_patterns=(patterns)
         @backtrace_formatter.exclusion_patterns = patterns
       end
@@ -584,12 +643,13 @@ module RSpec
       # will be included.
       #
       # You can modify the list via the getter, or replace it with the setter.
+      # @return [Array<Regexp>]
       def backtrace_inclusion_patterns
         @backtrace_formatter.inclusion_patterns
       end
 
       # Set regular expressions used to include lines in backtrace.
-      # @attr patterns [Regexp] set backtrace_formatter inclusion_patterns
+      # @attr patterns [Array<Regexp>] set backtrace_formatter inclusion_patterns
       def backtrace_inclusion_patterns=(patterns)
         @backtrace_formatter.inclusion_patterns = patterns
       end
@@ -852,11 +912,11 @@ module RSpec
       # @overload add_formatter(formatter)
       # @overload add_formatter(formatter, output)
       #
-      # @param formatter [Class, String] formatter to use. Can be any of the
+      # @param formatter [Class, String, Object] formatter to use. Can be any of the
       #   string values supported from the CLI (`p`/`progress`,
-      #   `d`/`doc`/`documentation`, `h`/`html`, or `j`/`json`) or any
+      #   `d`/`doc`/`documentation`, `h`/`html`, or `j`/`json`), any
       #   class that implements the formatter protocol and has registered
-      #   itself with RSpec as a formatter.
+      #   itself with RSpec as a formatter, or a formatter instance.
       # @param output [String, IO] where the formatter will write its output.
       #   Can be an IO object or a string path to a file. If not provided,
       #   the configured `output_stream` (`$stdout`, by default) will be used.
@@ -864,7 +924,7 @@ module RSpec
       # Adds a formatter to the set RSpec will use for this run.
       #
       # @see RSpec::Core::Formatters::Protocol
-      def add_formatter(formatter, output=output_stream)
+      def add_formatter(formatter, output=output_wrapper)
         formatter_loader.add(formatter, output)
       end
       alias_method :formatter=, :add_formatter
@@ -930,7 +990,7 @@ module RSpec
         @reporter_buffer || @reporter ||=
           begin
             @reporter_buffer = DeprecationReporterBuffer.new
-            formatter_loader.setup_default output_stream, deprecation_stream
+            formatter_loader.prepare_default output_wrapper, deprecation_stream
             @reporter_buffer.play_onto(formatter_loader.reporter)
             @reporter_buffer = nil
             formatter_loader.reporter
@@ -974,7 +1034,9 @@ module RSpec
           if (path = example_status_persistence_file_path)
             begin
               ExampleStatusPersister.load_from(path).inject(statuses) do |hash, example|
-                hash[example.fetch(:example_id)] = example.fetch(:status)
+                status = example[:status]
+                status = UNKNOWN_STATUS unless VALID_STATUSES.include?(status)
+                hash[example.fetch(:example_id)] = status
                 hash
               end
             rescue SystemCallError => e
@@ -993,6 +1055,15 @@ module RSpec
 
       # @private
       FAILED_STATUS = "failed".freeze
+
+      # @private
+      PASSED_STATUS = "passed".freeze
+
+      # @private
+      PENDING_STATUS = "pending".freeze
+
+      # @private
+      VALID_STATUSES = [UNKNOWN_STATUS, FAILED_STATUS, PASSED_STATUS, PENDING_STATUS]
 
       # @private
       def spec_files_with_failures
@@ -1431,7 +1502,7 @@ module RSpec
       def requires=(paths)
         directories = ['lib', default_path].select { |p| File.directory? p }
         RSpec::Core::RubyProject.add_to_load_path(*directories)
-        paths.each { |path| require path }
+        paths.each { |path| load_file_handling_errors(:require, path) }
         @requires += paths
       end
 
@@ -1472,7 +1543,7 @@ module RSpec
 
         files_to_run.uniq.each do |f|
           file = File.expand_path(f)
-          load_spec_file_handling_errors(file)
+          load_file_handling_errors(:load, file)
           loaded_spec_files << file
         end
 
@@ -1500,8 +1571,6 @@ module RSpec
       end
 
       # @private
-      # @macro [attach] delegate_to_ordering_manager
-      #   @!method $1
       def self.delegate_to_ordering_manager(*methods)
         methods.each do |method|
           define_method method do |*args, &block|
@@ -1510,12 +1579,12 @@ module RSpec
         end
       end
 
-      # @macro delegate_to_ordering_manager
+      # @!method seed=(value)
       #
       # Sets the seed value and sets the default global ordering to random.
       delegate_to_ordering_manager :seed=
 
-      # @macro delegate_to_ordering_manager
+      # @!method seed
       # Seed for random ordering (default: generated randomly each run).
       #
       # When you run specs with `--order random`, RSpec generates a random seed
@@ -1529,7 +1598,7 @@ module RSpec
       # don't accidentally leave the seed encoded.
       delegate_to_ordering_manager :seed
 
-      # @macro delegate_to_ordering_manager
+      # @!method order=(value)
       #
       # Sets the default global ordering strategy. By default this can be one
       # of `:defined`, `:random`, but is customizable through the
@@ -1539,7 +1608,8 @@ module RSpec
       # @see #register_ordering
       delegate_to_ordering_manager :order=
 
-      # @macro delegate_to_ordering_manager
+      # @!method register_ordering(name)
+      #
       # Registers a named ordering strategy that can later be
       # used to order an example group's subgroups by adding
       # `:order => <name>` metadata to the example group.
@@ -1698,7 +1768,7 @@ module RSpec
       #       mocks.patch_marshal_to_support_partial_doubles = false
       #     end
       #
-      #     config.mock_with :rspec do |expectations|
+      #     config.expect_with :rspec do |expectations|
       #       expectations.syntax = :expect
       #     end
       #   end
@@ -1752,7 +1822,7 @@ module RSpec
       #       require 'support/db'
       #     end
       #   end
-      def when_first_matching_example_defined(*filters, &block)
+      def when_first_matching_example_defined(*filters)
         specified_meta = Metadata.build_hash_from(filters, :warn_about_example_group_filtering)
 
         callback = lambda do |example_or_group_meta|
@@ -1761,9 +1831,9 @@ module RSpec
           return unless example_or_group_meta.key?(:example_group)
 
           # Ensure the callback only fires once.
-          @derived_metadata_blocks.items_for(specified_meta).delete(callback)
+          @derived_metadata_blocks.delete(callback, specified_meta)
 
-          block.call
+          yield
         end
 
         @derived_metadata_blocks.append(callback, specified_meta)
@@ -1789,6 +1859,12 @@ module RSpec
         handle_suite_hook(scope, meta) do
           @before_suite_hooks << Hooks::BeforeHook.new(block, {})
         end || begin
+          # defeat Ruby 2.5 lazy proc allocation to ensure
+          # the methods below are passed the same proc instances
+          # so `Hook` equality is preserved. For more info, see:
+          # https://bugs.ruby-lang.org/issues/14045#note-5
+          block.__id__
+
           add_hook_to_existing_matching_groups(meta, scope) { |g| g.before(scope, *meta, &block) }
           super(scope, *meta, &block)
         end
@@ -1812,6 +1888,12 @@ module RSpec
         handle_suite_hook(scope, meta) do
           @before_suite_hooks.unshift Hooks::BeforeHook.new(block, {})
         end || begin
+          # defeat Ruby 2.5 lazy proc allocation to ensure
+          # the methods below are passed the same proc instances
+          # so `Hook` equality is preserved. For more info, see:
+          # https://bugs.ruby-lang.org/issues/14045#note-5
+          block.__id__
+
           add_hook_to_existing_matching_groups(meta, scope) { |g| g.prepend_before(scope, *meta, &block) }
           super(scope, *meta, &block)
         end
@@ -1830,6 +1912,12 @@ module RSpec
         handle_suite_hook(scope, meta) do
           @after_suite_hooks.unshift Hooks::AfterHook.new(block, {})
         end || begin
+          # defeat Ruby 2.5 lazy proc allocation to ensure
+          # the methods below are passed the same proc instances
+          # so `Hook` equality is preserved. For more info, see:
+          # https://bugs.ruby-lang.org/issues/14045#note-5
+          block.__id__
+
           add_hook_to_existing_matching_groups(meta, scope) { |g| g.after(scope, *meta, &block) }
           super(scope, *meta, &block)
         end
@@ -1853,6 +1941,12 @@ module RSpec
         handle_suite_hook(scope, meta) do
           @after_suite_hooks << Hooks::AfterHook.new(block, {})
         end || begin
+          # defeat Ruby 2.5 lazy proc allocation to ensure
+          # the methods below are passed the same proc instances
+          # so `Hook` equality is preserved. For more info, see:
+          # https://bugs.ruby-lang.org/issues/14045#note-5
+          block.__id__
+
           add_hook_to_existing_matching_groups(meta, scope) { |g| g.append_after(scope, *meta, &block) }
           super(scope, *meta, &block)
         end
@@ -1862,6 +1956,12 @@ module RSpec
       #
       # See {Hooks#around} for full `around` hook docs.
       def around(scope=nil, *meta, &block)
+        # defeat Ruby 2.5 lazy proc allocation to ensure
+        # the methods below are passed the same proc instances
+        # so `Hook` equality is preserved. For more info, see:
+        # https://bugs.ruby-lang.org/issues/14045#note-5
+        block.__id__
+
         add_hook_to_existing_matching_groups(meta, scope) { |g| g.around(scope, *meta, &block) }
         super(scope, *meta, &block)
       end
@@ -1897,10 +1997,27 @@ module RSpec
         @on_example_group_definition_callbacks ||= []
       end
 
+      # @private
+      def bisect_runner_class
+        @bisect_runner_class ||= begin
+          case bisect_runner
+          when :fork
+            RSpec::Support.require_rspec_core 'bisect/fork_runner'
+            Bisect::ForkRunner
+          when :shell
+            RSpec::Support.require_rspec_core 'bisect/shell_runner'
+            Bisect::ShellRunner
+          else
+            raise "Unsupported value for `bisect_runner` (#{bisect_runner.inspect}). " \
+                  "Only `:fork` and `:shell` are supported."
+          end
+        end
+      end
+
     private
 
-      def load_spec_file_handling_errors(file)
-        load file
+      def load_file_handling_errors(method, file)
+        __send__(method, file)
       rescue Support::AllExceptionsExceptOnesWeMustNotRescue => ex
         relative_file = Metadata.relative_path(file)
         reporter.notify_non_example_exception(ex, "An error occurred while loading #{relative_file}.")
@@ -2037,6 +2154,10 @@ module RSpec
           "RSpec's #{config_option} configuration option must be configured before " \
           "any example groups are defined, but you have already defined a group."
         )
+      end
+
+      def output_wrapper
+        @output_wrapper ||= OutputWrapper.new(output_stream)
       end
 
       def output_to_tty?(output=output_stream)

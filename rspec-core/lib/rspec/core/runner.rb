@@ -94,9 +94,7 @@ module RSpec
       # @param err [IO] error stream
       # @param out [IO] output stream
       def setup(err, out)
-        @configuration.error_stream = err
-        @configuration.output_stream = out if @configuration.output_stream == $stdout
-        @options.configure(@configuration)
+        configure(err, out)
         @configuration.load_spec_files
         @world.announce_filters
       end
@@ -122,17 +120,11 @@ module RSpec
         success ? 0 : @configuration.failure_exit_code
       end
 
-    private
-
-      def persist_example_statuses
-        return unless (path = @configuration.example_status_persistence_file_path)
-
-        ExampleStatusPersister.persist(@world.all_examples, path)
-      rescue SystemCallError => e
-        RSpec.warning "Could not write example statuses to #{path} (configured as " \
-                      "`config.example_status_persistence_file_path`) due to a " \
-                      "system error: #{e.inspect}. Please check that the config " \
-                      "option is set to an accessible, valid file path", :call_site => nil
+      # @private
+      def configure(err, out)
+        @configuration.error_stream = err
+        @configuration.output_stream = out if @configuration.output_stream == $stdout
+        @options.configure(@configuration)
       end
 
       # @private
@@ -187,6 +179,20 @@ module RSpec
           RSpec.world.wants_to_quit = true
           $stderr.puts "\nRSpec is shutting down and will print the summary report... Interrupt again to force quit."
         end
+      end
+
+    private
+
+      def persist_example_statuses
+        return if @configuration.dry_run
+        return unless (path = @configuration.example_status_persistence_file_path)
+
+        ExampleStatusPersister.persist(@world.all_examples, path)
+      rescue SystemCallError => e
+        RSpec.warning "Could not write example statuses to #{path} (configured as " \
+                      "`config.example_status_persistence_file_path`) due to a " \
+                      "system error: #{e.inspect}. Please check that the config " \
+                      "option is set to an accessible, valid file path", :call_site => nil
       end
     end
   end

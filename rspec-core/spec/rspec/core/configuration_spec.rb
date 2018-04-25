@@ -2,7 +2,6 @@ require 'tmpdir'
 require 'rspec/support/spec/in_sub_process'
 
 module RSpec::Core
-
   RSpec.describe Configuration do
     include RSpec::Support::InSubProcess
 
@@ -64,7 +63,7 @@ module RSpec::Core
       end
 
       it 'is configurable' do
-        io = double 'deprecation io'
+        io = StringIO.new
         config.deprecation_stream = io
         expect(config.deprecation_stream).to eq io
       end
@@ -97,9 +96,11 @@ module RSpec::Core
       it 'defaults to standard output' do
         expect(config.output_stream).to eq $stdout
       end
+    end
 
+    describe "#output_stream=" do
       it 'is configurable' do
-        io = double 'output io'
+        io = StringIO.new
         config.output_stream = io
         expect(config.output_stream).to eq io
       end
@@ -1442,6 +1443,51 @@ module RSpec::Core
       end
     end
 
+    describe "#bisect_runner_class" do
+      if RSpec::Support::RubyFeatures.fork_supported?
+        it 'defaults to the faster `Bisect::ForkRunner` since fork is supported on this platform' do
+          expect(config.bisect_runner_class).to be Bisect::ForkRunner
+        end
+      else
+        it 'defaults to the slower `Bisect::ShellRunner` since fork is not supported on this platform' do
+          expect(config.bisect_runner_class).to be Bisect::ShellRunner
+        end
+      end
+
+      it "returns `Bisect::ForkRunner` when `bisect_runner == :fork" do
+        config.bisect_runner = :fork
+        expect(config.bisect_runner_class).to be Bisect::ForkRunner
+      end
+
+      it "returns `Bisect::ShellRunner` when `bisect_runner == :shell" do
+        config.bisect_runner = :shell
+        expect(config.bisect_runner_class).to be Bisect::ShellRunner
+      end
+
+      it "raises a clear error when `bisect_runner` is configured to an unrecognized value" do
+        config.bisect_runner = :unknown
+        expect {
+          config.bisect_runner_class
+        }.to raise_error(/Unsupported value for `bisect_runner`/)
+      end
+
+      it 'cannot be changed after the runner is in use' do
+        config.bisect_runner = :fork
+        config.bisect_runner_class
+
+        expect {
+          config.bisect_runner = :shell
+        }.to raise_error(/config.bisect_runner = :shell/)
+      end
+
+      it 'can be set to the same value after the runner is in use' do
+        config.bisect_runner = :shell
+        config.bisect_runner_class
+
+        expect { config.bisect_runner = :shell }.not_to raise_error
+      end
+    end
+
     %w[formatter= add_formatter].each do |config_method|
       describe "##{config_method}" do
         it "delegates to formatters#add" do
@@ -1456,6 +1502,53 @@ module RSpec::Core
         config.add_formatter 'doc'
         config.formatters.clear
         expect(config.formatters).to_not eq []
+      end
+    end
+
+    describe '#reporter' do
+      before do
+        config.output_stream = StringIO.new
+        config.deprecation_stream = StringIO.new
+      end
+
+      it 'does not immediately trigger formatter setup' do
+        config.reporter
+
+        expect(config.formatters).to be_empty
+      end
+
+      it 'buffers deprecations until the reporter is ready' do
+        allow(config.formatter_loader).to receive(:prepare_default).and_wrap_original do |original, *args|
+          config.reporter.deprecation :message => 'Test deprecation'
+          original.call(*args)
+        end
+        expect {
+          config.reporter.notify :deprecation_summary, Notifications::NullNotification
+        }.to change { config.deprecation_stream.string }.to include 'Test deprecation'
+      end
+
+      it 'allows registering listeners without doubling up formatters' do
+        config.reporter.register_listener double(:message => nil), :message
+
+        expect {
+          config.formatter = :documentation
+        }.to change { config.formatters.size }.from(0).to(1)
+
+        # notify triggers the formatter setup, there are two due to the already configured
+        # documentation formatter and deprecation formatter
+        expect {
+          config.reporter.notify :message, double(:message => 'Triggers formatter setup')
+        }.to change { config.formatters.size }.from(1).to(2)
+      end
+
+      it 'still configures a default formatter when none specified' do
+        config.reporter.register_listener double(:message => nil), :message
+
+        # notify triggers the formatter setup, there are two due to the default
+        # (progress) and deprecation formatter
+        expect {
+          config.reporter.notify :message, double(:message => 'Triggers formatter setup')
+        }.to change { config.formatters.size }.from(0).to(2)
       end
     end
 
@@ -1480,8 +1573,13 @@ module RSpec::Core
       end
 
       context 'when no other formatter has been set' do
+        before do
+          config.output_stream = StringIO.new
+        end
+
         it 'gets used' do
           config.default_formatter = 'doc'
+          config.reporter.notify :message, double(:message => 'Triggers formatter setup')
 
           expect(used_formatters).not_to include(an_instance_of Formatters::ProgressFormatter)
           expect(used_formatters).to include(an_instance_of Formatters::DocumentationFormatter)
@@ -1940,6 +2038,50 @@ module RSpec::Core
           expect(sequence).to eq [:before_group, :before_example, :callback, :after_example]
         end
       end
+
+      context 'when the value of the registered metadata is a Proc' do
+        it 'does not fire when later matching examples are defined' do
+          sequence = []
+          RSpec.configuration.when_first_matching_example_defined(:foo => proc { true }) do
+            sequence << :callback
+          end
+
+          RSpec.describe do
+            example("ex 1", :foo)
+            sequence.clear
+
+            sequence << :before_second_matching_example_defined
+            example("ex 2", :foo)
+            sequence << :after_second_matching_example_defined
+          end
+
+          expect(sequence).to eq [:before_second_matching_example_defined, :after_second_matching_example_defined]
+        end
+      end
+
+      context 'when a matching example group with other registered metadata has been defined' do
+        it 'does not fire when later matching examples with the other metadata are defined' do
+          sequence = []
+
+          RSpec.configuration.when_first_matching_example_defined(:foo) do
+            sequence << :callback
+          end
+
+          RSpec.configuration.when_first_matching_example_defined(:bar) do
+          end
+
+          RSpec.describe 'group', :foo, :bar do
+            example("ex 1", :foo)
+            sequence.clear
+
+            sequence << :before_second_matching_example_defined
+            example("ex 2", :foo, :bar)
+            sequence << :after_second_matching_example_defined
+          end
+
+          expect(sequence).to eq [:before_second_matching_example_defined, :after_second_matching_example_defined]
+        end
+      end
     end
 
     describe "#add_setting" do
@@ -2195,6 +2337,32 @@ module RSpec::Core
         config.add_formatter "doc"
         config.reset
         expect(config.formatters).to be_empty
+      end
+
+      it "clears the output wrapper" do
+        config.output_stream = StringIO.new
+        config.reset
+        expect(config.instance_variable_get("@output_wrapper")).to be_nil
+      end
+    end
+
+    describe "#reset_reporter" do
+      it "clears the reporter" do
+        expect(config.reporter).not_to be_nil
+        config.reset
+        expect(config.instance_variable_get("@reporter")).to be_nil
+      end
+
+      it "clears the formatters" do
+        config.add_formatter "doc"
+        config.reset
+        expect(config.formatters).to be_empty
+      end
+
+      it "clears the output wrapper" do
+        config.output_stream = StringIO.new
+        config.reset
+        expect(config.instance_variable_get("@output_wrapper")).to be_nil
       end
     end
 

@@ -174,12 +174,20 @@ end
 
 Then(/^bisect should (succeed|fail) with output like:$/) do |succeed, expected_output|
   last_process = only_processes.last
-  expect(last_exit_status).to eq(succeed == "succeed" ? 0 : 1)
+  expected_status = succeed == "succeed" ? 0 : 1
+  expect(last_exit_status).to eq(expected_status),
+    "Expected exit status of #{expected_status} but got #{last_exit_status} \n\n" \
+    "Output:\n\n#{last_process.stdout}"
 
   expected = normalize_durations(expected_output)
-  actual   = normalize_durations(last_process.stdout)
+  actual   = normalize_durations(last_process.stdout).sub(/\n+\Z/, '')
 
-  expect(actual.sub(/\n+\Z/, '')).to eq(expected)
+  if expected.include?("# ...")
+    expected_start, expected_end = expected.split("# ...")
+    expect(actual).to start_with(expected_start).and end_with(expected_end)
+  else
+    expect(actual).to eq(expected)
+  end
 end
 
 When(/^I run `([^`]+)` and abort in the middle with ctrl\-c$/) do |cmd|

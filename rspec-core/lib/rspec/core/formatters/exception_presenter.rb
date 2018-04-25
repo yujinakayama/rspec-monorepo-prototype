@@ -1,6 +1,7 @@
 # encoding: utf-8
 RSpec::Support.require_rspec_core "formatters/console_codes"
 RSpec::Support.require_rspec_core "formatters/snippet_extractor"
+RSpec::Support.require_rspec_core 'formatters/syntax_highlighter'
 RSpec::Support.require_rspec_support "encoded_string"
 
 module RSpec
@@ -215,7 +216,7 @@ module RSpec
           file_path, line_number = file_and_line_number[1..2]
           max_line_count = RSpec.configuration.max_displayed_failure_line_count
           lines = SnippetExtractor.extract_expression_lines_at(file_path, line_number.to_i, max_line_count)
-          RSpec.world.source_cache.syntax_highlighter.highlight(lines)
+          RSpec.world.syntax_highlighter.highlight(lines)
         rescue SnippetExtractor::NoSuchFileError
           ["Unable to find #{file_path} to read failed line"]
         rescue SnippetExtractor::NoSuchLineError
@@ -279,7 +280,7 @@ module RSpec
                 :description   => "#{@example.full_description} FIXED",
                 :message_color => RSpec.configuration.fixed_color,
                 :failure_lines => [
-                  "Expected pending '#{@execution_result.pending_message}' to fail. No Error was raised."
+                  "Expected pending '#{@execution_result.pending_message}' to fail. No error was raised."
                 ]
               }
             elsif @execution_result.status == :pending
@@ -346,7 +347,10 @@ module RSpec
 
                 failure   = common_backtrace_truncater.with_truncated_backtrace(failure)
                 presenter = ExceptionPresenter.new(failure, @example, options)
-                presenter.fully_formatted_lines("#{failure_number}.#{index + 1}", colorizer)
+                presenter.fully_formatted_lines(
+                  "#{failure_number ? "#{failure_number}." : ''}#{index + 1}",
+                  colorizer
+                )
               end
             end
           end
@@ -375,6 +379,7 @@ module RSpec
                 parent_bt[index] != child_bt[index]
               end
 
+              return child if index_before_first_common_frame.nil?
               return child if index_before_first_common_frame == -1
 
               child = child.dup

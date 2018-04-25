@@ -247,12 +247,12 @@ module RSpec::Core
           end
 
           it 'uses our syntax highlighter on the code snippet to format it nicely' do
-            syntax_highlighter = instance_double(Source::SyntaxHighlighter)
+            syntax_highlighter = instance_double(Formatters::SyntaxHighlighter)
             allow(syntax_highlighter).to receive(:highlight) do |lines|
               lines.map { |l| "<highlighted>#{l.strip}</highlighted>" }
             end
 
-            allow(RSpec.world.source_cache).to receive_messages(:syntax_highlighter => syntax_highlighter)
+            allow(RSpec.world).to receive_messages(:syntax_highlighter => syntax_highlighter)
 
             formatted = presenter.fully_formatted(1)
             expect(formatted).to include("<highlighted>expect('RSpec').to be_a(Integer)</highlighted>")
@@ -436,6 +436,7 @@ module RSpec::Core
 
         context 'and the line count does not exceed RSpec.configuration.max_displayed_failure_line_count' do
           it 'returns all the lines' do
+            pending 'https://github.com/jruby/jruby/issues/4737' if RSpec::Support::Ruby.jruby_9000?
             expect(read_failed_lines).to eq([
               "            expect('RSpec').to be_a(String).",
               "                           and start_with('R').",
@@ -450,6 +451,7 @@ module RSpec::Core
           end
 
           it 'returns the lines without exceeding the max count' do
+            pending 'https://github.com/jruby/jruby/issues/4737' if RSpec::Support::Ruby.jruby_9000?
             expect(read_failed_lines).to eq([
               "            expect('RSpec').to be_a(String).",
               "                           and start_with('R')."
@@ -647,6 +649,15 @@ module RSpec::Core
     it 'returns the original exception object (not a dup) when there is no need to update the backtrace' do
       parent = exception_with %w[ bar.rb:1 ]
       child  = exception_with %w[ foo.rb:1 ]
+
+      truncated = truncate(parent, child)
+
+      expect(truncated).to be child
+    end
+
+    it 'returns the original exception object when parent and child have the same files' do
+      parent = exception_with %w[ bar.rb:1 ]
+      child  = exception_with %w[ bar.rb:1 ]
 
       truncated = truncate(parent, child)
 

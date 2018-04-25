@@ -72,7 +72,7 @@ module RSpec::Core::Formatters
   autoload :ProgressFormatter,        'rspec/core/formatters/progress_formatter'
   autoload :ProfileFormatter,         'rspec/core/formatters/profile_formatter'
   autoload :JsonFormatter,            'rspec/core/formatters/json_formatter'
-  autoload :BisectFormatter,          'rspec/core/formatters/bisect_formatter'
+  autoload :BisectDRbFormatter,       'rspec/core/formatters/bisect_drb_formatter'
   autoload :ExceptionPresenter,       'rspec/core/formatters/exception_presenter'
 
   # Register the formatter class
@@ -116,6 +116,11 @@ module RSpec::Core::Formatters
     attr_accessor :default_formatter
 
     # @private
+    def prepare_default(output_stream, deprecation_stream)
+      reporter.prepare_default(self, output_stream, deprecation_stream)
+    end
+
+    # @private
     def setup_default(output_stream, deprecation_stream)
       add default_formatter, output_stream if @formatters.empty?
 
@@ -128,9 +133,6 @@ module RSpec::Core::Formatters
       end
 
       return unless RSpec.configuration.profile_examples?
-
-      @reporter.setup_profiler
-
       return if existing_formatter_implements?(:dump_profile)
 
       add RSpec::Core::Formatters::ProfileFormatter, output_stream
@@ -138,9 +140,16 @@ module RSpec::Core::Formatters
 
     # @private
     def add(formatter_to_use, *paths)
+      # If a formatter instance was passed, we can register it directly,
+      # with no need for any of the further processing that happens below.
+      if Loader.formatters.key?(formatter_to_use.class)
+        register formatter_to_use, notifications_for(formatter_to_use.class)
+        return
+      end
+
       formatter_class = find_formatter(formatter_to_use)
 
-      args = paths.map { |p| p.respond_to?(:puts) ? p : file_at(p) }
+      args = paths.map { |p| p.respond_to?(:puts) ? p : open_stream(p) }
 
       if !Loader.formatters[formatter_class].nil?
         formatter = formatter_class.new(*args)
@@ -201,8 +210,8 @@ module RSpec::Core::Formatters
         ProgressFormatter
       when 'j', 'json'
         JsonFormatter
-      when 'bisect'
-        BisectFormatter
+      when 'bisect-drb'
+        BisectDRbFormatter
       end
     end
 
@@ -247,9 +256,14 @@ module RSpec::Core::Formatters
       word
     end
 
-    def file_at(path)
-      RSpec::Support::DirectoryMaker.mkdir_p(File.dirname(path))
-      File.new(path, 'w')
+    def open_stream(path_or_wrapper)
+      if RSpec::Core::OutputWrapper === path_or_wrapper
+        path_or_wrapper.output = open_stream(path_or_wrapper.output)
+        path_or_wrapper
+      else
+        RSpec::Support::DirectoryMaker.mkdir_p(File.dirname(path_or_wrapper))
+        File.new(path_or_wrapper, 'w')
+      end
     end
   end
 end

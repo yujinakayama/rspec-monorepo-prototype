@@ -520,6 +520,12 @@ module RSpec::Core
       end.to raise_error(/#let or #subject called without a block/)
     end
 
+    it 'raises an error when attempting to define a reserved method name' do
+      expect do
+        RSpec.describe { let(:initialize) { true }}
+      end.to raise_error(/#let or #subject called with a reserved name #initialize/)
+    end
+
     let(:a_value) { "a string" }
 
     context 'when overriding let in a nested context' do
@@ -625,7 +631,7 @@ module RSpec::Core
   end
 
   RSpec.describe 'Module#define_method' do
-    it 'is still a private method' do
+    it 'retains its normal private visibility on Ruby versions where it is normally private', :if => RUBY_VERSION < '2.5' do
       a_module = Module.new
       expect { a_module.define_method(:name) { "implementation" } }.to raise_error NoMethodError
     end

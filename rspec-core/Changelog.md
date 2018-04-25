@@ -1,3 +1,90 @@
+### Development
+[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.7.1...master)
+
+Enhancements:
+
+* Improve shell escaping used by `RSpec::Core::RakeTask` and `--bisect` so
+  that it works on `Pathname` objects. (Andrew Vit, #2479)
+* Nicely format errors encountered while loading files specified
+  by `--require` option.  (Myron Marston, #2504)
+* Significantly improve the performance of `--bisect` on platforms that
+  support forking by replacing the shell-based runner with one that uses
+  forking so that RSpec and the application environment can be booted only
+  once, instead of once per spec run. (Myron Marston, #2511)
+* Provide a configuration API to pick which bisect runner is used for
+  `--bisect`. Pick a runner via `config.bisect_runner = :shell` or
+  `config.bisect_runner = :fork` in a file loaded by a `--require`
+  option passed at the command line or set in `.rspec`. (Myron Marston, #2511)
+
+Bug Fixes:
+
+* Prevent an `ArgumentError` when truncating backtraces with two identical
+  backtraces. (Systho, #2515, Benoit Tigeot, #2539)
+
+### 3.7.1 / 2018-01-02
+[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.7.0...v3.7.1)
+
+Bug Fixes:
+
+* Work around duplicate config hook regression introduced
+  by Ruby 2.5's lazy proc allocation. (Myron Marston, #2497)
+
+### 3.7.0 / 2017-10-17
+[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.6.0...v3.7.0)
+
+Enhancements:
+
+* Add `-n` alias for `--next-failure`. (Ian Ker-Seymer, #2434)
+* Improve compatibility with `--enable-frozen-string-literal` option
+  on Ruby 2.3+. (Pat Allan, #2425, #2427, #2437)
+* Do not run `:context` hooks for example groups that have been skipped.
+  (Devon Estes, #2442)
+* Add `errors_outside_of_examples_count` to the JSON formatter.
+  (Takeshi Arabiki, #2448)
+
+Bug Fixes:
+
+* Improve compatibility with frozen string literal flag. (#2425, Pat Allan)
+
+### 3.6.0 / 2017-05-04
+[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.6.0.beta2...v3.6.0)
+
+Enhancements:
+
+* Add seed information to JSON formatter output. (#2388, Mitsutaka Mimura)
+* Include example id in the JSON formatter output. (#2369, Xavier Shay)
+* Respect changes to `config.output_stream` after formatters have been
+  setup. (#2401, #2419, Ilya Lavrov)
+
+Bug Fixes:
+
+* Delay formatter loading until the last minute to allow accessing the reporter
+  without triggering formatter setup. (Jon Rowe, #2243)
+* Ensure context hook failures running before an example can access the
+  reporter. (Jon Jensen, #2387)
+* Multiple fixes to allow using the runner multiple times within the same
+  process: `RSpec.clear_examples` resets the formatter and no longer clears
+  shared examples, and streams can be used across multiple runs rather than
+  being closed after the first. (#2368, Xavier Shay)
+* Prevent unexpected `example_group_finished` notifications causing an error.
+  (#2396, VTJamie)
+* Fix bugs where `config.when_first_matching_example_defined` hooks would fire
+  multiple times in some cases. (Yuji Nakayama, #2400)
+* Default `last_run_status` to "unknown" when the `status` field in the
+  persistence file contains an unrecognized value. (#2360, matrinox)
+* Prevent `let` from defining an `initialize` method. (#2414, Jon Rowe)
+
+### 3.6.0.beta2 / 2016-12-12
+[Full Changelog](http://github.com/rspec/rspec-core/compare/v3.6.0.beta1...v3.6.0.beta2)
+
+Enhancements:
+
+* Include count of errors occurring outside examples in default summaries.
+  (#2351, Jon Rowe)
+* Warn when including shared example groups recursively. (#2356, Jon Rowe)
+* Improve failure snippet syntax highlighting with CodeRay to highlight
+  RSpec "keywords" like `expect`. (#2358, Myron Marston)
+
 ### 3.6.0.beta1 / 2016-10-09
 [Full Changelog](http://github.com/rspec/rspec-core/compare/v3.5.4...v3.6.0.beta1)
 

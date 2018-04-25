@@ -1,6 +1,6 @@
-require 'rspec/core/source'
+require 'rspec/support/source'
 
-module RSpec::Core
+module RSpec::Support
   RSpec.describe Source, :if => RSpec::Support::RubyFeatures.ripper_supported? do
     subject(:source) do
       Source.new(source_string)
@@ -124,7 +124,7 @@ module RSpec::Core
 
     describe '#inspect' do
       it 'returns a string including class name and file path' do
-        expect(source.inspect).to start_with('#<RSpec::Core::Source (string)>')
+        expect(source.inspect).to start_with('#<RSpec::Support::Source (string)>')
       end
     end
   end

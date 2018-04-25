@@ -1,6 +1,6 @@
-require 'rspec/core/source/token'
+require 'rspec/support/source/token'
 
-class RSpec::Core::Source
+class RSpec::Support::Source
   RSpec.describe Token, :if => RSpec::Support::RubyFeatures.ripper_supported? do
     let(:target_token) do
       tokens.first
@@ -60,7 +60,7 @@ class RSpec::Core::Source
 
     describe '#inspect' do
       it 'returns a string including class name, token type and source string' do
-        expect(target_token.inspect).to eq('#<RSpec::Core::Source::Token on_ident "puts">')
+        expect(target_token.inspect).to eq('#<RSpec::Support::Source::Token on_ident "puts">')
       end
     end
   end

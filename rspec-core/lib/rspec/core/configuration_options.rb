@@ -168,7 +168,11 @@ module RSpec
       end
 
       def options_file_as_erb_string(path)
-        ERB.new(File.read(path), nil, '-').result(binding)
+        if RUBY_VERSION >= '2.6'
+          ERB.new(File.read(path), :trim_mode => '-').result(binding)
+        else
+          ERB.new(File.read(path), nil, '-').result(binding)
+        end
       end
 
       def custom_options_file
@@ -186,8 +190,10 @@ module RSpec
       def global_options_file
         File.join(File.expand_path("~"), ".rspec")
       rescue ArgumentError
+        # :nocov:
         RSpec.warning "Unable to find ~/.rspec because the HOME environment variable is not set"
         nil
+        # :nocov:
       end
     end
   end

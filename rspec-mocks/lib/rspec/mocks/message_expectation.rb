@@ -330,7 +330,7 @@ module RSpec
       def ordered(&block)
         if type == :stub
           RSpec.warning(
-            "`allow(...).to receive(..).ordered` is not supported and will" \
+            "`allow(...).to receive(..).ordered` is not supported and will " \
             "have no effect, use `and_return(*ordered_values)` instead."
           )
         end
@@ -367,7 +367,7 @@ module RSpec
         # @private
         attr_reader :type
 
-        # rubocop:disable Style/ParameterLists
+        # rubocop:disable Metrics/ParameterLists
         def initialize(error_generator, expectation_ordering, expected_from, method_double,
                        type=:expectation, opts={}, &implementation_block)
           @type = type
@@ -395,7 +395,7 @@ module RSpec
           @implementation = Implementation.new
           self.inner_implementation_action = implementation_block
         end
-        # rubocop:enable Style/ParameterLists
+        # rubocop:enable Metrics/ParameterLists
 
         def expected_args
           @argument_list_matcher.expected_args
@@ -581,6 +581,7 @@ module RSpec
         end
 
         def set_expected_received_count(relativity, n)
+          raise "`count` is not supported with negative message expectations" if negative?
           @at_least = (relativity == :at_least)
           @at_most  = (relativity == :at_most)
           @exactly  = (relativity == :exactly)
@@ -650,7 +651,7 @@ module RSpec
             @error_generator.raise_wrong_arity_error(args, block_signature)
           end
 
-          value = @eval_context ? @eval_context.instance_exec(*args, &block) : block.call(*args)
+          value = @eval_context ? @eval_context.instance_exec(*args, &block) : yield(*args)
         end
         value
       end

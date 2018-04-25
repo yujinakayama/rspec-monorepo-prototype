@@ -21,9 +21,13 @@ module RSpec
         end
 
         # rubocop:disable Style/ClassVars
+        # @private
         @@converter = NullConverter
+
         begin
           require 'coderay'
+          RSpec::Support.require_rspec_core 'formatters/syntax_highlighter'
+          RSpec::Core::Formatters::SyntaxHighlighter.attempt_to_add_rspec_terms_to_coderay_keywords
           @@converter = CoderayConverter
           # rubocop:disable Lint/HandleExceptions
         rescue LoadError

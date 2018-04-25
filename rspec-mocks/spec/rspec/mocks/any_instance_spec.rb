@@ -123,6 +123,11 @@ module RSpec
               expect(klass.new.one.plus(1)).to eq(2)
               expect(klass.new.one.plus(2)).to eq(3)
             end
+
+            it 'can use a chain of methods to perform an expectation' do
+              expect_any_instance_of(klass).to receive_message_chain('message1.message2').with('some args')
+              klass.new.message1.message2('some args')
+            end
           end
         end
 
@@ -373,12 +378,12 @@ module RSpec
 
           it "works with the non-standard constructor \"\"" do
             allow_any_instance_of(String).to receive(:foo).and_return(1)
-            expect("".foo).to eq(1)
+            expect("".dup.foo).to eq(1)
           end
 
           it "works with the non-standard constructor \'\'" do
             allow_any_instance_of(String).to receive(:foo).and_return(1)
-            expect(''.foo).to eq(1)
+            expect(''.dup.foo).to eq(1)
           end
 
           it "works with the non-standard constructor module" do
@@ -540,10 +545,10 @@ module RSpec
 
         it "does not set the expectation on every instance" do
           # Setup an unrelated object of the same class that won't receive the expected message.
-          allow('non-related object').to receive(:non_related_method)
+          allow('non-related object'.dup).to receive(:non_related_method)
 
           expect_any_instance_of(Object).to receive(:foo)
-          'something'.foo
+          'something'.dup.foo
         end
 
         it "does not modify the return value of stubs set on an instance" do

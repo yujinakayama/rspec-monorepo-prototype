@@ -39,6 +39,14 @@ module RSpec::Core::Formatters
         expect(loader.formatters.first).to be_an_instance_of(CustomFormatter)
       end
 
+      it "lets you pass a formatter instance, for when you need to instantiate it with some custom state" do
+        instance = ProgressFormatter.new(StringIO.new)
+
+        expect {
+          loader.add(instance)
+        }.to change { loader.formatters }.from([]).to([instance])
+      end
+
       context "when a legacy formatter is added with RSpec::LegacyFormatters" do
         formatter_class = Struct.new(:output)
         let(:formatter) { double "formatter", :notifications => notifications, :output => output }
@@ -185,7 +193,6 @@ module RSpec::Core::Formatters
         context "without an existing profile formatter" do
           it "will add the profile formatter" do
             allow(reporter).to receive(:registered_listeners).with(:dump_profile) { [] }
-            expect(reporter).to receive(:setup_profiler)
             expect {
               setup_default
             }.to change { loader.formatters }.
@@ -197,7 +204,6 @@ module RSpec::Core::Formatters
         context "when a formatter that implement #dump_profile is added" do
           it "wont add the profile formatter" do
             allow(reporter).to receive(:registered_listeners).with(:dump_profile) { [:json] }
-            expect(reporter).to receive(:setup_profiler)
             setup_default
             expect(
               loader.formatters.map(&:class)

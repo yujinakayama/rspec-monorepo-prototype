@@ -170,7 +170,7 @@ module RSpec
             expect(::Hash).to equal(top_level_hash)
           end
 
-          it 'does not affect the ability to access the top-level constant from nested contexts', :silence_warnings do
+          it 'does not affect the ability to access the top-level constant from nested contexts', :silence_warnings, :if => RUBY_VERSION < '2.5' do
             top_level_hash = ::Hash
 
             hide_const("TestClass::Hash")
@@ -216,6 +216,10 @@ module RSpec
       describe "#stub_const" do
         context "for a loaded constant nested in a module that redefines `send`" do
           it_behaves_like "loaded constant stubbing", "TestClassThatDefinesSend::C"
+        end
+
+        it "requires a string argument" do
+          expect { stub_const(10, 1) }.to raise_error(ArgumentError, /requires a String/i)
         end
 
         context 'for a loaded unnested constant' do

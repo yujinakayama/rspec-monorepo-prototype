@@ -14,16 +14,17 @@ RSpec.describe RSpec::Core::Formatters::JsonFormatter do
   include FormatterSupport
 
   it "can be loaded via `--format json`" do
-    output = run_example_specs_with_formatter("json", :normalize_output => false)
+    output = run_example_specs_with_formatter("json", :normalize_output => false, :seed => 42)
     parsed = JSON.parse(output)
-    expect(parsed.keys).to include("examples", "summary", "summary_line")
+    expect(parsed.keys).to include("examples", "summary", "summary_line", "seed")
   end
 
   it "outputs expected json (brittle high level functional test)" do
+    its = []
     group = RSpec.describe("one apiece") do
-      it("succeeds") { expect(1).to eq 1 }
-      it("fails") { fail "eek" }
-      it("pends") { pending "world peace"; fail "eek" }
+      its.push it("succeeds") { expect(1).to eq 1 }
+      its.push it("fails") { fail "eek" }
+      its.push it("pends") { pending "world peace"; fail "eek" }
     end
     succeeding_line = __LINE__ - 4
     failing_line = __LINE__ - 4
@@ -44,6 +45,7 @@ RSpec.describe RSpec::Core::Formatters::JsonFormatter do
       :version => RSpec::Core::Version::STRING,
       :examples => [
         {
+          :id => its[0].id,
           :description => "succeeds",
           :full_description => "one apiece succeeds",
           :status => "passed",
@@ -53,6 +55,7 @@ RSpec.describe RSpec::Core::Formatters::JsonFormatter do
           :pending_message => nil,
         },
         {
+          :id => its[1].id,
           :description => "fails",
           :full_description => "one apiece fails",
           :status => "failed",
@@ -67,6 +70,7 @@ RSpec.describe RSpec::Core::Formatters::JsonFormatter do
           },
         },
         {
+          :id => its[2].id,
           :description => "pends",
           :full_description => "one apiece pends",
           :status => "pending",
@@ -81,6 +85,7 @@ RSpec.describe RSpec::Core::Formatters::JsonFormatter do
         :example_count => 3,
         :failure_count => 1,
         :pending_count => 1,
+        :errors_outside_of_examples_count => 0,
       },
       :summary_line => "3 examples, 1 failure, 1 pending"
     }
@@ -95,6 +100,22 @@ RSpec.describe RSpec::Core::Formatters::JsonFormatter do
     end
   end
 
+  describe "#seed" do
+    context "use random seed" do
+      it "adds random seed" do
+        send_notification :seed, seed_notification(42)
+        expect(formatter.output_hash[:seed]).to eq(42)
+      end
+    end
+
+    context "don't use random seed" do
+      it "don't add random seed" do
+        send_notification :seed, seed_notification(42, false)
+        expect(formatter.output_hash[:seed]).to be_nil
+      end
+    end
+  end
+
   describe "#close" do
     it "outputs the results as a JSON string" do
       expect(formatter_output.string).to eq ""
@@ -102,6 +123,11 @@ RSpec.describe RSpec::Core::Formatters::JsonFormatter do
       expect(formatter_output.string).to eq({
         :version => RSpec::Core::Version::STRING
       }.to_json)
+    end
+
+    it "does not close the stream so that it can be reused within a process" do
+      formatter.close(RSpec::Core::Notifications::NullNotification)
+      expect(formatter_output.closed?).to be(false)
     end
   end
 
@@ -114,13 +140,13 @@ RSpec.describe RSpec::Core::Formatters::JsonFormatter do
 
   describe "#dump_summary" do
     it "adds summary info to the output hash" do
-      send_notification :dump_summary, summary_notification(1.0, examples(10), examples(3), examples(4), 0)
+      send_notification :dump_summary, summary_notification(1.0, examples(10), examples(3), examples(4), 0, 1)
       expect(formatter.output_hash[:summary]).to include(
         :duration => 1.0, :example_count => 10, :failure_count => 3,
-        :pending_count => 4
+        :pending_count => 4, :errors_outside_of_examples_count => 1
       )
       summary_line = formatter.output_hash[:summary_line]
-      expect(summary_line).to eq "10 examples, 3 failures, 4 pending"
+      expect(summary_line).to eq "10 examples, 3 failures, 4 pending, 1 error occurred outside of examples"
     end
   end
 

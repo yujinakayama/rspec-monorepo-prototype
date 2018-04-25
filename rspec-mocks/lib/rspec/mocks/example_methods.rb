@@ -282,6 +282,18 @@ module RSpec
         Matchers::HaveReceived.new(method_name, &block)
       end
 
+      # Turns off the verifying of partial doubles for the duration of the
+      # block, this is useful in situations where methods are defined at run
+      # time and you wish to define stubs for them but not turn off partial
+      # doubles for the entire run suite. (e.g. view specs in rspec-rails).
+      def without_partial_double_verification
+        original_state = Mocks.configuration.temporarily_suppress_partial_double_verification
+        Mocks.configuration.temporarily_suppress_partial_double_verification = true
+        yield
+      ensure
+        Mocks.configuration.temporarily_suppress_partial_double_verification = original_state
+      end
+
       # @method expect
       # Used to wrap an object in preparation for setting a mock expectation
       # on it.
@@ -380,7 +392,7 @@ module RSpec
       def self.included(klass)
         klass.class_exec do
           # This gets mixed in so that if `RSpec::Matchers` is included in
-          # `klass` later, it's definition of `expect` will take precedence.
+          # `klass` later, its definition of `expect` will take precedence.
           include ExpectHost unless method_defined?(:expect)
         end
       end
@@ -388,7 +400,7 @@ module RSpec
       # @private
       def self.extended(object)
         # This gets extended in so that if `RSpec::Matchers` is included in
-        # `klass` later, it's definition of `expect` will take precedence.
+        # `klass` later, its definition of `expect` will take precedence.
         object.extend ExpectHost unless object.respond_to?(:expect)
       end
 

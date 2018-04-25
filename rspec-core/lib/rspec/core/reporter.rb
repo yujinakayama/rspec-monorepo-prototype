@@ -18,24 +18,14 @@ module RSpec::Core
       @failed_examples = []
       @pending_examples = []
       @duration = @start = @load_time = nil
+      @non_example_exception_count = 0
+      @setup_default = lambda {}
+      @setup = false
+      @profiler = nil
     end
 
     # @private
     attr_reader :examples, :failed_examples, :pending_examples
-
-    # @private
-    def reset
-      @examples = []
-      @failed_examples = []
-      @pending_examples = []
-      @profiler = Profiler.new if defined?(@profiler)
-    end
-
-    # @private
-    def setup_profiler
-      @profiler = Profiler.new
-      register_listener @profiler, *Profiler::NOTIFICATIONS
-    end
 
     # Registers a listener to a list of notifications. The reporter will send
     # notification of events to all registered listeners.
@@ -49,6 +39,13 @@ module RSpec::Core
         @listeners[notification.to_sym] << listener
       end
       true
+    end
+
+    # @private
+    def prepare_default(loader, output_stream, deprecation_stream)
+      @setup_default = lambda do
+        loader.setup_default output_stream, deprecation_stream
+      end
     end
 
     # @private
@@ -157,6 +154,7 @@ module RSpec::Core
     # Exceptions will be formatted the same way they normally are.
     def notify_non_example_exception(exception, context_description)
       @configuration.world.non_example_failure = true
+      @non_example_exception_count += 1
 
       example = Example.new(AnonymousExampleGroup, context_description, {})
       presenter = Formatters::ExceptionPresenter.new(exception, example, :indentation => 0)
@@ -177,7 +175,8 @@ module RSpec::Core
                                                                        @profiler.example_groups)
         end
         notify :dump_summary, Notifications::SummaryNotification.new(@duration, @examples, @failed_examples,
-                                                                     @pending_examples, @load_time)
+                                                                     @pending_examples, @load_time,
+                                                                     @non_example_exception_count)
         notify :seed, Notifications::SeedNotification.new(@configuration.seed, seed_used?)
       end
     end
@@ -197,6 +196,7 @@ module RSpec::Core
 
     # @private
     def notify(event, notification)
+      ensure_listeners_ready
       registered_listeners(event).each do |formatter|
         formatter.__send__(event, notification)
       end
@@ -221,6 +221,15 @@ module RSpec::Core
     end
 
   private
+
+    def ensure_listeners_ready
+      return if @setup
+
+      @setup_default.call
+      @profiler = Profiler.new
+      register_listener @profiler, *Profiler::NOTIFICATIONS
+      @setup = true
+    end
 
     def close
       notify :close, Notifications::NullNotification
