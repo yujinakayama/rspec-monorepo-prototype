@@ -2,7 +2,7 @@ module RSpec
   module Expectations
     # @private
     module Version
-      STRING = '3.6.0.beta1'
+      STRING = '3.8.pre'
     end
   end
 end

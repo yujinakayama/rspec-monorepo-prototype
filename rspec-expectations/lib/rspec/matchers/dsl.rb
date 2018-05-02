@@ -2,7 +2,70 @@ module RSpec
   module Matchers
     # Defines the custom matcher DSL.
     module DSL
+      # Defines a matcher alias. The returned matcher's `description` will be overriden
+      # to reflect the phrasing of the new name, which will be used in failure messages
+      # when passed as an argument to another matcher in a composed matcher expression.
+      #
+      # @example
+      #   RSpec::Matchers.alias_matcher :a_list_that_sums_to, :sum_to
+      #   sum_to(3).description # => "sum to 3"
+      #   a_list_that_sums_to(3).description # => "a list that sums to 3"
+      #
+      # @example
+      #   RSpec::Matchers.alias_matcher :a_list_sorted_by, :be_sorted_by do |description|
+      #     description.sub("be sorted by", "a list sorted by")
+      #   end
+      #
+      #   be_sorted_by(:age).description # => "be sorted by age"
+      #   a_list_sorted_by(:age).description # => "a list sorted by age"
+      #
+      # @param new_name [Symbol] the new name for the matcher
+      # @param old_name [Symbol] the original name for the matcher
+      # @param options  [Hash] options for the aliased matcher
+      # @option options [Class] :klass the ruby class to use as the decorator. (Not normally used).
+      # @yield [String] optional block that, when given, is used to define the overriden
+      #   logic. The yielded arg is the original description or failure message. If no
+      #   block is provided, a default override is used based on the old and new names.
+      # @see RSpec::Matchers
+      def alias_matcher(new_name, old_name, options={}, &description_override)
+        description_override ||= lambda do |old_desc|
+          old_desc.gsub(EnglishPhrasing.split_words(old_name), EnglishPhrasing.split_words(new_name))
+        end
+        klass = options.fetch(:klass) { AliasedMatcher }
+
+        define_method(new_name) do |*args, &block|
+          matcher = __send__(old_name, *args, &block)
+          matcher.matcher_name = new_name if matcher.respond_to?(:matcher_name=)
+          klass.new(matcher, description_override)
+        end
+      end
+
+      # Defines a negated matcher. The returned matcher's `description` and `failure_message`
+      # will be overriden to reflect the phrasing of the new name, and the match logic will
+      # be based on the original matcher but negated.
+      #
+      # @example
+      #   RSpec::Matchers.define_negated_matcher :exclude, :include
+      #   include(1, 2).description # => "include 1 and 2"
+      #   exclude(1, 2).description # => "exclude 1 and 2"
+      #
+      # @param negated_name [Symbol] the name for the negated matcher
+      # @param base_name [Symbol] the name of the original matcher that will be negated
+      # @yield [String] optional block that, when given, is used to define the overriden
+      #   logic. The yielded arg is the original description or failure message. If no
+      #   block is provided, a default override is used based on the old and new names.
+      # @see RSpec::Matchers
+      def define_negated_matcher(negated_name, base_name, &description_override)
+        alias_matcher(negated_name, base_name, :klass => AliasedNegatedMatcher, &description_override)
+      end
+
       # Defines a custom matcher.
+      #
+      # @param name [Symbol] the name for the matcher
+      # @yield [Object] block that is used to define the matcher.
+      #   The block is evaluated in the context of your custom matcher class.
+      #   When args are passed to your matcher, they will be yielded here,
+      #   usually representing the expected value(s).
       # @see RSpec::Matchers
       def define(name, &declarations)
         warn_about_block_args(name, declarations)
@@ -266,7 +329,7 @@ module RSpec
         #
         # This compiles the user block into an actual method, allowing
         # them to use normal method constructs like `return`
-        # (e.g. for a early guard statement), while allowing us to define
+        # (e.g. for an early guard statement), while allowing us to define
         # an override that can provide the wrapped handling
         # (e.g. assigning `@actual`, rescueing errors, etc) and
         # can `super` to the user's definition.
@@ -462,5 +525,3 @@ module RSpec
     end
   end
 end
-
-RSpec::Matchers.extend RSpec::Matchers::DSL

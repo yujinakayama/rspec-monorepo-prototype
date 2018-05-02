@@ -131,7 +131,7 @@ module RSpec
         end
 
         def with_arity
-          str = ''
+          str = ''.dup
           str << " with #{with_arity_string}" if @expected_arity
           str << " #{str.length == 0 ? 'with' : 'and'} #{with_keywords_string}" if @expected_keywords && @expected_keywords.count > 0
           str << " #{str.length == 0 ? 'with' : 'and'} unlimited arguments" if @unlimited_arguments
@@ -151,7 +151,7 @@ module RSpec
                      @expected_keywords.map(&:inspect).join(' and ')
                    else
                      "#{@expected_keywords[0...-1].map(&:inspect).join(', ')}, and #{@expected_keywords.last.inspect}"
-          end
+                   end
 
           "keyword#{@expected_keywords.count == 1 ? '' : 's'} #{kw_str}"
         end

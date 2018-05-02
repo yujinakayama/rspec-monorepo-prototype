@@ -89,7 +89,7 @@ module RSpec
           elsif actual.respond_to?(:to_a) && !to_a_disallowed?(actual)
             @actual = actual.to_a
           else
-            return false
+            false
           end
         end
 
@@ -176,6 +176,7 @@ module RSpec
         #
         # @private
         class PairingsMaximizer
+          # @private
           Solution = Struct.new(:unmatched_expected_indexes,     :unmatched_actual_indexes,
                                 :indeterminate_expected_indexes, :indeterminate_actual_indexes) do
             def worse_than?(other)

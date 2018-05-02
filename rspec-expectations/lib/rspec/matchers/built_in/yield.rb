@@ -8,19 +8,17 @@ module RSpec
       # yield matchers is used. Provides information about
       # the yield behavior of the object-under-test.
       class YieldProbe
-        def self.probe(block)
-          probe = new(block)
+        def self.probe(block, &callback)
+          probe = new(block, &callback)
           return probe unless probe.has_block?
-          probe.assert_valid_expect_block!
-          block.call(probe)
-          probe.assert_used!
-          probe
+          probe.probe
         end
 
         attr_accessor :num_yields, :yielded_args
 
-        def initialize(block)
+        def initialize(block, &callback)
           @block = block
+          @callback = callback || Proc.new {}
           @used = false
           self.num_yields = 0
           self.yielded_args = []
@@ -30,13 +28,22 @@ module RSpec
           Proc === @block
         end
 
+        def probe
+          assert_valid_expect_block!
+          @block.call(self)
+          assert_used!
+          self
+        end
+
         def to_proc
           @used = true
 
           probe = self
+          callback = @callback
           Proc.new do |*args|
             probe.num_yields += 1
             probe.yielded_args << args
+            callback.call(*args)
             nil # to indicate the block does not return a meaningful value
           end
         end
@@ -53,12 +60,6 @@ module RSpec
             raise "The #{matcher_name} matcher is not designed to be used with a " \
                   'method that yields multiple times. Use the yield_successive_args ' \
                   'matcher for that case.'
-          end
-        end
-
-        def successive_yield_args
-          yielded_args.map do |arg_array|
-            arg_array.size == 1 ? arg_array.first : arg_array
           end
         end
 
@@ -269,10 +270,15 @@ module RSpec
 
         # @private
         def matches?(block)
-          @probe = YieldProbe.probe(block)
+          @args_matched_when_yielded = true
+          @probe = YieldProbe.new(block) do
+            @actual = @probe.single_yield_args
+            @actual_formatted = actual_formatted
+            @args_matched_when_yielded &&= args_currently_match?
+          end
           return false unless @probe.has_block?
-          @actual = @probe.single_yield_args
-          @probe.yielded_once?(:yield_with_args) && args_match?
+          @probe.probe
+          @probe.yielded_once?(:yield_with_args) && @args_matched_when_yielded
         end
 
         # @private
@@ -293,7 +299,7 @@ module RSpec
         # @private
         def description
           desc = 'yield with args'
-          desc << "(#{expected_arg_description})" unless @expected.empty?
+          desc = "#{desc}(#{expected_arg_description})" unless @expected.empty?
           desc
         end
 
@@ -317,16 +323,16 @@ module RSpec
         def negative_failure_reason
           if !@probe.has_block?
             'was not a block'
-          elsif all_args_match?
+          elsif @args_matched_when_yielded && !@expected.empty?
             'yielded with expected arguments' \
               "\nexpected not: #{surface_descriptions_in(@expected).inspect}" \
-              "\n         got: #{actual_formatted}"
+              "\n         got: #{@actual_formatted}"
           else
             'did'
           end
         end
 
-        def args_match?
+        def args_currently_match?
           if @expected.empty? # expect {...}.to yield_with_args
             @positive_args_failure = 'yielded with no arguments' if @actual.empty?
             return !@actual.empty?
@@ -335,7 +341,7 @@ module RSpec
           unless (match = all_args_match?)
             @positive_args_failure = 'yielded with unexpected arguments' \
               "\nexpected: #{surface_descriptions_in(@expected).inspect}" \
-              "\n     got: #{actual_formatted}"
+              "\n     got: #{@actual_formatted}"
           end
 
           match
@@ -356,10 +362,21 @@ module RSpec
 
         # @private
         def matches?(block)
-          @probe = YieldProbe.probe(block)
+          @actual_formatted = []
+          @actual = []
+          args_matched_when_yielded = true
+          yield_count = 0
+
+          @probe = YieldProbe.probe(block) do |*arg_array|
+            arg_or_args = arg_array.size == 1 ? arg_array.first : arg_array
+            @actual_formatted << RSpec::Support::ObjectFormatter.format(arg_or_args)
+            @actual << arg_or_args
+            args_matched_when_yielded &&= values_match?(@expected[yield_count], arg_or_args)
+            yield_count += 1
+          end
+
           return false unless @probe.has_block?
-          @actual = @probe.successive_yield_args
-          args_match?
+          args_matched_when_yielded && yield_count == @expected.length
         end
 
         def does_not_match?(block)
@@ -390,10 +407,6 @@ module RSpec
 
       private
 
-        def args_match?
-          values_match?(@expected, @actual)
-        end
-
         def expected_arg_description
           @expected.map { |e| description_of e }.join(', ')
         end
@@ -403,7 +416,7 @@ module RSpec
 
           'yielded with unexpected arguments' \
           "\nexpected: #{surface_descriptions_in(@expected).inspect}" \
-          "\n     got: #{actual_formatted}"
+          "\n     got: [#{@actual_formatted.join(", ")}]"
         end
 
         def negative_failure_reason
@@ -411,7 +424,7 @@ module RSpec
 
           'yielded with expected arguments' \
           "\nexpected not: #{surface_descriptions_in(@expected).inspect}" \
-          "\n         got: #{actual_formatted}"
+          "\n         got: [#{@actual_formatted.join(", ")}]"
         end
       end
     end

@@ -105,6 +105,42 @@ module MatcherHelperModule
 end
 
 module RSpec::Matchers::DSL
+  RSpec.describe "#alias_matcher" do
+    describe "an alias matcher defined in the current scope" do
+      alias_matcher :be_untrue_in_this_scope, :be_falsy
+
+      it "is available only in the current scope" do
+        expect(false).to be_untrue_in_this_scope
+      end
+    end
+
+    describe "an aliased matcher defined in another scope" do
+      it "is not available in the current scope" do
+        expect {
+          expect(false).to be_untrue_in_this_scope
+        }.to fail_with("expected false to respond to `untrue_in_this_scope?`")
+      end
+    end
+  end
+
+  RSpec.describe "#define_negated_matcher" do
+    describe "a negated matcher defined in the current scope" do
+      define_negated_matcher :be_untrue_in_this_scope, :be_truthy
+
+      it "is available only in the current scope" do
+        expect(false).to be_untrue_in_this_scope
+      end
+    end
+
+    describe "a negated matcher defined in another scope" do
+      it "is not available in the current scope" do
+        expect {
+          expect(false).to be_untrue_in_this_scope
+        }.to fail_with("expected false to respond to `untrue_in_this_scope?`")
+      end
+    end
+  end
+
   RSpec.describe Matcher do
     def new_matcher(name, *expected, &block)
       RSpec::Matchers::DSL::Matcher.new(name, block, self, *expected)
@@ -590,16 +626,16 @@ module RSpec::Matchers::DSL
           end
         end
 
-        expect(Fixnum).to descend_from(Object)
-        expect(Fixnum).not_to descend_from(Array)
+        expect(Integer).to descend_from(Object)
+        expect(Integer).not_to descend_from(Array)
 
         expect {
-          expect(Fixnum).to descend_from(Array)
-        }.to fail_with(/expected Fixnum to descend from Array/)
+          expect(Integer).to descend_from(Array)
+        }.to fail_with(/expected Integer to descend from Array/)
 
         expect {
-          expect(Fixnum).not_to descend_from(Object)
-        }.to fail_with(/expected Fixnum not to descend from Object/)
+          expect(Integer).not_to descend_from(Object)
+        }.to fail_with(/expected Integer not to descend from Object/)
       end
 
       it "can use the `match` matcher from a `match` block" do
@@ -1223,7 +1259,7 @@ module RSpec::Matchers::DSL
         end
 
         expected_msg = "RSpec::Matchers::DSL::Matcher"
-        expected_msg << " __raise_no_method_error" unless rbx?
+        expected_msg = "#{expected_msg} __raise_no_method_error" unless rbx?
 
         expect {
           expect(example).to __raise_no_method_error

@@ -145,7 +145,7 @@ module RSpec
         def matches?(actual)
           @actual = actual
           @actual.__send__ @operator, @expected
-        rescue ArgumentError
+        rescue ArgumentError, NoMethodError
           false
         end
 
@@ -270,7 +270,7 @@ module RSpec
         def validity_message
           return nil if predicate_accessible?
 
-          msg = "expected #{actual_formatted} to respond to `#{predicate}`"
+          msg = "expected #{actual_formatted} to respond to `#{predicate}`".dup
 
           if private_predicate?
             msg << " but `#{predicate}` is a private method"

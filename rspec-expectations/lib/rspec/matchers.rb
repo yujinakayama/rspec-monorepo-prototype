@@ -41,9 +41,9 @@ module RSpec
   #
   #     expect("a string").to be_an_instance_of(String) # =>"a string".instance_of?(String) # passes
   #
-  #     expect(3).to be_a_kind_of(Fixnum)        # => 3.kind_of?(Numeric)     | passes
-  #     expect(3).to be_a_kind_of(Numeric)       # => 3.kind_of?(Numeric)     | passes
-  #     expect(3).to be_an_instance_of(Fixnum)   # => 3.instance_of?(Fixnum)  | passes
+  #     expect(3).to be_a_kind_of(Integer)          # => 3.kind_of?(Numeric)     | passes
+  #     expect(3).to be_a_kind_of(Numeric)          # => 3.kind_of?(Numeric)     | passes
+  #     expect(3).to be_an_instance_of(Integer)     # => 3.instance_of?(Integer) | passes
   #     expect(3).not_to be_an_instance_of(Numeric) # => 3.instance_of?(Numeric) | fails
   #
   # RSpec will also create custom matchers for predicates like `has_key?`. To
@@ -61,6 +61,26 @@ module RSpec
   #
   #     RSpec::Matchers.alias_matcher :a_user_who_is_an_admin, :be_an_admin
   #     expect(user_list).to include(a_user_who_is_an_admin)
+  #
+  # ## Alias Matchers
+  #
+  # With {RSpec::Matchers.alias_matcher}, you can easily create an
+  # alternate name for a given matcher.
+  #
+  # The description will also change according to the new name:
+  #
+  #     RSpec::Matchers.alias_matcher :a_list_that_sums_to, :sum_to
+  #     sum_to(3).description # => "sum to 3"
+  #     a_list_that_sums_to(3).description # => "a list that sums to 3"
+  #
+  # or you can specify a custom description like this:
+  #
+  #     RSpec::Matchers.alias_matcher :a_list_sorted_by, :be_sorted_by do |description|
+  #       description.sub("be sorted by", "a list sorted by")
+  #     end
+  #
+  #     be_sorted_by(:age).description # => "be sorted by age"
+  #     a_list_sorted_by(:age).description # => "a list sorted by age"
   #
   # ## Custom Matchers
   #
@@ -202,7 +222,44 @@ module RSpec
   # expressions, and also uses the noun-phrase wording in the matcher's `description`,
   # for readable failure messages. You can alias your custom matchers in similar fashion
   # using {RSpec::Matchers.alias_matcher}.
+  #
+  # ## Negated Matchers
+  #
+  # Sometimes if you want to test for the opposite using a more descriptive name
+  # instead of using `not_to`, you can use {RSpec::Matchers.define_negated_matcher}:
+  #
+  #     RSpec::Matchers.define_negated_matcher :exclude, :include
+  #     include(1, 2).description # => "include 1 and 2"
+  #     exclude(1, 2).description # => "exclude 1 and 2"
+  #
+  # While the most obvious negated form may be to add a `not_` prefix,
+  # the failure messages you get with that form can be confusing (e.g.
+  # "expected [actual] to not [verb], but did not"). We've found it works
+  # best to find a more positive name for the negated form, such as
+  # `avoid_changing` rather than `not_change`.
+  #
   module Matchers
+    extend ::RSpec::Matchers::DSL
+
+    # @!macro [attach] alias_matcher
+    #   @!parse
+    #     alias $1 $2
+    # @!visibility private
+    # We define this override here so we can attach a YARD macro to it.
+    # It ensures that our docs list all the matcher aliases.
+    def self.alias_matcher(*args, &block)
+      super(*args, &block)
+    end
+
+    # @!method self.alias_matcher(new_name, old_name, options={}, &description_override)
+    #   Extended from {RSpec::Matchers::DSL#alias_matcher}.
+
+    # @!method self.define(name, &declarations)
+    #   Extended from {RSpec::Matchers::DSL#define}.
+
+    # @!method self.define_negated_matcher(negated_name, base_name, &description_override)
+    #   Extended from {RSpec::Matchers::DSL#define_negated_matcher}.
+
     # @method expect
     # Supports `expect(actual).to matcher` syntax by wrapping `actual` in an
     # `ExpectationTarget`.
@@ -212,70 +269,6 @@ module RSpec
     # @return [ExpectationTarget]
     # @see ExpectationTarget#to
     # @see ExpectationTarget#not_to
-
-    # Defines a matcher alias. The returned matcher's `description` will be overriden
-    # to reflect the phrasing of the new name, which will be used in failure messages
-    # when passed as an argument to another matcher in a composed matcher expression.
-    #
-    # @param new_name [Symbol] the new name for the matcher
-    # @param old_name [Symbol] the original name for the matcher
-    # @param options  [Hash] options for the aliased matcher
-    # @option options [Class] :klass the ruby class to use as the decorator. (Not normally used).
-    # @yield [String] optional block that, when given, is used to define the overriden
-    #   logic. The yielded arg is the original description or failure message. If no
-    #   block is provided, a default override is used based on the old and new names.
-    #
-    # @example
-    #   RSpec::Matchers.alias_matcher :a_list_that_sums_to, :sum_to
-    #   sum_to(3).description # => "sum to 3"
-    #   a_list_that_sums_to(3).description # => "a list that sums to 3"
-    #
-    # @example
-    #   RSpec::Matchers.alias_matcher :a_list_sorted_by, :be_sorted_by do |description|
-    #     description.sub("be sorted by", "a list sorted by")
-    #   end
-    #
-    #   be_sorted_by(:age).description # => "be sorted by age"
-    #   a_list_sorted_by(:age).description # => "a list sorted by age"
-    #
-    # @!macro [attach] alias_matcher
-    #   @!parse
-    #     alias $1 $2
-    def self.alias_matcher(new_name, old_name, options={}, &description_override)
-      description_override ||= lambda do |old_desc|
-        old_desc.gsub(EnglishPhrasing.split_words(old_name), EnglishPhrasing.split_words(new_name))
-      end
-      klass = options.fetch(:klass) { AliasedMatcher }
-
-      define_method(new_name) do |*args, &block|
-        matcher = __send__(old_name, *args, &block)
-        klass.new(matcher, description_override)
-      end
-    end
-
-    # Defines a negated matcher. The returned matcher's `description` and `failure_message`
-    # will be overriden to reflect the phrasing of the new name, and the match logic will
-    # be based on the original matcher but negated.
-    #
-    # @param negated_name [Symbol] the name for the negated matcher
-    # @param base_name [Symbol] the name of the original matcher that will be negated
-    # @yield [String] optional block that, when given, is used to define the overriden
-    #   logic. The yielded arg is the original description or failure message. If no
-    #   block is provided, a default override is used based on the old and new names.
-    #
-    # @example
-    #   RSpec::Matchers.define_negated_matcher :exclude, :include
-    #   include(1, 2).description # => "include 1 and 2"
-    #   exclude(1, 2).description # => "exclude 1 and 2"
-    #
-    # @note While the most obvious negated form may be to add a `not_` prefix,
-    #   the failure messages you get with that form can be confusing (e.g.
-    #   "expected [actual] to not [verb], but did not"). We've found it works
-    #   best to find a more positive name for the negated form, such as
-    #   `avoid_changing` rather than `not_change`.
-    def self.define_negated_matcher(negated_name, base_name, &description_override)
-      alias_matcher(negated_name, base_name, :klass => AliasedNegatedMatcher, &description_override)
-    end
 
     # Allows multiple expectations in the provided block to fail, and then
     # aggregates them into a single exception, rather than aborting on the
@@ -367,7 +360,7 @@ module RSpec
     # Passes if actual.instance_of?(expected)
     #
     # @example
-    #   expect(5).to     be_an_instance_of(Fixnum)
+    #   expect(5).to     be_an_instance_of(Integer)
     #   expect(5).not_to be_an_instance_of(Numeric)
     #   expect(5).not_to be_an_instance_of(Float)
     def be_an_instance_of(expected)
@@ -379,7 +372,7 @@ module RSpec
     # Passes if actual.kind_of?(expected)
     #
     # @example
-    #   expect(5).to     be_a_kind_of(Fixnum)
+    #   expect(5).to     be_a_kind_of(Integer)
     #   expect(5).to     be_a_kind_of(Numeric)
     #   expect(5).not_to be_a_kind_of(Float)
     def be_a_kind_of(expected)
@@ -487,7 +480,10 @@ module RSpec
     # == Notes
     #
     # Evaluates `receiver.message` or `block` before and after it
-    # evaluates the block passed to `expect`.
+    # evaluates the block passed to `expect`. If the value is the same
+    # object, its before/after `hash` value is used to see if it has changed.
+    # Therefore, your object needs to properly implement `hash` to work correctly
+    # with this matcher.
     #
     # `expect( ... ).not_to change` supports the form that specifies `from`
     # (which specifies what you expect the starting, unchanged value to be)
@@ -585,7 +581,7 @@ module RSpec
     # information about equality in Ruby.
     #
     # @example
-    #   expect(5).to       equal(5)   # Fixnums are equal
+    #   expect(5).to       equal(5)   # Integers are equal
     #   expect("5").not_to equal("5") # Strings that look the same are not the same object
     def equal(expected)
       BuiltIn::Equal.new(expected)
@@ -688,7 +684,7 @@ module RSpec
     #     :a => {
     #       :b => a_collection_containing_exactly(
     #         a_string_starting_with("f"),
-    #         an_instance_of(Fixnum)
+    #         an_instance_of(Integer)
     #       ),
     #       :c => { :d => (a_value < 3) }
     #     }
@@ -809,7 +805,7 @@ module RSpec
     # @example
     #   expect(5).to satisfy { |n| n > 3 }
     #   expect(5).to satisfy("be greater than 3") { |n| n > 3 }
-    def satisfy(description="satisfy block", &block)
+    def satisfy(description=nil, &block)
       BuiltIn::Satisfy.new(description, &block)
     end
     alias_matcher :an_object_satisfying, :satisfy
@@ -905,7 +901,7 @@ module RSpec
     # @example
     #   expect { |b| 5.tap(&b) }.to yield_with_args # because #tap yields an arg
     #   expect { |b| 5.tap(&b) }.to yield_with_args(5) # because 5 == 5
-    #   expect { |b| 5.tap(&b) }.to yield_with_args(Fixnum) # because Fixnum === 5
+    #   expect { |b| 5.tap(&b) }.to yield_with_args(Integer) # because Integer === 5
     #   expect { |b| File.open("f.txt", &b) }.to yield_with_args(/txt/) # because /txt/ === "f.txt"
     #
     #   expect { |b| User.transaction(&b) }.not_to yield_with_args # because it yields no args
