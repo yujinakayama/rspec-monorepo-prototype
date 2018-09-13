@@ -56,20 +56,6 @@ module RSpec
         end
       end
 
-      # Configures the maximum character length that RSpec will print while
-      # formatting an object. You can set length to nil to prevent RSpec from
-      # doing truncation.
-      # @param [Fixnum] length the number of characters to limit the formatted output to.
-      # @example
-      #   RSpec.configure do |rspec|
-      #     rspec.expect_with :rspec do |c|
-      #       c.max_formatted_output_length = 200
-      #     end
-      #   end
-      def max_formatted_output_length=(length)
-        RSpec::Support::ObjectFormatter.default_instance.max_formatted_output_length = length
-      end
-
       # The list of configured syntaxes.
       # @return [Array<Symbol>] the list of configured syntaxes.
       # @example

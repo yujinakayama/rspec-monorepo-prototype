@@ -1,17 +1,5 @@
-### Development
-[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.8.1...master)
-
-### 3.8.1 / 2018-08-06
-[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.8.0...v3.8.1)
-
-Bug Fixes:
-
-* Fix regression in `include` matcher so stopped
-  `expect(hash.with_indifferent_access).to include(:symbol_key)`
-  from working. (Eito Katagiri, #1069)
-
-### 3.8.0 / 2018-08-04
-[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.7.0...v3.8.0)
+### 3.8 Development
+[Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.7.0...master)
 
 Enhancements:
 
@@ -25,11 +13,6 @@ Enhancements:
 * Improve `include` matcher so that pseudo-hash objects (e.g. objects
   that decorate a hash using a `SimpleDelegator` or similar) are treated
   as a hash, as long as they implement `to_hash`. (Pablo Brasero, #1012)
-* Add `max_formatted_output_length=` to configuration, allowing changing
-  the length at which we truncate large output strings.
-  (Sam Phippen #951, Benoit Tigeot #1056)
-* Improve error message when passing a matcher that doesn't support block
-  expectations to a block based `expect`. (@nicktime, #1066)
 
 ### 3.7.0 / 2017-10-17
 [Full Changelog](http://github.com/rspec/rspec-expectations/compare/v3.6.0...v3.7.0)
