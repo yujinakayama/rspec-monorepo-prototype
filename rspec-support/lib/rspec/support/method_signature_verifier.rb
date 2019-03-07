@@ -85,6 +85,10 @@ module RSpec
         # contain keyword arguments?
         def could_contain_kw_args?(args)
           return false if args.count <= min_non_kw_args
+          return false if args.count <= max_non_kw_args &&
+            Hash === args.last &&
+            args.last.keys.none? { |x| x.is_a?(Symbol) }
+
           @allows_any_kw_args || @allowed_kw_args.any?
         end
 
@@ -357,7 +361,14 @@ module RSpec
 
       def split_args(*args)
         kw_args = if @signature.has_kw_args_in?(args)
-                    args.pop.keys
+                    last = args.pop
+                    non_kw_args = last.reject { |k, _| k.is_a?(Symbol) }
+                    if non_kw_args.empty?
+                      last.keys
+                    else
+                      args << non_kw_args
+                      last.select { |k, _| k.is_a?(Symbol) }.keys
+                    end
                   else
                     []
                   end
