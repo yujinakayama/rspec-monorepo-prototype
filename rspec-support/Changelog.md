@@ -1,3 +1,11 @@
+### 3.8.1 / 2019-03-03
+[Full Changelog](http://github.com/rspec/rspec-support/compare/v3.8.0...v3.8.1)
+
+Bug Fixes:
+
+* Ensure that inspecting a `SimpleDelegator` based object works regardless of
+  visibilty of the `__getobj__` method. (Jon Rowe, #369)
+
 ### 3.8.0 / 2018-08-04
 [Full Changelog](http://github.com/rspec/rspec-support/compare/v3.7.1...v3.8.0)
 
