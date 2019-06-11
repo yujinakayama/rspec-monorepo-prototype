@@ -209,6 +209,17 @@ EOD
           expect(diff).to be_diffed_as(expected_diff)
         end
 
+        it 'outputs unified diff message of strings in arrays' do
+          diff = differ.diff(["a\r\nb"], ["a\r\nc"])
+          expected_diff = <<-EOD
+
+@@ -1,2 +1,2 @@
+-a\\r\\nc
++a\\r\\nb
+EOD
+          expect(diff).to be_diffed_as(expected_diff)
+        end
+
         it "outputs unified diff message of two hashes" do
           expected = { :foo => 'bar', :baz => 'quux', :metasyntactic => 'variable', :delta => 'charlie', :width =>'quite wide' }
           actual   = { :foo => 'bar', :metasyntactic => 'variable', :delta => 'charlotte', :width =>'quite wide' }
@@ -466,6 +477,13 @@ EOD
 
             diff = differ.diff(expected,actual)
             expect(diff).to be_diffed_as(expected_diff)
+          end
+        end
+
+        context 'when expected or actual is false' do
+          it 'generates a diff' do
+            expect(differ.diff(true, false)).to_not be_empty
+            expect(differ.diff(false, true)).to_not be_empty
           end
         end
       end
