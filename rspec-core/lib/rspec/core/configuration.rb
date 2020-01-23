@@ -1350,12 +1350,6 @@ module RSpec
       #       end
       #     end
       #
-      #     module PreferencesHelpers
-      #       def preferences(user, preferences = {})
-      #         # ...
-      #       end
-      #     end
-      #
       #     module UserHelpers
       #       def users(username)
       #         # ...
@@ -1364,17 +1358,12 @@ module RSpec
       #
       #     RSpec.configure do |config|
       #       config.include(UserHelpers) # included in all groups
-      #
-      #       # included in examples with `:preferences` metadata
-      #       config.include(PreferenceHelpers, :preferences)
-      #
-      #       # included in examples with `:type => :request` metadata
       #       config.include(AuthenticationHelpers, :type => :request)
       #     end
       #
-      #     describe "edit profile", :preferences, :type => :request do
+      #     describe "edit profile", :type => :request do
       #       it "can be viewed by owning user" do
-      #         login_as preferences(users(:jdoe), :lang => 'es')
+      #         login_as users(:jdoe)
       #         get "/profiles/jdoe"
       #         assert_select ".username", :text => 'jdoe'
       #       end
@@ -1402,21 +1391,17 @@ module RSpec
       #
       # @example
       #
-      #     RSpec.shared_context "example admin user" do
+      #     RSpec.shared_context "example users" do
       #       let(:admin_user) { create_user(:admin) }
-      #     end
-      #
-      #     RSpec.shared_context "example guest user" do
       #       let(:guest_user) { create_user(:guest) }
       #     end
       #
       #     RSpec.configure do |config|
-      #       config.include_context "example guest user", :type => :request
-      #       config.include_context "example admin user", :admin, :type => :request
+      #       config.include_context "example users", :type => :request
       #     end
       #
       #     RSpec.describe "The admin page", :type => :request do
-      #       it "can be viewed by admins", :admin do
+      #       it "can be viewed by admins" do
       #         login_with admin_user
       #         get "/admin"
       #         expect(response).to be_ok
@@ -1458,20 +1443,12 @@ module RSpec
       #       end
       #     end
       #
-      #     module PermissionHelpers
-      #       def define_permissions
-      #         # ...
-      #       end
-      #     end
-      #
       #     RSpec.configure do |config|
       #       config.extend(UiHelpers, :type => :request)
-      #       config.extend(PermissionHelpers, :with_permissions, :type => :request)
       #     end
       #
-      #     describe "edit profile", :with_permissions, :type => :request do
+      #     describe "edit profile", :type => :request do
       #       run_in_browser
-      #       define_permissions
       #
       #       it "does stuff in the client" do
       #         # ...
@@ -1929,8 +1906,7 @@ module RSpec
       #
       # This method differs from {Hooks#before} in only one way: it supports
       # the `:suite` scope. Hooks with the `:suite` scope will be run once before
-      # the first example of the entire suite is executed. Conditions passed along
-      # with `:suite` are effectively ignored.
+      # the first example of the entire suite is executed.
       #
       # @see #prepend_before
       # @see #after
@@ -1959,8 +1935,7 @@ module RSpec
       #
       # This method differs from {Hooks#prepend_before} in only one way: it supports
       # the `:suite` scope. Hooks with the `:suite` scope will be run once before
-      # the first example of the entire suite is executed. Conditions passed along
-      # with `:suite` are effectively ignored.
+      # the first example of the entire suite is executed.
       #
       # @see #before
       # @see #after
@@ -1984,8 +1959,7 @@ module RSpec
       #
       # This method differs from {Hooks#after} in only one way: it supports
       # the `:suite` scope. Hooks with the `:suite` scope will be run once after
-      # the last example of the entire suite is executed. Conditions passed along
-      # with `:suite` are effectively ignored.
+      # the last example of the entire suite is executed.
       #
       # @see #append_after
       # @see #before
@@ -2014,8 +1988,7 @@ module RSpec
       #
       # This method differs from {Hooks#append_after} in only one way: it supports
       # the `:suite` scope. Hooks with the `:suite` scope will be run once after
-      # the last example of the entire suite is executed. Conditions passed along
-      # with `:suite` are effectively ignored.
+      # the last example of the entire suite is executed.
       #
       # @see #append_after
       # @see #before
