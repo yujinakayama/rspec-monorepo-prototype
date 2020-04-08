@@ -1,5 +1,3 @@
-RSpec::Support.require_rspec_support "with_keywords_when_needed"
-
 module RSpec
   module Matchers
     # Defines the custom matcher DSL.
@@ -462,12 +460,11 @@ module RSpec
           @chained_method_clauses = []
           @block_arg = block_arg
 
-          klass = class << self
+          class << self
             # See `Macros#define_user_override` above, for an explanation.
             include(@user_method_defs = Module.new)
             self
-          end
-          RSpec::Support::WithKeywordsWhenNeeded.class_exec(klass, *expected, &declarations)
+          end.class_exec(*expected, &declarations)
         end
 
         # Provides the expected value. This will return an array if
@@ -531,9 +528,6 @@ module RSpec
             super(method, *args, &block)
           end
         end
-        # The method_missing method should be refactored to pass kw args in RSpec 4
-        # then this can be removed
-        ruby2_keywords :method_missing if respond_to?(:ruby2_keywords, true)
       end
     end
   end
